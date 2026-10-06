@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { AccionFuente, EstadoPlanta } from '../../../shared/tipos';
+import type { Filtros as F } from '../filtros';
 import { IcoCampana, IcoCerrar, IcoLupa } from '../iconos';
+import { Filtros } from './Filtros';
 import type { Modulo } from './MenuLateral';
 
 interface Props {
@@ -10,8 +12,9 @@ interface Props {
   onBusqueda: (q: string) => void;
   coincidencias: number | null; // máquinas que coinciden con búsqueda/filtro; null = sin filtro
   procesos: { id: string; nombre: string }[];
-  proceso: string;
-  onProceso: (p: string) => void;
+  filtros: F;
+  onFiltros: (f: F) => void;
+  contar: (f: F) => number;   // máquinas que quedan con esos filtros
   onAbrir: (m: Modulo, pestana?: 'rojo' | 'amarillo') => void;
   refBusqueda: RefObject<HTMLInputElement | null>;
   /** Página publicada: leer Zoho (pide permiso) o abrir los permisos de la página. */
@@ -20,7 +23,7 @@ interface Props {
 
 const SIN_FECHAS = 'Los SO no traen fecha de entrega: no hay semáforo';
 
-export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidencias, procesos, proceso, onProceso, onAbrir, refBusqueda, onAccionFuente }: Props) {
+export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidencias, procesos, filtros, onFiltros, contar, onAbrir, refBusqueda, onAccionFuente }: Props) {
   const k = estado?.kpis;
   const sinFechas = !!k && k.items_abiertos > 0 && k.items_con_fecha === 0;
   const avisos = estado?.avisos ?? [];
@@ -47,10 +50,7 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
         {coincidencias !== null && <span className="coinc">{coincidencias} máq.</span>}
         {busqueda && <button className="limpiar" onClick={() => onBusqueda('')} aria-label="Limpiar búsqueda"><IcoCerrar /></button>}
       </label>
-      <select id="proceso" value={proceso} onChange={e => onProceso(e.target.value)} aria-label="Filtrar por proceso">
-        <option value="todos">Todos los procesos</option>
-        {procesos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-      </select>
+      <Filtros filtros={filtros} onCambiar={onFiltros} procesos={procesos} contar={contar} sinSemaforo={sinFechas} />
 
       {k && (
         <div className="kpis" role="group" aria-label="Resumen">

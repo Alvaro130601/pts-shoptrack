@@ -32,7 +32,9 @@ Construido con React + React Three Fiber. Equivalencias para PTS:
 
 ## Vistas (v1)
 Pantalla limpia: la planta 3D ocupa todo el fondo; todo lo demás se abre bajo demanda.
-- **Barra superior**: búsqueda (atajo `/`), filtro por proceso, KPIs compactos que abren su módulo
+- **Barra superior**: búsqueda (atajo `/`), botón **Filtros** (prioridad = semáforo de las órdenes de la máquina:
+  atrasadas, en riesgo, a tiempo · máquina: trabajando, sin trabajo, fuera de servicio · proceso; dentro de una
+  sección basta una opción, entre secciones se combinan; cada opción dice cuántas máquinas quedan), KPIs compactos que abren su módulo
   (atrasadas/en riesgo → Alertas), campana de avisos y estado de la fuente de datos.
 - **Menú lateral** con módulos (uno abierto a la vez, en un cajón a la izquierda; `Esc` cierra):
   1. **Carga por proceso**: cada proceso (equipo de Zoho) con en proceso / en cola / en camino y días de carga;

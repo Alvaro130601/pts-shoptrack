@@ -12,7 +12,7 @@ const RANGO = { rojo: 0, amarillo: 1, verde: 2, libre: 3 } as const;
 export function CargaProcesos({ centros, maquinas, filtro, seleccion, onMaquina, onOp, onCerrar }: {
   centros: EstadoCentro[];
   maquinas: Map<string, EstadoMaquina>;
-  filtro: Set<string> | null;      // máquinas que coinciden con la búsqueda o el filtro de proceso
+  filtro: Set<string> | null;      // máquinas que coinciden con la búsqueda o los filtros de la barra
   seleccion: string | null;
   onMaquina: (id: string) => void;
   onOp: (o: Operacion) => void;

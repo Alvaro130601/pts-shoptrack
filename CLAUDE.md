@@ -8,7 +8,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 
 ## Stack
 - `web/` React 19 + Vite + **React Three Fiber** + drei (escena 3D isométrica con cámara ortográfica) + CSS propio.
-  `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, menú lateral, panel, controles),
+  `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, filtros, menú lateral, panel, controles;
+  la lógica de los filtros de la planta está en `filtros.ts`: semáforo, estado de máquina, proceso),
   `modulos/` (cajones del menú: carga por proceso, alertas, ¿dónde está mi SO?, material, sin centro, leyenda).
 - `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`, `/api/ajustes` y
   `/api/asistente` (NDJSON). Cachea la lectura de Zoho y rearma el plan al momento cuando cambian los ajustes.

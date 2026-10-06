@@ -3,6 +3,7 @@ import { useDatos } from './api';
 import { backendServidor, type Backend } from './backend';
 import { backendPagina, type ConfigPagina } from './backend-pagina';
 import { NOMBRE_FAMILIA } from './familias';
+import { SIN_FILTROS, activos, cumple, type Filtros } from './filtros';
 import { Planta, cajaDe, cajaPlanta } from './escena/Planta';
 import type { CamaraApi } from './escena/Camara';
 import { BarraSuperior } from './hud/BarraSuperior';
@@ -36,7 +37,7 @@ export default function App() {
   const [pestana, setPestana] = useState<Pestana>('rojo');
   const [soActivo, setSoActivo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
-  const [proceso, setProceso] = useState('todos');
+  const [filtros, setFiltros] = useState<Filtros>(SIN_FILTROS);
   const [pista, setPista] = useState(leerPista);
   const camara = useRef<CamaraApi | null>(null);
   const refBusqueda = useRef<HTMLInputElement>(null);
@@ -48,19 +49,19 @@ export default function App() {
   const procesos = useMemo(() => centros.filter(c => c.tipo === 'maquina').map(c => ({ id: c.id, nombre: c.nombre })), [centros]);
   const items = useMemo(() => new Map<string, Item>((estado?.sos ?? []).flatMap(s => s.items.map(i => [i.id, i] as const))), [estado]);
 
-  // Máquinas resaltadas en 3D: el SO elegido en "¿Dónde está mi SO?" manda; si no, búsqueda + filtro de proceso.
+  // Máquinas resaltadas en 3D: el SO elegido en "¿Dónde está mi SO?" manda; si no, búsqueda + filtros de la barra.
+  const q = busqueda.trim().toLowerCase();
+  const coincideBusqueda = useCallback((m: EstadoMaquina) => !q ||
+    `${m.nombre} ${NOMBRE_FAMILIA[m.familia ?? 'generica']} ${nombreCentro.get(m.centro_id ?? '') ?? ''}`.toLowerCase().includes(q) ||
+    planDe(m).some(o => `${o.proyecto} ${o.cliente} ${o.item} ${o.nombre}`.toLowerCase().includes(q)), [q, nombreCentro]);
+  const contar = useCallback((f: Filtros) => maquinas.filter(m => cumple(m, f) && coincideBusqueda(m)).length, [maquinas, coincideBusqueda]);
   const resaltadas = useMemo(() => {
     if (modulo === 'so' && soActivo) {
       return new Set(maquinas.filter(m => planDe(m).some(o => o.proyecto_id === soActivo)).map(m => m.id));
     }
-    const q = busqueda.trim().toLowerCase();
-    if (!q && proceso === 'todos') return null;
-    return new Set(maquinas.filter(m =>
-      (proceso === 'todos' || m.centro_id === proceso) &&
-      (!q || `${m.nombre} ${NOMBRE_FAMILIA[m.familia ?? 'generica']} ${nombreCentro.get(m.centro_id ?? '') ?? ''}`.toLowerCase().includes(q) ||
-        planDe(m).some(o => `${o.proyecto} ${o.cliente} ${o.item} ${o.nombre}`.toLowerCase().includes(q))),
-    ).map(m => m.id));
-  }, [maquinas, busqueda, proceso, modulo, soActivo, nombreCentro]);
+    if (!q && !activos(filtros)) return null;
+    return new Set(maquinas.filter(m => cumple(m, filtros) && coincideBusqueda(m)).map(m => m.id));
+  }, [maquinas, q, filtros, coincideBusqueda, modulo, soActivo]);
 
   const encuadrarMaquinas = useCallback((ids: string[], margen: number, zoomMax = 46) => {
     const pts = (layout?.elementos ?? []).filter(e => ids.includes(e.id)).flatMap(e => e.footprint);
@@ -140,7 +141,7 @@ export default function App() {
 
       <BarraSuperior estado={estado} error={error} busqueda={busqueda} onBusqueda={setBusqueda}
         coincidencias={resaltadas && modulo !== 'so' ? resaltadas.size : null}
-        procesos={procesos} proceso={proceso} onProceso={setProceso} onAbrir={abrir} refBusqueda={refBusqueda}
+        procesos={procesos} filtros={filtros} onFiltros={setFiltros} contar={contar} onAbrir={abrir} refBusqueda={refBusqueda}
         onAccionFuente={BACKEND.accion} />
 
       <Resguardo nombre="el panel">
