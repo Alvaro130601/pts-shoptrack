@@ -1,7 +1,8 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState } from 'react';
 import type * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { EstadoMaquina, Operacion, Semaforo } from '../../../shared/tipos';
 import type { ElementoLayout } from '../tipos-layout';
 import { C, colorSemaforo } from '../colores';
@@ -10,6 +11,16 @@ import { ModeloCtx, ModeloMaquina } from './modelos';
 const MAX_PILA = 6;
 const ALTO_BLOQUE = 0.22;
 const SEP_BLOQUE = 0.06;
+
+/** Una caja redondeada por tamaño, compartida por todas las pilas. Antes cada orden armaba la suya y, al cambiar los
+ *  datos (p. ej. al llegar los de Zoho), se rehacían todas a la vez y la cámara se trababa. */
+const cajas = new Map<number, THREE.BufferGeometry>();
+function cajaBloque(lado: number) {
+  const k = Math.round(lado * 100) / 100;
+  let g = cajas.get(k);
+  if (!g) cajas.set(k, g = new RoundedBoxGeometry(k, ALTO_BLOQUE, k, 2, 0.05));
+  return g;
+}
 
 interface Props {
   e: ElementoLayout;
@@ -56,9 +67,10 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
         {seleccionada && <Marco w={e.w + 0.7} d={e.d + 0.7} g={0.12} color={C.acento} y={0.03} />}
       </group>
 
-      {/* pila de órdenes sobre la máquina: una caja por operación */}
+      {/* pila de órdenes sobre la máquina: una caja por operación. Por posición, no por orden: cuando cambian los
+          datos las cajas se recolorean en vez de rehacerse. */}
       {!atenuada && visibles.map((o, i) => (
-        <Bloque key={o.id} op={o} lado={lado} y={yPila + i * (ALTO_BLOQUE + SEP_BLOQUE)} />
+        <Bloque key={i} op={o} lado={lado} y={yPila + i * (ALTO_BLOQUE + SEP_BLOQUE)} />
       ))}
 
       {mostrarChip && (
@@ -159,10 +171,11 @@ function Bloque({ op, y, lado }: { op: Operacion; y: number; lado: number }) {
   const fantasma = op.estado === 'en_camino' || op.estado === 'bloqueada';
   return (
     <group ref={ref} position-y={y}>
-      <RoundedBox args={[lado, ALTO_BLOQUE, lado]} radius={0.05} smoothness={2} castShadow={!fantasma}>
+      {/* dispose={null}: la geometría es compartida, no se descarta al quitar la caja */}
+      <mesh geometry={cajaBloque(lado)} castShadow={!fantasma} dispose={null}>
         <meshStandardMaterial color={color} transparent opacity={fantasma ? 0.3 : 0.95}
           emissive={color} emissiveIntensity={enProceso ? 0.25 : 0.05} />
-      </RoundedBox>
+      </mesh>
     </group>
   );
 }

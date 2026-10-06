@@ -27,6 +27,9 @@ interface Props {
 const UMBRAL_DETALLE = 30;
 export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
   const { camera, size } = useThree();
+  // Mientras la cámara se mueve, la planta se dibuja a menos resolución (AdaptiveDpr): en equipos con gráficos
+  // modestos el movimiento sigue fluido y al soltar vuelve la nitidez.
+  const regress = useThree(s => s.performance.regress);
   const hud = useRef(ocupado);
   hud.current = ocupado;
   const controles = useRef<any>(null);
@@ -101,6 +104,6 @@ export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
   return (
     <MapControls ref={controles} makeDefault enableRotate enableDamping dampingFactor={0.12}
       maxPolarAngle={Math.PI / 2.4} minZoom={8} maxZoom={90} screenSpacePanning
-      onStart={() => { destino.current = null; }} />
+      onStart={() => { destino.current = null; }} onChange={() => regress()} />
   );
 }

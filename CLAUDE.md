@@ -91,6 +91,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   supone que llega en 3 días hábiles (SLA). Un SO con ensamble y sin servicio externo lleva buffer 2 (regla
   actual; por SLA serían 3): confirmar con Alvaro.
 - Etiquetas se traslapan en zonas densas (Taller #3): falta LOD / agrupación.
+- Rendimiento 3D (Alvaro: la cámara se trababa al llegar los datos de Zoho): las cajas de la pila comparten geometría
+  y van por posición (al cambiar los datos se recolorean, no se rehacen), las máquinas se dibujan cuando hay datos,
+  la resolución baja mientras se mueve la cámara (AdaptiveDpr) y la sombra es de 1024. La página mide los cuadros.
 - La exportación a Excel no trae lista de tareas, equipo ni fecha de entrega: los ítems se deducen del orden
   ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Con Zoho en vivo sí. Ver `docs/ZOHO.md`.
 - Zoho en vivo lee las tareas abiertas de la vista más las de Servicio Externo (cuenta como una pausa de la ruta);

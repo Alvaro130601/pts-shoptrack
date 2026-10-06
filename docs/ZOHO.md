@@ -30,8 +30,9 @@ tareas abiertas con "H." de todo el portal (~600-800, 3-4 páginas). Las tareas 
   (sin conector, sin permiso, Zoho caído, un error al armar el plan), muestra los datos publicados con la página y
   dice por qué en los avisos, con el código de error. Relee cada 5 minutos.
   **Diagnóstico**: la página guarda en su base (colección `diagnostico`) el resultado de la última lectura de Zoho
-  (`zoho`: ok, proyectos, tareas, ms o el código de error) y el último error del navegador (`error`), para revisarlo
-  a distancia con Claude.
+  (`zoho`: ok, proyectos, tareas, ms o el código de error), el último error del navegador (`error`) y cómo se movió
+  la planta en los primeros 90 s (`rendimiento`: duración de los cuadros, saltos al cambiar los datos, GPU), para
+  revisarlo a distancia con Claude.
 - **Servidor en una PC de planta** (`DATA_SOURCE=zoho`): OAuth con **Self Client**.
   1. https://api-console.zoho.com → *Add Client* → *Self Client* → *Create*.
   2. *Generate Code* con los scopes `ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasklists.READ,ZohoProjects.tasks.READ`

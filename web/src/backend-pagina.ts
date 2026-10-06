@@ -136,6 +136,7 @@ export function backendPagina(cfg: ConfigPagina): Backend {
   window.addEventListener('error', e => diagnostico('error', { mensaje: textoError(e.error ?? e.message), donde: `${String(e.filename ?? '').split('/').pop()}:${e.lineno}` }));
   window.addEventListener('unhandledrejection', e => diagnostico('error', { mensaje: textoError(e.reason), donde: 'promesa' }));
   window.addEventListener('shoptrack-error', e => diagnostico('error', { mensaje: textoError((e as CustomEvent).detail), donde: 'dibujo' }));
+  window.addEventListener('shoptrack-rendimiento', e => diagnostico('rendimiento', { ...(e as CustomEvent).detail }));
 
   // Zoho en vivo: se lee en segundo plano y, al terminar, la app vuelve a pedir el estado (avisar). La primera vez
   // claude.ai pide permiso para usar el conector: si todavía no lo hay, no se lee al abrir (el diálogo taparía la
