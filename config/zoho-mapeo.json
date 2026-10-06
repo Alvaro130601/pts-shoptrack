@@ -19,7 +19,7 @@
     "estados": {
       "_nota": "Se comparan por inicio del texto. 'material_pendiente' son los estados viejos que indican falta de material.",
       "pendiente": ["Pendiente", "Abierta", "Abierto", "Open", "No iniciada"],
-      "en_proceso": ["En proceso", "En progreso", "In Progress"],
+      "en_proceso": ["En proceso", "En progreso", "En Producción", "In Progress"],
       "cerrada": ["Cerrada", "Cerrado", "Closed", "Completada", "Completado", "Terminada"],
       "material_pendiente": ["Material Pendiente"]
     }

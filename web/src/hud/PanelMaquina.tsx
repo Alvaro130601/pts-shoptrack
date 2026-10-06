@@ -7,6 +7,9 @@ import { IcoCerrar } from '../iconos';
 import { RutaItem } from '../modulos/RutaItem';
 
 const ESTADO_MAQ = { rojo: 'Atrasada', amarillo: 'En riesgo', verde: 'A tiempo', libre: 'Libre' } as const;
+/** Sin semáforo no siempre es libre: puede tener trabajo de SO sin fecha de entrega. */
+const estadoMaq = (m: EstadoMaquina) =>
+  m.semaforo === 'libre' && (m.en_proceso.length || m.cola.length) ? 'Con trabajo, sin fecha de entrega' : ESTADO_MAQ[m.semaforo];
 
 export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: {
   m: EstadoMaquina;
@@ -33,7 +36,7 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
         <div>
           <div className="sup">{centro ?? 'Sin proceso asignado'} · {NOMBRE_FAMILIA[m.familia ?? 'generica']} · {tallerNombre(m.taller)}</div>
           <h2>{m.nombre}</h2>
-          <span className={`estado-maq ${m.semaforo}`}><span className="punto" style={{ background: colorSemaforo(m.semaforo) }} />{ESTADO_MAQ[m.semaforo]}</span>
+          <span className={`estado-maq ${m.semaforo}`}><span className="punto" style={{ background: colorSemaforo(m.semaforo) }} />{estadoMaq(m)}</span>
         </div>
         <button className="icono-btn" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)"><IcoCerrar /></button>
       </header>
@@ -55,7 +58,7 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
                   <button className="op-cab" aria-expanded={abiertaOp} onClick={() => setAbierta(abiertaOp ? null : o.id)}>
                     <span className="op-fila">
                       <span className="pos">{o.posicion === 0 ? '▶' : o.posicion ?? '·'}</span>
-                      <span className="so">{o.so}</span>
+                      <span className="so">{o.proyecto}</span>
                       <span className="desc">{itemCorto(o)} · {etiquetaPaso(o)}</span>
                       {o.semaforo && <span className="pill" style={{ background: colorSemaforo(o.semaforo) }}>{o.semaforo}</span>}
                     </span>

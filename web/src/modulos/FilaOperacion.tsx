@@ -9,7 +9,7 @@ export function FilaOperacion({ o, onClick }: { o: Operacion; onClick?: () => vo
       <span className="barra-sem" style={{ background: colorSemaforo(o.semaforo) }} />
       <span className="op-l-cuerpo">
         <span className="op-l-arriba">
-          <b className="so">{o.so}</b>
+          <b className="so">{o.proyecto}</b>
           <span className="maq">{itemCorto(o)}</span>
           <span className="estado">{estadoLargo(o)}</span>
         </span>

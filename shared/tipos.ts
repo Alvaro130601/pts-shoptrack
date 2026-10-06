@@ -33,7 +33,7 @@ export interface ProyectoCrudo {
 /** Forma 3D aproximada con que se dibuja la máquina en la planta. */
 export const FAMILIAS = [
   'fresadora_cnc', 'fresadora_convencional', 'torno_cnc', 'torno_convencional', 'torno_suizo',
-  'edm_hilo', 'laser', 'horno', 'dobladora', 'guillotina', 'soldadora', 'generica',
+  'edm_hilo', 'laser', 'rectificadora', 'horno', 'dobladora', 'guillotina', 'soldadora', 'generica',
 ] as const;
 export type FamiliaMaquina = (typeof FAMILIAS)[number];
 
@@ -48,8 +48,9 @@ export interface MaquinaConfig {
   activa: boolean;
 }
 
-/** maquina: Set Up y mecanizado · programacion: programadores · externo: proveedores */
-export type TipoCentro = 'maquina' | 'programacion' | 'externo';
+/** maquina: Set Up y mecanizado en máquinas del layout · programacion: programadores ·
+ *  puesto: trabajo manual o en equipos que no están en el layout (personas × horas) · externo: proveedores */
+export type TipoCentro = 'maquina' | 'programacion' | 'puesto' | 'externo';
 
 /** Centro de trabajo = un proceso (equipo de Zoho) con los recursos que lo hacen (config/centros.json). */
 export interface CentroConfig {
@@ -57,9 +58,10 @@ export interface CentroConfig {
   nombre: string;
   tipo: TipoCentro;
   equipos_zoho: string[];     // valores de "Equipo asignado" que caen en este centro
+  tareas_zoho?: string[];     // si la tarea no trae equipo: expresiones sobre su nombre (sin "H.", sin tildes)
   maquinas?: string[];        // tipo maquina: ids de config/maquinas.json
-  personas?: number;          // tipo programacion: cuántos programadores
-  horas_dia?: number;         // tipo programacion: horas por persona y día hábil
+  personas?: number;          // tipo programacion o puesto: cuántas personas o puestos
+  horas_dia?: number;         // tipo programacion o puesto: horas por persona y día hábil
   dias?: number;              // tipo externo: días hábiles por servicio
 }
 
@@ -189,7 +191,8 @@ export interface EstadoMaquina extends MaquinaConfig {
 
 export interface EstadoPlanta {
   actualizado: string;        // ISO datetime
-  fuente: 'seed' | 'zoho';
+  fuente: 'seed' | 'zoho' | 'excel';
+  datos_de?: string;          // ISO: fecha del archivo exportado (fuente excel)
   hoy: string;                // fecha usada para los cálculos
   centros: EstadoCentro[];
   maquinas: EstadoMaquina[];
@@ -203,6 +206,7 @@ export interface EstadoPlanta {
     esperando_material: number; // ítems
     atrasados: number;        // ítems en rojo
     en_riesgo: number;        // ítems en amarillo
+    items_con_fecha: number;  // ítems abiertos cuyo SO tiene fecha de entrega (sin fecha no hay semáforo)
     horas_cola: number;
   };
   avisos: string[];

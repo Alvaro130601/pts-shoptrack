@@ -1,7 +1,7 @@
 # Proceso de una orden en PTS
 
-> **Borrador para validar con Alvaro.** Actualizado el 6-oct-2026 con una captura real de **SO-10664-MCV-1**
-> y las decisiones de Alvaro. ✅ = visto en Zoho o decidido · ❓ = por confirmar · 💡 = propuesta.
+> **Borrador para validar con Alvaro.** Actualizado el 6-oct-2026 con una captura real de **SO-10664-MCV-1**,
+> las decisiones de Alvaro y la primera exportación de tareas de Zoho (sección 6). ✅ = visto en Zoho o decidido · ❓ = por confirmar · 💡 = propuesta.
 > Detalle de campos en `docs/ZOHO.md`.
 
 ## Decisiones tomadas ✅ (6-oct-2026)
@@ -80,17 +80,23 @@ Con eso no hay que mantener estados a mano en otros niveles; ShopTrack los calcu
 
 Código: `shared/ruta.ts` (lectura y estados) y `shared/plan.ts` (plan), con tests en `tests/`.
 
-**Centros de trabajo = equipos de Zoho**, cada uno con sus máquinas (`config/centros.json`, propuesta ❓):
+**Centros de trabajo = procesos**, cada uno con sus recursos (`config/centros.json`, propuesta ❓). El proceso se lee
+del Equipo asignado; si la tarea no lo trae (exportación a Excel), de su nombre:
 
-| Equipo | Máquinas |
+| Proceso | Recursos |
 |---|---|
-| Fresado | Fresadora #1 a #7 |
 | Fresado CNC | Haas VF-2, SVM 4100 #1 y #2, Haas Mini Mill #1 y #2, SYL |
+| Fresado | Fresadora #1 a #7 |
 | Torno CNC | Torno Hyundai, Torno Hanwa |
+| Torno suizo | Torno Hanwa |
 | Torno | Torno #1 y #2 |
 | Erosionado | EDM hilo, CUT E350, E350 |
-| Programación | Programadores: cola de personas, no ocupa máquina ✅ |
-| Servicio externo / No Requiere | Proveedores, fuera de planta |
+| Rectificado | Rectificadora #1 y #2, al fondo del Taller #1 ✅ (posición aproximada) |
+| Tratamiento térmico y revenido | Horno |
+| Doblado · Soldadura · Corte láser | Dobladora · Soldadora · Cortadora láser |
+| Grabado · Limpieza y rebabeo | Puestos manuales fuera del plano: 1 persona, 8 h/día cada uno ❓ |
+| Programación | Programadores: cola de personas, no ocupa máquina ✅ (1 programador, 8 h/día ❓) |
+| Servicio externo / No Requiere | Proveedores (Flash Chrome, anodizado, electroless, black oxide…): 3 días hábiles |
 
 Cada **operación** tiene un estado calculado con su ítem:
 
@@ -134,7 +140,28 @@ Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso,
   **E350** ≈ GF FORM E 350, electroerosión por penetración (está junto a la CUT E 350 de hilo);
   **H32Z** sin hipótesis.
 
-## 6. Preguntas abiertas
+## 6. Lo que muestra la primera exportación (foto del 6-oct-2026)
+
+538 tareas abiertas de 122 SO, unas 2 100 h. Sin fechas de entrega, el plan va por número de SO.
+
+| Proceso | Horas abiertas | Listas para empezar | Días de carga lista |
+|---|---|---|---|
+| Fresado CNC (6 máquinas) | 610 h | 157 h | 1,8 |
+| Erosionado (3) | 551 h | 401 h | **10** |
+| Torno CNC (2) | 282 h | 230 h | **7,2** |
+| Fresado (7) | 204 h | 113 h | 2 |
+| Rectificado (2) | 163 h | 33 h | 2 |
+| Tratamiento térmico y revenido (horno) | 112 h | 10 h | 0,4 |
+
+- **Erosionado es el cuello de botella**: diez días de trabajo listo en tres máquinas. Torno CNC le sigue.
+- Fresado CNC tiene la mayor carga total, pero casi toda espera programa, material u otra operación.
+- Rectificado llega sobre todo después del tratamiento térmico: su carga lista crecerá cuando salgan del horno.
+- Tratamiento térmico (5 h) y revenido (2 h) tienen horas fijas por tarea: parecen ciclos de horno que se pueden
+  juntar en lotes. Hoy el plan los trata uno por uno a 24 h/día ❓.
+- Grabado: 75 tareas de media hora, casi siempre al final de la ruta.
+- 16 ítems esperan material (estado `Material Pendiente`).
+
+## 7. Preguntas abiertas
 
 1. Lista completa de equipos y qué máquinas pertenecen a cada uno (la tabla de la sección 4 es una propuesta),
    y cuántos programadores hay (hoy se supone 1, 8 h/día).
@@ -143,4 +170,10 @@ Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso,
 4. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?
 5. Calidad: ¿solo inspección final o también dentro de la ruta?
 6. ¿Qué máquinas son SYL, E350 y H32Z?
-7. ¿Qué significa `Pendiente Op…`? (Solo importa mientras se usen los estados actuales.)
+7. ~~¿Qué significa `Pendiente Op…`?~~ En la exportación es `Pendiente Operación`: se trata como Pendiente.
+8. Rectificadoras: ¿cuál es la *centerless*? ¿Posición exacta y horas por día?
+9. Grabado y limpieza: ¿dónde se hacen y cuántas personas o equipos hay? (hoy, un puesto de 8 h/día cada uno)
+10. Horno: ¿tratamiento térmico y revenido se hacen en planta? ¿Cuántas piezas entran por ciclo?
+11. Erosionado: si la E350 es de penetración, ¿qué tareas le tocan? Hoy se reparte "Erosionado" entre las tres.
+12. ¿Se puede exportar con **Lista de tareas**, **Equipo asignado** y la fecha final del proyecto? Con eso los
+    ítems son exactos y vuelve el semáforo.

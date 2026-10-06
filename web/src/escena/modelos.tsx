@@ -184,6 +184,27 @@ function Laser({ w, d, h }: Dim) {
   );
 }
 
+/** Rectificadora plana: bancada, mesa larga con plato magnético y guardas contra salpicaduras, columna atrás con el
+ *  cabezal y la muela (disco con su guarda) sobre la mesa, tanque de refrigerante debajo de la mesa y panel. */
+function Rectificadora({ w, d, h }: Dim) {
+  const yb = h * 0.46;
+  const zm = d * 0.16;                      // eje de la mesa, hacia el frente
+  return (
+    <>
+      <Caja s={[w * 0.6, yb, d * 0.62]} p={[0, 0, d * 0.12]} t="pintura" />
+      <Caja s={[w * 0.96, 0.07, d * 0.34]} p={[0, yb, zm]} t="metal" />
+      <Caja s={[w * 0.5, 0.05, d * 0.26]} p={[0, yb + 0.07, zm]} t="oscuro" />
+      {[-1, 1].map(s => <Caja key={s} s={[w * 0.62, h * 0.09, 0.02]} p={[0, yb + 0.07, zm + s * d * 0.16]} t="vidrio" />)}
+      <Caja s={[w * 0.16, h * 0.28, d * 0.3]} p={[w * 0.4, 0, d * 0.1]} t="oscuro" />
+      <Caja s={[w * 0.3, h * 0.9, d * 0.3]} p={[0, 0, -d * 0.33]} t="pintura" />
+      <Caja s={[w * 0.2, h * 0.15, d * 0.36]} p={[0, h * 0.64, -d * 0.1]} t="pintura" />
+      <Cil rad={h * 0.14} largo={d * 0.12} p={[0, h * 0.66, d * 0.13]} eje="z" t="metal" />
+      <Cil rad={h * 0.05} largo={0.05} p={[-w * 0.2, yb * 0.62, d * 0.45]} eje="z" t="oscuro" />
+      <Caja s={[w * 0.12, h * 0.26, 0.08]} p={[w * 0.22, h * 0.52, -d * 0.12]} t="panel" />
+    </>
+  );
+}
+
 function Horno({ w, d, h }: Dim) {
   return (
     <>
@@ -256,7 +277,7 @@ function Generica({ w, d, h }: Dim) {
 const MODELOS: Record<FamiliaMaquina, (d: Dim) => ReactNode> = {
   fresadora_cnc: FresadoraCNC, fresadora_convencional: FresadoraConvencional,
   torno_cnc: TornoCNC, torno_convencional: TornoConvencional, torno_suizo: TornoSuizo,
-  edm_hilo: EdmHilo, laser: Laser, horno: Horno, dobladora: Dobladora, guillotina: Guillotina,
+  edm_hilo: EdmHilo, laser: Laser, rectificadora: Rectificadora, horno: Horno, dobladora: Dobladora, guillotina: Guillotina,
   soldadora: Soldadora, generica: Generica,
 };
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { EstadoCentro, EstadoMaquina, Operacion } from '../../../shared/tipos';
 import { colorSemaforo } from '../colores';
+import { soCorto } from '../formato';
 import { Cajon } from './Cajon';
 import { FilaOperacion } from './FilaOperacion';
 
@@ -60,7 +61,7 @@ export function CargaProcesos({ centros, maquinas, filtro, seleccion, onMaquina,
                 <p className="nota">{resumen(c)}</p>
                 {c.tipo === 'maquina' ? (
                   <>
-                    <div className="tabla-cab-fila"><span /><span>Máquina</span><span>Proc.</span><span>Cola</span><span>Carga</span><span>Próximo</span></div>
+                    <div className="tabla-cab-fila"><span /><span>Máquina</span><span>Cola</span><span>Carga</span><span>Próximo</span></div>
                     {maqs.map(m => <FilaMaquina key={m.id} m={m} sel={seleccion === m.id} onClick={() => onMaquina(m.id)} />)}
                     {!maqs.length && <p className="vacio">Ninguna máquina coincide con la búsqueda.</p>}
                   </>
@@ -77,8 +78,10 @@ export function CargaProcesos({ centros, maquinas, filtro, seleccion, onMaquina,
 
 function resumen(c: EstadoCentro) {
   if (c.tipo === 'externo') return `${c.en_proceso} en el proveedor · ${c.en_cola} listos para enviar · ${c.en_camino} por llegar`;
-  const quien = c.tipo === 'programacion' ? `${c.recursos.length} programador(es)` : `${c.recursos.length} máquinas`;
-  return `${c.horas_cola} h listas o en proceso · ${c.horas_total} h en total · ${c.capacidad_horas_dia} h/día entre ${quien}`;
+  const n = c.recursos.length;
+  const quien = c.tipo === 'programacion' ? `${n} programador${n === 1 ? '' : 'es'}`
+    : c.tipo === 'puesto' ? `${n} puesto${n === 1 ? '' : 's'}` : `${n} máquina${n === 1 ? '' : 's'}`;
+  return `${c.horas_cola} h listas o en proceso · ${c.horas_total} h en total · ${c.capacidad_horas_dia} h/día ${n === 1 ? 'en' : 'entre'} ${quien}`;
 }
 
 function FilaMaquina({ m, sel, onClick }: { m: EstadoMaquina; sel: boolean; onClick: () => void }) {
@@ -86,14 +89,15 @@ function FilaMaquina({ m, sel, onClick }: { m: EstadoMaquina; sel: boolean; onCl
   return (
     <button className={`fila ${sel ? 'sel' : ''}`} onClick={onClick}>
       <span className="punto" style={{ background: colorSemaforo(m.semaforo) }} />
-      <span className="nom">{m.nombre}</span>
-      <span className="num">{m.en_proceso.length ? '▶ ' + m.en_proceso.length : '—'}</span>
+      <span className="nom" title={m.en_proceso.length ? `${m.nombre}: ${m.en_proceso.length} en proceso` : m.nombre}>
+        {m.en_proceso.length > 0 && <i className="trabajando" aria-label="en proceso">▶ </i>}{m.nombre}
+      </span>
       <span className="num">{m.cola.length}{m.proximas.length ? <small> +{m.proximas.length}</small> : null}</span>
       <span className="carga-celda">
         <span className="carga"><i style={{ width: `${Math.min(m.dias_carga / 3, 1) * 100}%`, background: colorSemaforo(m.semaforo) }} /></span>
         <span className="num">{m.dias_carga} d</span>
       </span>
-      <span className="prox">{prox ? prox.so : '—'}</span>
+      <span className="prox" title={prox?.proyecto}>{prox ? soCorto(prox.proyecto) : '—'}</span>
     </button>
   );
 }

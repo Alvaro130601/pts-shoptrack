@@ -14,18 +14,23 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `shared/` tipos y **reglas de negocio puras**, sin I/O: `reglas.ts` (días hábiles, SLA, buffer, semáforo),
   `ruta.ts` (Zoho → SO → ítems → ruta; estados de cada paso) y `plan.ts` (reparto sugerido por capacidad,
   límites hacia atrás desde la entrega, semáforo, estado de la planta).
-- `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados.
+- `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados,
+  `zoho` lee la API y `excel` lee la exportación de tareas más reciente de `data/exportaciones/` (`server/fuentes/exportacion.ts`).
 - `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.
 
 ## Datos
 - `data/layout/planta_pts.json` — **posiciones reales** (m) de talleres y máquinas, exportadas del ensamble
   SolidWorks `Ensamble final de taller.SLDASM`. Proyectado a planta, sin la inclinación de 2.41° que tiene el CAD.
-  No editar a mano salvo correcciones puntuales; documentarlas en `docs/SPEC.md#layout`.
+  No editar a mano salvo correcciones puntuales; documentarlas en `docs/SPEC.md#layout`. Agregadas a mano:
+  Rectificadoras #1 y #2 al fondo del Taller #1 (no están en el CAD; posición aproximada).
 - `config/maquinas.json` — máquinas: proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
-- `config/centros.json` — procesos (Equipo asignado en Zoho) → máquinas que los hacen; programadores; proveedores.
+- `config/centros.json` — procesos (Equipo asignado en Zoho, o `tareas_zoho` = patrones del nombre de la tarea si no
+  trae equipo) → máquinas que los hacen; puestos manuales (grabado, limpieza); programadores; proveedores.
   **Propuesta por confirmar con Alvaro.**
 - `config/zoho-mapeo.json` — cómo se leen proyectos, ítems, tareas y estados de Zoho (`lectura`). **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
+- `data/exportaciones/` — exportaciones de Zoho a Excel con **datos reales: no se suben** (`.gitignore`). Formato y
+  límites en `docs/ZOHO.md#exportación-a-excel`.
 
 ## Proceso real (ver `docs/PROCESO.md`; visto en SO-10664-MCV-1)
 - Un SO (proyecto) tiene **ítems** = listas de tareas `Ítem <línea> (<cantidad> unidades)`. Cada ítem tiene su
@@ -71,3 +76,7 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   supone que llega en 3 días hábiles (SLA). Un SO con ensamble y sin servicio externo lleva buffer 2 (regla
   actual; por SLA serían 3): confirmar con Alvaro.
 - Etiquetas se traslapan en zonas densas (Taller #3): falta LOD / agrupación.
+- La exportación a Excel no trae lista de tareas, equipo ni fecha de entrega: los ítems se deducen del orden
+  ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Ver `docs/ZOHO.md`.
+- Horno: tratamiento y revenido se planifican uno por uno (24 h/día), sin lotes. Grabado y limpieza: 1 puesto de
+  8 h/día cada uno, fuera del plano. Por confirmar con Alvaro (`docs/PROCESO.md` §7).

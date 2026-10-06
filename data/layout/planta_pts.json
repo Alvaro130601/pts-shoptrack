@@ -7,7 +7,8 @@
   "Taller #4 no trae contorno: es aproximado.",
   "Cortadora láser no tiene relaciones de posición en el CAD; su posición puede no ser la real.",
   "proceso_sugerido es una suposición por nombre: confirmar contra Zoho.",
-  "RACK MORADO-1 de primer nivel choca con SVM 4100-3 en el CAD; se excluyó del layout."
+  "RACK MORADO-1 de primer nivel choca con SVM 4100-3 en el CAD; se excluyó del layout.",
+  "Rectificadoras #1 y #2 no están en el CAD: agregadas a mano al fondo de Taller #1 (posición aproximada, 6-oct-2026)."
  ],
  "talleres": [
   {
@@ -1752,6 +1753,72 @@
    "nombre": "Rack de barras",
    "id": "rack-de-barras-4",
    "taller": "taller-3"
+  },
+  {
+   "px": 38.0,
+   "py": 20.2,
+   "w": 2.2,
+   "d": 1.6,
+   "h": 1.9,
+   "yaw": 3.1416,
+   "footprint": [
+    [
+     39.1,
+     21.0
+    ],
+    [
+     36.9,
+     21.0
+    ],
+    [
+     36.9,
+     19.4
+    ],
+    [
+     39.1,
+     19.4
+    ]
+   ],
+   "cad": "No está en el CAD: agregada a mano (posición aproximada)",
+   "cad_path": "",
+   "kind": "maquina",
+   "nombre": "Rectificadora #1",
+   "proceso_sugerido": "Rectificado",
+   "id": "rectificadora-1",
+   "taller": "taller-1"
+  },
+  {
+   "px": 41.6,
+   "py": 20.2,
+   "w": 2.2,
+   "d": 1.6,
+   "h": 1.9,
+   "yaw": 3.1416,
+   "footprint": [
+    [
+     42.7,
+     21.0
+    ],
+    [
+     40.5,
+     21.0
+    ],
+    [
+     40.5,
+     19.4
+    ],
+    [
+     42.7,
+     19.4
+    ]
+   ],
+   "cad": "No está en el CAD: agregada a mano (posición aproximada)",
+   "cad_path": "",
+   "kind": "maquina",
+   "nombre": "Rectificadora #2",
+   "proceso_sugerido": "Rectificado",
+   "id": "rectificadora-2",
+   "taller": "taller-1"
   }
  ]
 }

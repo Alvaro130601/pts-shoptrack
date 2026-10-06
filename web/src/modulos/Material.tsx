@@ -10,7 +10,7 @@ export function Material({ sos, onSO, onPaso, onCerrar }: {
   const lista = sos.flatMap(so => so.items.flatMap(i => {
     const paso = i.ruta.find(o => o.tipo === 'material' && o.estado !== 'hecha');
     return paso ? [{ so, i, paso }] : [];
-  })).sort((a, b) => (a.paso.limite ?? '9999').localeCompare(b.paso.limite ?? '9999') || a.so.so.localeCompare(b.so.so));
+  })).sort((a, b) => (a.paso.limite ?? '9999').localeCompare(b.paso.limite ?? '9999') || a.so.nombre.localeCompare(b.so.nombre, 'es', { numeric: true }));
 
   return (
     <Cajon titulo="Material" sub="Ítems que esperan material, del más urgente al menos. El plan supone que llega en 3 días hábiles." onCerrar={onCerrar}>

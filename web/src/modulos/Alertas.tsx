@@ -16,6 +16,7 @@ export function Alertas({ sos, pestana, onPestana, onSO, onPaso, onCerrar }: {
   const de = (s: Pestana) => abiertos.filter(x => x.i.semaforo === s)
     .sort((a, b) => holgura(a.i) - holgura(b.i) || a.so.fecha_entrega.localeCompare(b.so.fecha_entrega));
   const lista = de(pestana);
+  const sinFechas = abiertos.length > 0 && !abiertos.some(x => x.i.limite);
 
   return (
     <Cajon titulo="Alertas" sub="Ítems que con el plan actual no llegan, o llegan justos, a su entrega" onCerrar={onCerrar}
@@ -30,7 +31,10 @@ export function Alertas({ sos, pestana, onPestana, onSO, onPaso, onCerrar }: {
         </div>
       }>
       {lista.map(({ so, i }) => <FilaItem key={i.id} so={so} item={i} onAbrir={() => onSO(so.id)} onPaso={onPaso} />)}
-      {!lista.length && <p className="vacio">{pestana === 'rojo' ? 'Ningún ítem atrasado.' : 'Ningún ítem en riesgo.'}</p>}
+      {!lista.length && (sinFechas
+        ? <p className="vacio">Los SO no traen fecha de entrega, así que no se puede saber qué llega tarde. Con la fecha final
+            de cada proyecto (Zoho en vivo o una exportación que la incluya) aparece aquí el semáforo.</p>
+        : <p className="vacio">{pestana === 'rojo' ? 'Ningún ítem atrasado.' : 'Ningún ítem en riesgo.'}</p>)}
     </Cajon>
   );
 }

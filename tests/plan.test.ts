@@ -126,11 +126,11 @@ describe('estado de la planta', () => {
   it('aparta equipos desconocidos y SO sin fecha sin romper el resto', () => {
     const e = plan(
       so('SO-8-OK', '2026-10-30', item(MATERIAL_OK(), t('H. Fresado CNC', 'Fresado CNC'))),
-      so('SO-8-RECT', '2026-10-30', item(MATERIAL_OK(), t('H. Rectificado', 'Rectificado'))),
+      so('SO-8-LAP', '2026-10-30', item(MATERIAL_OK(), t('H. Lapeado', 'Lapeado'))),
       so('SO-8-SINFECHA', '', item(MATERIAL_OK(), t('H. Fresado CNC', 'Fresado CNC'))),
     );
-    expect(e.sin_centro.map(o => o.equipo_zoho)).toEqual(['Rectificado']);
-    expect(e.avisos.some(a => a.includes('Rectificado'))).toBe(true);
+    expect(e.sin_centro.map(o => o.equipo_zoho)).toEqual(['Lapeado']);
+    expect(e.avisos.some(a => a.includes('Lapeado'))).toBe(true);
     expect(e.avisos.some(a => a.includes('SO-8-SINFECHA'))).toBe(true);
     const sinFecha = ops(e, 'SO-8-SINFECHA')[0];
     expect(sinFecha.maquina_id).toBeTruthy();       // igual ocupa capacidad

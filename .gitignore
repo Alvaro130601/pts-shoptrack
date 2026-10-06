@@ -3,3 +3,6 @@ dist
 .env
 *.log
 .cache
+# Exportaciones de Zoho: datos reales de órdenes, no se suben
+data/exportaciones/*
+!data/exportaciones/LEEME.md

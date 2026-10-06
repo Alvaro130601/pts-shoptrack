@@ -32,8 +32,8 @@ export function Leyenda({ maquinas, centros, onCerrar }: { maquinas: EstadoMaqui
           <dd>Holgura de 1 día hábil o menos.</dd>
           <dt><span className="punto" style={{ background: C.rojo }} /> Atrasada</dt>
           <dd>El límite ya pasó, o con el plan actual termina después del límite.</dd>
-          <dt><span className="punto" style={{ background: C.libre }} /> Libre</dt>
-          <dd>Máquina sin trabajo en proceso ni en cola.</dd>
+          <dt><span className="punto" style={{ background: C.libre }} /> Gris</dt>
+          <dd>Máquina libre, o trabajo de un SO sin fecha de entrega (sin fecha no hay semáforo).</dd>
         </dl>
         <p className="nota">
           El límite de cada paso se calcula hacia atrás desde la entrega: calidad y envío (2 días hábiles, 3 con ensamble y
@@ -66,7 +66,8 @@ export function Leyenda({ maquinas, centros, onCerrar }: { maquinas: EstadoMaqui
               <dt>{c.nombre}</dt>
               <dd>{c.tipo === 'maquina' ? c.recursos.map(id => nombres.get(id) ?? id).join(', ') || 'Sin máquinas'
                 : c.tipo === 'programacion' ? `${c.recursos.length} programador(es), ${c.capacidad_horas_dia} h/día`
-                  : 'Proveedores, fuera de planta'}</dd>
+                  : c.tipo === 'puesto' ? `${c.recursos.length} puesto(s) fuera del plano, ${c.capacidad_horas_dia} h/día`
+                    : 'Proveedores, fuera de planta'}</dd>
             </div>
           ))}
         </dl>

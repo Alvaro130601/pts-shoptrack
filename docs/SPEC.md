@@ -65,3 +65,8 @@ Fuente: `Ensamble final de taller.SLDASM` (guardado 2026-07-22). Notas de la rev
 - RACK MORADO-1 de primer nivel choca con SVM 4100 #2: excluido.
 - `proceso_sugerido` sale del nombre del componente; confirmar (Fresadoras/Tornos del Taller #2 ¿convencionales?,
   SYL, E350, H32Z sin identificar).
+- **Rectificadoras #1 y #2** (6-oct-2026): no están en el CAD. Alvaro: "son dos máquinas de rectificado, al fondo
+  del Taller #1". Se agregaron a mano en el extremo del Taller #1 opuesto a la guillotina y el horno (py ≈ 20,2 m,
+  contra la pared, donde el CAD deja el espacio libre), con medidas genéricas de rectificadora plana
+  (2,2 × 1,6 × 1,9 m) y el frente hacia el taller. Por confirmar: posición exacta, orientación y cuál es la
+  *centerless* (en Zoho hay tareas "Rectificadora (Centerless)").

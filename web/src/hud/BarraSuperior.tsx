@@ -16,8 +16,11 @@ interface Props {
   refBusqueda: RefObject<HTMLInputElement | null>;
 }
 
+const SIN_FECHAS = 'Los SO no traen fecha de entrega: no hay semáforo';
+
 export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidencias, procesos, proceso, onProceso, onAbrir, refBusqueda }: Props) {
   const k = estado?.kpis;
+  const sinFechas = !!k && k.items_abiertos > 0 && k.items_con_fecha === 0;
   const avisos = estado?.avisos ?? [];
   const [verAvisos, setVerAvisos] = useState(false);
   const refAvisos = useRef<HTMLDivElement>(null);
@@ -64,11 +67,11 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
           <button className="kpi" onClick={() => onAbrir('material')} title="Ítems esperando material">
             <b className={k.esperando_material ? 'morado' : ''}>{k.esperando_material}</b><span>sin material</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('alertas', 'rojo')} title="Ítems que no llegan a la entrega">
-            <b className={k.atrasados ? 'rojo' : 'verde'}>{k.atrasados}</b><span>atrasados</span>
+          <button className="kpi" onClick={() => onAbrir('alertas', 'rojo')} title={sinFechas ? SIN_FECHAS : 'Ítems que no llegan a la entrega'}>
+            <b className={sinFechas ? '' : k.atrasados ? 'rojo' : 'verde'}>{sinFechas ? '—' : k.atrasados}</b><span>atrasados</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('alertas', 'amarillo')} title="Ítems con 1 día de holgura o menos">
-            <b className={k.en_riesgo ? 'amarillo' : 'verde'}>{k.en_riesgo}</b><span>en riesgo</span>
+          <button className="kpi" onClick={() => onAbrir('alertas', 'amarillo')} title={sinFechas ? SIN_FECHAS : 'Ítems con 1 día de holgura o menos'}>
+            <b className={sinFechas ? '' : k.en_riesgo ? 'amarillo' : 'verde'}>{sinFechas ? '—' : k.en_riesgo}</b><span>en riesgo</span>
           </button>
         </div>
       )}
@@ -89,12 +92,31 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
             </div>
           )}
         </div>
-        <div className={`fuente ${estado?.fuente ?? ''}`} title={estado ? `Actualizado ${new Date(estado.actualizado).toLocaleString('es-CR')}` : ''}>
-          <span className="punto-vivo" />
-          {estado ? (estado.fuente === 'zoho' ? 'Zoho' : 'Simulado') : 'Cargando…'}
-          {estado && <span className="hora">{new Date(estado.actualizado).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}</span>}
-        </div>
+        <Fuente estado={estado} />
       </div>
     </header>
+  );
+}
+
+const hora = (iso: string) => new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
+/** De dónde vienen los datos: Zoho en vivo, una exportación a Excel (con su fecha) o datos simulados. */
+function Fuente({ estado }: { estado: EstadoPlanta | null }) {
+  if (!estado) return <div className="fuente"><span className="punto-vivo" />Cargando…</div>;
+  const leido = `Leído ${new Date(estado.actualizado).toLocaleString('es-CR')}`;
+  if (estado.fuente === 'excel') {
+    const de = estado.datos_de ?? estado.actualizado;
+    return (
+      <div className="fuente excel" title={`Exportación de Zoho del ${new Date(de).toLocaleString('es-CR')} · ${leido}`}>
+        <span className="punto-vivo" />Exportación
+        <span className="hora">{new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })} {hora(de)}</span>
+      </div>
+    );
+  }
+  return (
+    <div className={`fuente ${estado.fuente}`} title={leido}>
+      <span className="punto-vivo" />{estado.fuente === 'zoho' ? 'Zoho' : 'Simulado'}
+      <span className="hora">{hora(estado.actualizado)}</span>
+    </div>
   );
 }

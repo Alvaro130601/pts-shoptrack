@@ -41,10 +41,43 @@ Consecuencias para la lectura:
 | ¿La fase del SO es el estado del proyecto? ¿Dónde está el cliente? | `zoho-mapeo.json → fase / cliente` |
 | Rutas y forma de respuesta v3 (`/api/v3/portal/{id}/projects`, `/projects/{id}/tasklists`, `/projects/{id}/tasks`, paginación) | `server/fuentes/zoho.ts` (marcado `VERIFICAR`) |
 
+## Exportación a Excel
+Mientras no se pueda leer la API, ShopTrack lee la exportación de tareas de Zoho Projects (`DATA_SOURCE=excel`).
+El `.xlsx` se guarda en `data/exportaciones/` (no se sube al repositorio) y se usa el más reciente; `EXPORT_PATH`
+cambia la carpeta o apunta a un archivo. Código: `server/fuentes/exportacion.ts`.
+
+Observado en `task_export_1613834000021378010.xlsx` (6-oct-2026): una hoja "Todos los proyectos" con 538 tareas
+abiertas de 122 SO.
+
+| Columna | Ejemplo | Uso |
+|---|---|---|
+| Nombre de Tarea | `H. Erosionado (#1)`, `H. Retrabajo set Up` | Operación; el proceso sale del nombre (`tareas_zoho` en `config/centros.json`) |
+| Horas de trabajo | `09:00` (texto hh:mm) | Horas estimadas (total de la tarea) |
+| Estado personalizado | `Pendiente Operación`, `Material Pendiente`, `En Producción` | Estado de la tarea |
+| Diferencia | `(+) 09:00`, `(-) 04:30`, `00:00` | Estimadas − registradas: de aquí salen las horas registradas |
+| Nombre del proyecto | `SO-11338-SMT-1` | SO; el cliente es el código del medio (`SMT`). Un mismo número de SO puede tener varios proyectos (`-1`, `-2`…) |
+
+Lo que **no** trae y cómo se suple:
+- **Lista de tareas (ítem).** Los ítems se deducen del orden de las filas ("Grupo 1, 2…"): empieza otro grupo cuando
+  se repite el nombre de una tarea (`(#1)` y `(#2)` son pasos de la misma ruta), cuando después de un acabado
+  (servicio externo, grabado, limpieza) viene trabajo de máquina o programación, o cuando cambia el estado
+  `Material Pendiente` (se ponía en todas las tareas de un ítem). Programación y Set Up se van con la operación
+  que preparan. Ensamble, calidad y envío van a la lista Cierre del SO.
+- **Equipo asignado.** El proceso sale del nombre: `Rectificado (Balony)` y `Rectificadora (Centerless)` → Rectificado;
+  `Tratamiento térmico` y `Revenido` → horno; `Flash Chrome`, `Anodizado`, `Electroless`, `Black Oxide` → servicio
+  externo; `Grabado`, `Limpieza`, `Rebabeo` → puestos manuales; `Retrabajo <proceso>` → ese proceso.
+- **Fecha de entrega.** La exportación de tareas no trae la fecha del proyecto: no hay semáforo y el plan reparte por
+  número de SO (el más viejo primero).
+- **Tareas cerradas.** Solo vienen las abiertas: la primera tarea abierta de cada ítem queda en cola.
+
+Para la próxima exportación conviene agregar **Lista de tareas** y **Equipo asignado** si la vista lo permite: con
+ellas se usan los ítems y procesos exactos. Las columnas se reconocen por el título, sin tildes ni mayúsculas (ver
+`COLUMNAS` en `server/fuentes/exportacion.ts`); el orden no importa.
+
 ## Acceso desde el entorno de desarrollo
 El entorno de nube donde se desarrolla bloquea `*.zoho.com` (`www`, `projects`, `accounts`, `projectsapi`).
-Para leer datos reales hay que agregar esos dominios en Network access del entorno, o correr la lectura en
-una PC de PTS.
+Para leer datos reales hay que agregar esos dominios en Network access del entorno, correr la lectura en
+una PC de PTS, o usar la exportación a Excel.
 
 ## Rendimiento
 ~90 SO activos × (listas + tareas) → unas 180 llamadas por refresco. Cache de 5 min (`ZOHO_REFRESH_SECONDS`).

@@ -51,13 +51,13 @@ describe('estructura SO → ítems → ruta', () => {
       t('H. Progrmación', 'Torno CNC'),
       t('H. Torno CNC', 'Torno CNC'),
       t('H. Anodizado', 'No Requiere', 'Pendiente', 0),
-      t('H. Rectificado', 'Rectificado'),
+      t('H. Lapeado', 'Lapeado'),
     ]));
     expect(sos[0].items[0].ruta.map(o => [o.tipo, o.centro_id, o.proceso])).toEqual([
       ['programacion', 'programacion', 'Programación'],
       ['maquina', 'torno-cnc', 'Torno CNC'],
       ['externo', 'externo', 'Servicio externo'],
-      ['maquina', null, 'Rectificado'],
+      ['maquina', null, 'Lapeado'],
     ]);
     expect(sos[0].requiere_servicio_externo).toBe(true);
   });

@@ -11,6 +11,10 @@ export const norm = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 /** "H. Fresado CNC" → "fresado cnc" */
 const sinH = (nombre: string) => norm(nombre).replace(/^h\s*\.\s*/, '');
+/** Nombre para reconocer el proceso: sin "H.", sin el número de operación "(#2)" y sin "Retrabajo".
+ *  "H. Retrabajo Erosionado (#2)" → "erosionado" */
+export const baseTarea = (nombre: string) =>
+  sinH(nombre).replace(/\s*\(#\d+\)\s*$/, '').replace(/^retrabajo\s+(de\s+)?/, '').trim();
 /** "H. Fresado CNC" → "Fresado CNC" */
 export const nombreCorto = (nombre: string) => nombre.replace(/^\s*H\s*\.\s*/i, '').trim();
 
@@ -34,46 +38,60 @@ export function depende(tipo: TipoPaso, previo: TipoPaso): boolean {
 
 const esCondicion = (t: TipoPaso) => t === 'material' || t === 'planos';
 
-function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
-  const re = (p: string) => new RegExp(p, 'i');
-  const R = {
+const re = (p: string) => new RegExp(p, 'i');
+
+/** Expresiones de config/zoho-mapeo.json → lectura, ya compiladas. */
+function expresiones(reglas: ReglasLectura) {
+  return {
     item: re(reglas.item_regex), cierre: re(reglas.cierre_regex),
     programacion: re(reglas.tareas.programacion), set_up: re(reglas.tareas.set_up),
     material: re(reglas.tareas.material), planos: re(reglas.tareas.planos),
     ensamble: re(reglas.tareas.ensamble), calidad: re(reglas.tareas.calidad), envio: re(reglas.tareas.envio),
   };
+}
+
+/** Estado de Zoho → pendiente / en proceso / cerrada. Los estados viejos tipo "Material Pendiente" marcan que al
+ *  ítem le falta material. Se compara por prefijo ("Pendiente Op…" entra en "Pendiente"). `conocido` = false si
+ *  no está en ninguna lista (se trata como pendiente). */
+export function leerEstado(crudo: string, estados: ReglasLectura['estados']): { estado: EstadoTarea; falta_material: boolean; conocido: boolean } {
+  const n = norm(crudo);
+  const en = (lista: string[]) => lista.some(x => norm(x) && n.startsWith(norm(x)));
+  if (en(estados.cerrada)) return { estado: 'cerrada', falta_material: false, conocido: true };
+  if (en(estados.en_proceso)) return { estado: 'en_proceso', falta_material: false, conocido: true };
+  if (en(estados.material_pendiente)) return { estado: 'pendiente', falta_material: true, conocido: true };
+  return { estado: 'pendiente', falta_material: false, conocido: en(estados.pendiente) || !crudo.trim() };
+}
+
+/** Qué paso es una tarea y a qué centro va: por el equipo asignado o, si no trae (p. ej. en una exportación a
+ *  Excel), por su nombre (`tareas_zoho` de config/centros.json). `enCierre`: la tarea está en la lista Cierre. */
+export function crearClasificador(reglas: ReglasLectura, centros: CentroConfig[]) {
+  const R = expresiones(reglas);
   const porEquipo = new Map<string, CentroConfig>();
   for (const c of centros) for (const e of c.equipos_zoho) porEquipo.set(norm(e), c);
+  const porNombre = centros.flatMap(c => (c.tareas_zoho ?? []).map(p => ({ re: re(p), centro: c })));
   const programacion = centros.find(c => c.tipo === 'programacion') ?? null;
-  const desconocidos = new Set<string>();
-  const est = {
-    cerrada: reglas.estados.cerrada.map(norm), en_proceso: reglas.estados.en_proceso.map(norm),
-    material: reglas.estados.material_pendiente.map(norm), pendiente: reglas.estados.pendiente.map(norm),
-  };
-
-  /** Estado de Zoho → pendiente / en proceso / cerrada. Los estados viejos tipo "Material Pendiente" marcan
-   *  que al ítem le falta material. Se compara por prefijo ("Pendiente Op…" entra en "Pendiente"). */
-  function estadoTarea(crudo: string): { estado: EstadoTarea; falta_material: boolean } {
-    const n = norm(crudo);
-    const en = (lista: string[]) => lista.some(x => x && n.startsWith(x));
-    if (en(est.cerrada)) return { estado: 'cerrada', falta_material: false };
-    if (en(est.en_proceso)) return { estado: 'en_proceso', falta_material: false };
-    if (en(est.material)) return { estado: 'pendiente', falta_material: true };
-    if (!en(est.pendiente) && crudo.trim()) desconocidos.add(crudo.trim());
-    return { estado: 'pendiente', falta_material: false };
-  }
-
-  function clasificar(t: TareaCruda, enCierre: boolean): { tipo: TipoPaso; centro: CentroConfig | null } {
-    const n = sinH(t.nombre);
+  return (t: Pick<TareaCruda, 'nombre' | 'equipo'>, enCierre = false): { tipo: TipoPaso; centro: CentroConfig | null } => {
+    const n = baseTarea(t.nombre);
     if (R.material.test(n)) return { tipo: 'material', centro: null };
     if (R.planos.test(n)) return { tipo: 'planos', centro: null };
     if (R.programacion.test(n)) return { tipo: 'programacion', centro: programacion };
     if (enCierre || R.ensamble.test(n) || R.calidad.test(n) || R.envio.test(n)) return { tipo: 'cierre', centro: null };
-    const centro = t.equipo ? porEquipo.get(norm(t.equipo)) ?? null : null;
+    const centro = (t.equipo ? porEquipo.get(norm(t.equipo)) : undefined) ?? porNombre.find(x => x.re.test(n))?.centro ?? null;
     if (centro?.tipo === 'externo') return { tipo: 'externo', centro };
     if (centro?.tipo === 'programacion') return { tipo: 'programacion', centro };
     return { tipo: 'maquina', centro };
-  }
+  };
+}
+
+function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
+  const R = expresiones(reglas);
+  const clasificar = crearClasificador(reglas, centros);
+  const desconocidos = new Set<string>();
+  const estadoTarea = (crudo: string) => {
+    const e = leerEstado(crudo, reglas.estados);
+    if (!e.conocido) desconocidos.add(crudo.trim());
+    return e;
+  };
 
   function proyecto(p: ProyectoCrudo): SO {
     const so = (p.nombre.match(/^\s*SO-\d+/i)?.[0] ?? p.nombre.split(/\s/)[0]).trim().toUpperCase();
@@ -85,7 +103,7 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
       else items.push(item(lista, base));
     }
     const todas = [...items.flatMap(i => i.ruta), ...cierre];
-    const requiere_ensamble = p.listas.some(l => l.tareas.some(t => R.ensamble.test(sinH(t.nombre))));
+    const requiere_ensamble = p.listas.some(l => l.tareas.some(t => R.ensamble.test(baseTarea(t.nombre))));
     const requiere_servicio_externo = todas.some(o => o.tipo === 'externo');
     if (cierre.length) estadosRuta(cierre, items.flatMap(i => i.ruta));
     return {
@@ -135,7 +153,9 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
     };
     for (let i = 0; i < crudas.length; i++) {
       const x = crudas[i], sig = crudas[i + 1];
-      const esSetUp = x.tipo === 'maquina' && R.set_up.test(sinH(x.t.nombre));
+      const esSetUp = x.tipo === 'maquina' && R.set_up.test(baseTarea(x.t.nombre));
+      // Un Set Up sin equipo es la preparación de la máquina del paso siguiente.
+      if (esSetUp && !x.centro && sig?.tipo === 'maquina') x.centro = sig.centro;
       if (esSetUp && sig && sig.tipo === 'maquina' && sig.centro && sig.centro.id === x.centro?.id) {
         ops.push(unir(nueva(x), nueva(sig)));
         i++;
@@ -168,6 +188,8 @@ export function horasPendientes(estimadas: number, registradas: number, estado: 
   if (estado === 'cerrada') return 0;
   const resto = Math.round((estimadas - registradas) * 10) / 10;
   if (estado === 'en_proceso') return Math.max(resto, Math.min(0.5, estimadas || 0.5));
+  // Pendiente pero con horas registradas por encima de lo estimado: ya se trabajó y no se cerró.
+  if (registradas > 0 && resto <= 0) return Math.min(0.5, estimadas || 0.5);
   return Math.max(resto, 0);
 }
 

@@ -11,7 +11,7 @@ export function FilaItem({ so, item, nota, onAbrir, onPaso }:
       <span className="barra-sem" style={{ background: colorSemaforo(item.semaforo) }} />
       <div className="fi-cuerpo">
         <button className="fi-cab" onClick={onAbrir} disabled={!onAbrir} title="Ver el SO completo">
-          <b className="so">{so.so}</b>
+          <b className="so">{so.nombre}</b>
           <span className="maq">{item.nombre}{item.cantidad ? ` · ${item.cantidad} u` : ''}</span>
           <span className="cli">{so.cliente}</span>
         </button>

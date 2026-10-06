@@ -5,9 +5,9 @@
    "id": "horno",
    "nombre": "Horno",
    "taller": "taller-1",
-   "proceso": "Tratamiento térmico?",
+   "proceso": "Tratamiento térmico y revenido",
    "familia": "horno",
-   "capacidad_horas_dia": 8,
+   "capacidad_horas_dia": 24,
    "es_centro_mecanizado": false,
    "activa": true
   },
@@ -257,6 +257,26 @@
    "taller": null,
    "proceso": "Corte láser",
    "familia": "laser",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "rectificadora-1",
+   "nombre": "Rectificadora #1",
+   "taller": "taller-1",
+   "proceso": "Rectificado",
+   "familia": "rectificadora",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "rectificadora-2",
+   "nombre": "Rectificadora #2",
+   "taller": "taller-1",
+   "proceso": "Rectificado",
+   "familia": "rectificadora",
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true

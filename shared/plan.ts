@@ -37,6 +37,7 @@ export interface DatosPlanta {
   centros: CentroConfig[];
   reglas: ReglasLectura;
   fuente: EstadoPlanta['fuente'];
+  datos_de?: string;          // fecha del archivo exportado (fuente excel)
   hoy: string;
   feriados: Set<string>;
   avisos?: string[];
@@ -92,18 +93,20 @@ export function armarEstado(d: DatosPlanta): EstadoPlanta {
     avisos.push(`${sin_centro.length} operaciones con un equipo que no corresponde a ningún centro: ${equipos.slice(0, 5).join(', ')}${equipos.length > 5 ? '…' : ''} (revisar config/centros.json)`);
   }
   const sinFecha = sos.filter(s => !esFechaISO(s.fecha_entrega)).map(s => s.nombre);
-  if (sinFecha.length) avisos.push(`${sinFecha.length} SO sin fecha de entrega válida, se planifican al final y sin semáforo: ${sinFecha.slice(0, 5).join(', ')}${sinFecha.length > 5 ? '…' : ''}`);
+  if (sinFecha.length === sos.length && sos.length) avisos.push('Ningún SO trae fecha de entrega: el plan reparte la carga por número de SO (el más viejo primero) y no hay semáforo');
+  else if (sinFecha.length) avisos.push(`${sinFecha.length} SO sin fecha de entrega válida, se planifican al final y sin semáforo: ${sinFecha.slice(0, 5).join(', ')}${sinFecha.length > 5 ? '…' : ''}`);
   if (estados_desconocidos.length) avisos.push(`Estados de tarea no reconocidos (se tratan como Pendiente): ${estados_desconocidos.join(', ')}`);
   for (const c of centros) {
     if (c.tipo !== 'externo' && c.recursos.length && c.en_proceso > c.recursos.length) {
-      avisos.push(`${c.nombre}: ${c.en_proceso} operaciones en proceso y solo ${c.recursos.length} ${c.tipo === 'programacion' ? 'programador(es)' : 'máquina(s)'}; revisar estados en Zoho`);
+      const quien = c.tipo === 'programacion' ? 'programador(es)' : c.tipo === 'puesto' ? 'puesto(s)' : 'máquina(s)';
+      avisos.push(`${c.nombre}: ${c.en_proceso} operaciones en proceso y solo ${c.recursos.length} ${quien}; revisar estados en Zoho`);
     }
   }
   const sinHoras = ops.filter(o => (o.tipo === 'maquina' || o.tipo === 'programacion') && o.horas_totales <= 0).length;
   if (sinHoras) avisos.push(`${sinHoras} operaciones sin horas estimadas: el plan las cuenta como 0 h`);
 
   return {
-    actualizado: new Date().toISOString(), fuente: d.fuente, hoy: d.hoy,
+    actualizado: new Date().toISOString(), fuente: d.fuente, datos_de: d.datos_de, hoy: d.hoy,
     centros, maquinas, sos, sin_centro,
     kpis: {
       so_abiertos: sos.filter(s => s.etapa !== 'Terminado').length,
@@ -113,6 +116,7 @@ export function armarEstado(d: DatosPlanta): EstadoPlanta {
       esperando_material: items.filter(i => i.ruta.some(o => o.tipo === 'material' && o.estado !== 'hecha')).length,
       atrasados: items.filter(i => i.semaforo === 'rojo').length,
       en_riesgo: items.filter(i => i.semaforo === 'amarillo').length,
+      items_con_fecha: items.filter(i => i.limite).length,
       horas_cola: round1(centros.filter(c => c.tipo === 'maquina').reduce((s, c) => s + c.horas_cola, 0)),
     },
     avisos,
@@ -132,7 +136,7 @@ export function planificar(sos: SO[], centros: CentroConfig[], maquinas: Maquina
         if (!r) porId.set(id, r = { id, cap: Math.max(activas.get(id)!.capacidad_horas_dia, 0.1), ocupado: [], carga: 0 });
         return r;
       }));
-    } else if (c.tipo === 'programacion') {
+    } else if (c.tipo === 'programacion' || c.tipo === 'puesto') {
       recursos.set(c.id, Array.from({ length: Math.max(c.personas ?? 1, 1) }, (_, k) => {
         const r: Recurso = { id: `${c.id}-${k + 1}`, cap: Math.max(c.horas_dia ?? 8, 0.1), ocupado: [], carga: 0 };
         porId.set(r.id, r);
@@ -142,22 +146,23 @@ export function planificar(sos: SO[], centros: CentroConfig[], maquinas: Maquina
   }
   const centroPorId = new Map(centros.map(c => [c.id, c]));
 
-  /** Duración en días hábiles. Máquina y programación: horas ÷ capacidad diaria del recurso (8 h si no hay centro).
-   *  Servicio externo, material, planos y cierre: su SLA (ensamble, calidad y envío = 1 día cada uno). */
+  /** Duración en días hábiles. Máquina, puesto y programación: horas ÷ capacidad diaria del recurso (8 h si no hay
+   *  centro). Servicio externo, material y planos: su SLA. Cierre (ensamble, calidad, envío): 1 día, o sus horas
+   *  a 8 h por día si son más. */
   const dias = (op: Operacion, r?: Recurso): number => {
     switch (op.tipo) {
       case 'maquina': case 'programacion': return op.horas_pendientes / (r?.cap ?? 8);
       case 'externo': return centroPorId.get(op.centro_id ?? '')?.dias ?? SLA.servicio_externo;
       case 'material': return SLA.material;
       case 'planos': return SLA.planos;
-      case 'cierre': return 1;
+      case 'cierre': return Math.max(1, op.horas_pendientes / 8);
     }
   };
 
   // Prioridad: la fecha en que deben terminar las rutas del SO (entrega − cierre); la fecha final manda.
   const finRutas = new Map(sos.map(s => [s.id, esFechaISO(s.fecha_entrega) ? sumarHabiles(s.fecha_entrega, -diasDeCierre(s), feriados) : '9999-12-31']));
   const orden = [...sos].sort((a, b) =>
-    finRutas.get(a.id)!.localeCompare(finRutas.get(b.id)!) || a.fecha_entrega.localeCompare(b.fecha_entrega) || a.nombre.localeCompare(b.nombre));
+    finRutas.get(a.id)!.localeCompare(finRutas.get(b.id)!) || a.fecha_entrega.localeCompare(b.fecha_entrega) || a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
 
   const t = new Map<string, [number, number]>();
   const colocar = (op: Operacion, desde: number) => {

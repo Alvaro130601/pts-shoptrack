@@ -8,6 +8,7 @@ export const NOMBRE_FAMILIA: Record<FamiliaMaquina, string> = {
   torno_suizo: 'Torno suizo',
   edm_hilo: 'Electroerosión por hilo',
   laser: 'Cortadora láser',
+  rectificadora: 'Rectificadora',
   horno: 'Horno',
   dobladora: 'Dobladora',
   guillotina: 'Guillotina',

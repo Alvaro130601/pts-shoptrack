@@ -23,9 +23,10 @@ export function estadoLargo(o: Operacion): string {
   return ESTADO_OP[o.estado];
 }
 
-/** Nombre corto de un paso de la ruta: el proceso para máquina, "Programación", "Anodizado", "Material"… */
+/** Nombre corto de un paso de la ruta: el de la tarea de máquina ("Revenido", "Rectificado (Balony)"; con Set Up,
+ *  el del mecanizado), "Programación", "Material", "Anodizado"… */
 export function etiquetaPaso(o: Operacion): string {
-  if (o.tipo === 'maquina') return o.proceso;
+  if (o.tipo === 'maquina') return nombreCorto(o.nombre.split(' + ').at(-1) ?? '') || o.proceso;
   if (o.tipo === 'programacion') return 'Programación';
   if (o.tipo === 'material') return 'Material';
   if (o.tipo === 'planos') return 'Planos';
@@ -35,3 +36,6 @@ export function etiquetaPaso(o: Operacion): string {
 /** "Ítem 23 · 3 u" */
 export const itemCorto = (o: { item: string; cantidad: number | null }) =>
   o.cantidad ? `${o.item} · ${o.cantidad} u` : o.item;
+
+/** "SO-11357-SMT-3" → "SO-11357-3": para columnas angostas (el cliente se muestra aparte). */
+export const soCorto = (proyecto: string) => proyecto.trim().replace(/^(SO-\d+)-[^-\s]+-(\w+)$/i, '$1-$2');
