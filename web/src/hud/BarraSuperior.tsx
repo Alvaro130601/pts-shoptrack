@@ -103,20 +103,23 @@ const hora = (iso: string) => new Date(iso).toLocaleTimeString('es-CR', { hour: 
 /** De dónde vienen los datos: Zoho en vivo, una exportación a Excel (con su fecha) o datos simulados. */
 function Fuente({ estado }: { estado: EstadoPlanta | null }) {
   if (!estado) return <div className="fuente"><span className="punto-vivo" />Cargando…</div>;
-  const leido = `Leído ${new Date(estado.actualizado).toLocaleString('es-CR')}`;
+  const de = estado.datos_de ?? estado.actualizado;
+  // En la página publicada: "leyendo Zoho…" mientras llega, o "sin Zoho" (el motivo está en los avisos).
+  const nota = estado.nota_fuente && <span className="nota">· {estado.nota_fuente}</span>;
   if (estado.fuente === 'excel') {
-    const de = estado.datos_de ?? estado.actualizado;
     return (
-      <div className="fuente excel" title={`Exportación de Zoho del ${new Date(de).toLocaleString('es-CR')} · ${leido}`}>
+      <div className="fuente excel" title={`Exportación de Zoho del ${new Date(de).toLocaleString('es-CR')}`}>
         <span className="punto-vivo" />Exportación
-        <span className="hora">{new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })} {hora(de)}</span>
+        <span className="hora">{new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })}{!nota && ` ${hora(de)}`}</span>
+        {nota}
       </div>
     );
   }
   return (
-    <div className={`fuente ${estado.fuente}`} title={leido}>
+    <div className={`fuente ${estado.fuente}`} title={`Leído ${new Date(de).toLocaleString('es-CR')}`}>
       <span className="punto-vivo" />{estado.fuente === 'zoho' ? 'Zoho' : 'Simulado'}
-      <span className="hora">{hora(estado.actualizado)}</span>
+      <span className="hora">{hora(de)}</span>
+      {nota}
     </div>
   );
 }

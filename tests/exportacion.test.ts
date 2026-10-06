@@ -133,6 +133,7 @@ describe('procesos por el nombre de la tarea (sin equipo asignado)', () => {
       'H. Retrabajo Erosionado', 'H. Rectificado (Balony)', 'H. Rectificadora (Centerless)', 'H. Tratamiento térmico',
       'H. Revenido', 'H. Doblado', 'H. Soldadura', 'H. Corte y soldadura', 'H. Grabado',
       'H. Limpieza y medición', 'H. Rebabeo', 'H. Flash Chrome', 'H. Anodizado', 'H. Electroless nykel', 'H. Black Oxide',
+      'H. Erosionado por penetración', 'H. Hole Popper',
     ];
     // Cada tarea en su propio SO para que el orden no mezcle ítems.
     const filas = nombres.flatMap((x, k) => hoja(`SO-${2000 + k}-ABC-1`, x));
@@ -142,6 +143,7 @@ describe('procesos por el nombre de la tarea (sin equipo asignado)', () => {
       'erosionado', 'rectificado', 'rectificado', 'tratamiento',
       'tratamiento', 'doblado', 'soldadura', 'soldadura', 'grabado',
       'limpieza', 'limpieza', 'externo', 'externo', 'externo', 'externo',
+      'externo', 'externo',
     ]);
   });
 

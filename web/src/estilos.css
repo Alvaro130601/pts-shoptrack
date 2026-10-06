@@ -74,6 +74,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .fuente { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px; background: #eef1fb; white-space: nowrap; }
 .fuente.zoho { background: #e4f6ee; color: #12734f; } .fuente.seed { background: #fff3e0; color: #8a5300; }
 .fuente.excel { background: #e8eefc; color: #2c46c9; } .fuente.excel .punto-vivo { animation: none; }
+.fuente .nota { font-weight: 500; opacity: .75; }
 .punto-vivo { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: latido 1.6s infinite; }
 .hora { font-family: var(--mono); font-weight: 500; opacity: .75; }
 @keyframes latido { 50% { opacity: .25; } }

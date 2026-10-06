@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { readSheet } from 'read-excel-file/universal';
-import { baseTarea, crearClasificador, leerEstado, norm } from '../../shared/ruta.ts';
+import { baseTarea, clienteDe, crearClasificador, leerEstado, norm } from '../../shared/ruta.ts';
 import type { CentroConfig, ListaCruda, ProyectoCrudo, ReglasLectura, TareaCruda } from '../../shared/tipos.ts';
 
 export interface Exportacion { proyectos: ProyectoCrudo[]; avisos: string[] }
@@ -19,7 +19,7 @@ const COLUMNAS = {
   diferencia: ['diferencia'],
   registradas: ['horas registradas', 'registros de tiempo'],
   lista: ['lista de tareas', 'nombre de la lista de tareas', 'lista'],
-  equipo: ['equipo asignado', 'equipo'],
+  equipo: ['equipo asignado', 'equipo asociado', 'equipo'],
 } as const;
 type Columna = keyof typeof COLUMNAS;
 
@@ -45,8 +45,7 @@ const texto = (v: unknown) => (v == null ? '' : String(v).trim());
 const slug = (nombre: string) => norm(nombre).replace(/^h\s*\.\s*/, '').replace(/[^a-z0-9#()]+/g, '-').replace(/^-+|-+$/g, '');
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
-/** Código del cliente en el nombre del proyecto: "SO-11338-SMT-1" → "SMT". */
-export const clienteDe = (proyecto: string) => proyecto.match(/^\s*SO-\d+-([^-\s]+)/i)?.[1]?.toUpperCase() ?? '';
+export { clienteDe };
 
 /** Filas de la hoja (la primera con los títulos) → proyectos con sus listas y tareas, en el orden de la hoja. */
 export function proyectosDesdeFilas(filas: unknown[][], reglas: ReglasLectura, centros: CentroConfig[]): Exportacion {

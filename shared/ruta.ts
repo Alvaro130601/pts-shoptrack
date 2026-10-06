@@ -17,6 +17,8 @@ export const baseTarea = (nombre: string) =>
   sinH(nombre).replace(/\s*\(#\d+\)\s*$/, '').replace(/^retrabajo\s+(de\s+)?/, '').trim();
 /** "H. Fresado CNC" → "Fresado CNC" */
 export const nombreCorto = (nombre: string) => nombre.replace(/^\s*H\s*\.\s*/i, '').trim();
+/** Código del cliente en el nombre del proyecto: "SO-11338-SMT-1" → "SMT". */
+export const clienteDe = (proyecto: string) => proyecto.match(/^\s*SO-\d+-([^-\s]+)/i)?.[1]?.toUpperCase() ?? '';
 
 /** Nombre corto de un paso de la ruta: el de la tarea de máquina ("Revenido", "Rectificado (Balony)"; con Set Up,
  *  el del mecanizado), "Programación", "Material", "Anodizado"… */
@@ -128,7 +130,8 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
   function item(lista: ListaCruda, base: Base): Item {
     const m = lista.nombre.match(R.item);
     const linea = m?.[1]?.trim();
-    const nombre = linea ? `Ítem ${linea}` : lista.nombre.trim();
+    // "Ítem 23 (3 unidades)" → "Ítem 23"; "PZA-0018-C (6 und)" → "PZA-0018-C"
+    const nombre = !linea ? lista.nombre.trim() : /^\s*[ÍIíi]tem\b/.test(lista.nombre) ? `Ítem ${linea}` : linea;
     const cantidad = m?.[2] ? Number(m[2]) : null;
     const ruta = pasos(lista, base, false, lista.id, nombre, cantidad);
     estadosRuta(ruta, []);

@@ -201,7 +201,8 @@ export interface EstadoMaquina extends MaquinaConfig {
 export interface EstadoPlanta {
   actualizado: string;        // ISO datetime
   fuente: 'seed' | 'zoho' | 'excel';
-  datos_de?: string;          // ISO: fecha del archivo exportado (fuente excel)
+  datos_de?: string;          // ISO: fecha del archivo exportado (excel) o de la lectura de Zoho en la página
+  nota_fuente?: string;       // página publicada: "leyendo Zoho…" o por qué no se pudo leer
   hoy: string;                // fecha usada para los cálculos
   centros: EstadoCentro[];
   maquinas: EstadoMaquina[];

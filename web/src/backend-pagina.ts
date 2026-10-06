@@ -1,16 +1,18 @@
-// La app como página publicada en claude.ai, sin servidor: arma el plan en el navegador con los datos publicados
-// junto a la página, guarda los ajustes en la base compartida de la página (capacidad `db`: los ve todo el que la
-// abre, en vivo) y el asistente usa la cuenta de Claude de quien la mira (capacidad `sample`).
+// La app como página publicada en claude.ai, sin servidor: arma el plan en el navegador, guarda los ajustes en la
+// base compartida de la página (capacidad `db`: los ve todo el que la abre, en vivo) y el asistente usa la cuenta
+// de Claude de quien la mira (capacidad `sample`). Con `zoho`, lee Zoho en vivo con el conector Zoho Projects de
+// quien la abre (capacidad `mcp`); mientras tanto, o si no se puede, muestra los datos publicados con la página.
 import { ErrorHerramienta, HERRAMIENTAS, INSTRUCCIONES, contextoPlanta, ejecutarHerramienta, type Contexto } from '../../shared/asistente';
 import { armarEstado, type DatosPlanta } from '../../shared/plan';
 import type { Ajuste, EstadoPlanta } from '../../shared/tipos';
+import { leerZohoCon, type LecturaZoho, type LlamarZoho, type MapeoZoho } from '../../shared/zoho';
 import type { Backend } from './backend';
 import type { Layout } from './tipos-layout';
 
-/** Lo que define index.html de la página publicada. */
-export interface ConfigPagina { datos: string; layout: string }
+/** Lo que define index.html de la página publicada. `zoho`: leer Zoho en vivo (los datos traen cómo). */
+export interface ConfigPagina { datos: string; layout: string; zoho?: boolean }
 
-type DatosPublicados = Omit<DatosPlanta, 'feriados' | 'ajustes'> & { feriados: string[] };
+type DatosPublicados = Omit<DatosPlanta, 'feriados' | 'ajustes'> & { feriados: string[]; zoho?: MapeoZoho };
 
 // ---- tipos mínimos del runtime de claude.ai (contrato 0.2.x: claude.use) ----
 interface Snapshot { docs: { data(): Record<string, unknown> | undefined }[] }
@@ -25,8 +27,17 @@ interface Sample {
   (input: Turnos, opciones: { tools: HerramientaPagina[]; signal: AbortSignal; modelTier: 'quick' | 'default' | 'complex'; onText: (u: { delta: string }) => void }): Promise<{ text: string }>;
   limits(): Promise<{ tools?: { maxCount: number } }>;
 }
+interface ErrorMcp { code?: string; message?: string; retryable?: boolean; retryAfterMs?: number }
+interface Mcp {
+  callTool(server: string, tool: string, input?: unknown, opciones?: { cache?: { staleTime?: number } }): Promise<{ payload?: unknown }>;
+}
 const usar = <T>(nombre: string): Promise<T | null> =>
   (window as unknown as { claude?: { use(n: string): Promise<T | null> } }).claude?.use(nombre).catch(() => null) ?? Promise.resolve(null);
+
+/** Nombre del conector en claude.ai: el mismo que declara el manifiesto de la página (capacidad mcp). */
+const CONECTOR_ZOHO = 'Zoho Projects';
+/** Cada cuánto se vuelve a leer Zoho (la página relee el plan cada 5 min). */
+const VIGENCIA_ZOHO = 4 * 60_000;
 
 const CLAVE_LOCAL = 'shoptrack.ajustes';
 const leerLocal = (): Ajuste[] => { try { return JSON.parse(localStorage.getItem(CLAVE_LOCAL) ?? '[]'); } catch { return []; } };
@@ -48,6 +59,48 @@ function mensajeSample(e: unknown): string {
   }
 }
 
+/** Por qué no se pudo leer Zoho, según el código de error de la capacidad `mcp`: cada uno se arregla distinto. */
+export function mensajeZoho(e: unknown): string {
+  const err = e as ErrorMcp;
+  switch (err?.code) {
+    case 'sin_mcp': case 'not_granted': case 'capability_disabled': case 'capability_removed':
+      return 'esta vista no puede usar los conectores de claude.ai';
+    case 'server_not_connected': case 'server_not_found':
+      return 'agrega el conector Zoho Projects en claude.ai → Configuración → Conectores';
+    case 'needs_reauth': return 'vuelve a conectar Zoho Projects en claude.ai → Configuración → Conectores';
+    case 'selection_required': return 'hay más de una conexión de Zoho Projects: elige cuál usar en el aviso de claude.ai';
+    case 'not_in_manifest': case 'consent_required': return 'no se dio permiso para que esta página lea Zoho (se cambia en Permisos de la página)';
+    case 'blocked_by_policy': case 'approval_required': return 'la organización no permite que esta página use Zoho Projects';
+    case 'server_unavailable': case 'rate_limited': return 'Zoho no respondió; se vuelve a intentar en unos minutos';
+    case 'tool_error': return `Zoho respondió con un error${err.message ? `: ${err.message.slice(0, 200)}` : ''}`;
+    default: return (e as Error)?.message || 'no se pudo leer Zoho';
+  }
+}
+
+/** Lee la vista "Carga de trabajo" con el conector de quien abre la página. Reintenta una vez lo que es pasajero. */
+async function leerZohoPagina(m: MapeoZoho): Promise<LecturaZoho> {
+  const mcp = await usar<Mcp>('mcp');
+  if (!mcp) throw { code: 'sin_mcp' } satisfies ErrorMcp;
+  const llamar: LlamarZoho = async (herramienta, consulta) => {
+    const input = { path_variables: { portal_id: m.portal.id }, query_params: consulta };
+    const una = async () => {
+      const { payload } = await mcp.callTool(CONECTOR_ZOHO, herramienta, input, { cache: { staleTime: 60_000 } });
+      if (typeof payload !== 'object' || payload === null) throw new Error(`respuesta inesperada de Zoho en ${herramienta}`);
+      return payload;
+    };
+    try { return await una(); } catch (e) {
+      const err = e as ErrorMcp;
+      if (!err?.retryable) throw e;
+      await new Promise(r => setTimeout(r, Math.min(err.retryAfterMs ?? 0, 15_000) || 1500 + Math.random() * 1500));
+      return una();
+    }
+  };
+  return leerZohoCon(llamar, m);
+}
+
+const fechaCorta = (iso: string) => new Date(iso).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+const hora = (iso: string) => new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
 export function backendPagina(cfg: ConfigPagina): Backend {
   const datos = fetch(cfg.datos).then(r => {
     if (!r.ok) throw new Error(`No se pudieron cargar los datos (${r.status})`);
@@ -67,6 +120,33 @@ export function backendPagina(cfg: ConfigPagina): Backend {
     }, () => { /* sin base: siguen los ajustes de este navegador */ });
     return d;
   });
+
+  // Zoho en vivo: se lee en segundo plano y, al terminar, la app vuelve a pedir el estado (avisar).
+  const zoho = { lectura: null as (LecturaZoho & { leido: string }) | null, error: null as string | null, leyendo: false, t: 0 };
+  function refrescarZoho(m: MapeoZoho) {
+    if (zoho.leyendo || (zoho.t && Date.now() - zoho.t < VIGENCIA_ZOHO)) return;
+    zoho.leyendo = true;
+    leerZohoPagina(m)
+      .then(l => { zoho.lectura = { ...l, leido: new Date().toISOString() }; zoho.error = null; })
+      .catch(e => { zoho.error = mensajeZoho(e); })
+      .finally(() => { zoho.t = Date.now(); zoho.leyendo = false; avisar(); });
+  }
+
+  /** Los datos con que se arma el plan ahora: los de Zoho si ya llegaron, si no los publicados con la página. */
+  function actuales(d: DatosPublicados): DatosPublicados & { nota_fuente?: string } {
+    if (!d.zoho) return d;
+    refrescarZoho(d.zoho);
+    const l = zoho.lectura;
+    if (l) {
+      const fallo = zoho.error && `El último intento de leer Zoho falló (${zoho.error}): se muestran los datos de las ${hora(l.leido)}`;
+      return { ...d, proyectos: l.proyectos, fuente: 'zoho', datos_de: l.leido, avisos: [...(fallo ? [fallo] : []), ...l.avisos],
+        ...(fallo ? { nota_fuente: 'sin conexión' } : {}) };
+    }
+    const respaldo = d.datos_de ? `la exportación del ${fechaCorta(d.datos_de)}` : 'los datos publicados con la página';
+    return zoho.error
+      ? { ...d, avisos: [`No se pudo leer Zoho en vivo: ${zoho.error}. Se muestra ${respaldo}.`, ...(d.avisos ?? [])], nota_fuente: 'sin Zoho' }
+      : { ...d, nota_fuente: 'leyendo Zoho…' };
+  }
 
   // El plan arranca hoy (hora de Costa Rica), aunque los datos se hayan publicado otro día.
   const hoy = () => new Date(Date.now() - 6 * 3600_000).toISOString().slice(0, 10);
@@ -93,9 +173,9 @@ export function backendPagina(cfg: ConfigPagina): Backend {
   }
 
   return {
-    refrescoMs: 0,
+    refrescoMs: cfg.zoho ? 5 * 60_000 : 0,
     layout: () => fetch(cfg.layout).then(r => r.json() as Promise<Layout>),
-    estado: async () => armar(await datos, ajustes),
+    estado: async () => armar(actuales(await datos), ajustes),
     quitarAjuste: async id => guardar(ajustes.filter(a => a.id !== id)),
     async asistente() {
       const sample = await usar<Sample>('sample');
@@ -106,7 +186,7 @@ export function backendPagina(cfg: ConfigPagina): Backend {
     async preguntar(p) {
       const sample = await usar<Sample>('sample');
       if (!sample) throw new Error('El asistente no está disponible en esta vista.');
-      const d = await datos;
+      const d = actuales(await datos);   // los mismos datos que se ven en la planta
       const contexto = (): Contexto => ({ estado: armar(d, ajustes), ajustes, replanificar: con => armar(d, con) });
       const max = (await sample.limits().catch(() => null))?.tools?.maxCount ?? HERRAMIENTAS.length;
       const tools: HerramientaPagina[] = HERRAMIENTAS.slice(0, max).map(h => ({

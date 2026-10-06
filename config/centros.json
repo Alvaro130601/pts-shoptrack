@@ -11,7 +11,7 @@
       "maquinas": ["torno-hanwa"] },
     { "id": "torno", "nombre": "Torno", "tipo": "maquina", "equipos_zoho": ["Torno", "Torno convencional"], "tareas_zoho": ["^torno$", "^torno convencional"],
       "maquinas": ["torno-1", "torno-2"] },
-    { "id": "erosionado", "nombre": "Erosionado", "tipo": "maquina", "equipos_zoho": ["Erosionado", "Hilo", "EDM"], "tareas_zoho": ["^erosionado", "^hilo", "^edm"],
+    { "id": "erosionado", "nombre": "Erosionado", "tipo": "maquina", "equipos_zoho": ["Erosionado", "Hilo", "EDM"], "tareas_zoho": ["^erosionado(?! por penetracion)", "^hilo", "^edm"],
       "maquinas": ["edm-hilo", "cut-e350"] },
     { "id": "rectificado", "nombre": "Rectificado", "tipo": "maquina", "equipos_zoho": ["Rectificado", "Rectificadora"], "tareas_zoho": ["^rectificad"],
       "maquinas": ["rectificadora-1", "rectificadora-2"] },
@@ -27,8 +27,9 @@
       "personas": 1, "horas_dia": 8 },
     { "id": "programacion", "nombre": "Programación", "tipo": "programacion", "equipos_zoho": ["Programación"],
       "personas": 1, "horas_dia": 8 },
-    { "id": "externo", "nombre": "Servicio externo", "tipo": "externo", "equipos_zoho": ["No Requiere", "Servicio externo"],
-      "tareas_zoho": ["^flash chrome", "^anodizado", "^electroless", "^black oxide", "^pasivado", "^niquel", "^cromado", "^recubrimiento"],
+    { "id": "externo", "nombre": "Servicio externo", "tipo": "externo", "equipos_zoho": ["No Requiere Equipo", "No Requiere", "Servicio externo"],
+      "tareas_zoho": ["^flash chrome", "^anodizado", "^electroless", "^black oxide", "^pasivado", "^niquel", "^cromado", "^recubrimiento",
+        "^erosionado por penetracion", "^hole popper"],
       "dias": 3 }
   ]
 }
