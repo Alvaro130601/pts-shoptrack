@@ -1,70 +1,122 @@
 # Integración con Zoho Projects
 
-Portal `ptsportal388` (ID `714664835`). Lectura únicamente.
+Portal `ptsportal388` (ID `714664835`). Lectura únicamente: ShopTrack nunca escribe en Zoho.
 
-## Cómo conectar Zoho
+## Qué lee ShopTrack: la vista "Carga de trabajo"
+Lo mismo que la vista **Carga de trabajo** de Tareas en Zoho (filtros que mostró Alvaro el 6-oct-2026), configurado
+en `config/zoho-mapeo.json → vista`:
 
-**A. Conector de Zoho Projects en claude.ai** (para revisar datos reales con Claude y para la página publicada):
-conectarlo en https://claude.ai/customize/connectors con la cuenta del portal `ptsportal388` y abrir una sesión
-nueva de Claude Code (los conectores se leen al iniciar la sesión). ShopTrack solo usaría sus herramientas de
-lectura (proyectos, listas de tareas, tareas); no escribe en Zoho. La página publicada puede leerlo con la
-capacidad `mcp`, con la conexión de quien la abre.
+| Filtro de la vista | Cómo lo aplica ShopTrack |
+|---|---|
+| Grupo de proyectos es Producción, Automatizacion | Por nombre del grupo (`project_group.name`) |
+| Estado del proyecto es En Producción, Pendiente de material, En Calidad, Pendiente de Planos, Pendiente de Compra | En la API, por id de estado (están en el mapeo) |
+| Nombre de tarea contiene `H.` | En la API |
+| Estado de la tarea es En Producción, En Curso, Material Pendiente, Pendiente de Operación, Pendiente Operación | La API trae las abiertas (`${all_open}`) y ShopTrack se queda con esos estados por nombre |
 
-**B. Servidor de ShopTrack en una PC de planta** (`DATA_SOURCE=zoho`): OAuth 2.0 con **Self Client**.
-1. https://api-console.zoho.com → *Add Client* → *Self Client* → *Create*.
-2. *Generate Code* con los scopes `ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasklists.READ,ZohoProjects.tasks.READ`
-   (duración 10 min) y copiar el código.
-3. Cambiarlo por un *refresh token* (en la misma PC, antes de que venzan los 10 min):
-   `curl -X POST "https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id=ID&client_secret=SECRETO&code=CODIGO"`
-   → la respuesta trae `refresh_token`.
-4. En `.env`: `DATA_SOURCE=zoho`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN` (el portal
-   `714664835` ya está). Si la cuenta no es del centro de datos `.com`, cambiar `ZOHO_ACCOUNTS_URL` y `ZOHO_PROJECTS_API`.
-5. `npm run dev`: la barra superior dice "Zoho". El backend renueva el access token (1 h) solo.
+Además, solo proyectos `SO-` y nunca Completado ni Cancelado. ShopTrack agrega las tareas en **Servicio Externo**
+(Alvaro, 6-oct: el servicio externo cuenta como una **pausa** de la ruta): el paso queda en proceso con el proveedor
+(3 días hábiles) y lo que sigue en la ruta lo espera. Las tareas en **Calidad** o **Pausado** no entran, igual que en
+la vista; el aviso de la campana dice cuántas son.
 
-Las claves nunca van al repositorio ni al chat. La lectura (`server/fuentes/zoho.ts`) todavía no se probó con datos
-reales: los campos marcados `VERIFICAR` se confirman en la primera conexión (lo más rápido es con la opción A).
+Son unas 5 llamadas por lectura (`shared/zoho.ts`): los proyectos en esos estados (~110-150, una página de 200) y las
+tareas abiertas con "H." de todo el portal (~600-800, 3-4 páginas). Las tareas se agrupan por proyecto y por lista.
 
-## Observado en un SO real
-Fuente: captura de la vista Tareas de **SO-10664-MCV-1** (clave `PTS-8808`), agrupada por lista de tareas,
-filtro "Todo abierto" (16-sep-2026). Ver el modelo completo en `docs/PROCESO.md`.
+## Dónde se lee
+- **Página publicada en claude.ai** (`PAGINA_ZOHO=1 DATA_SOURCE=excel npm run pagina`): lee Zoho en el navegador con
+  el conector **Zoho Projects** de quien la abre (capacidad `mcp`, solo `get_projects_list` y `get_tasks_by_portal`).
+  Si claude.ai todavía no tiene permiso para usar el conector en la página, no lo pide al abrir (su diálogo taparía la
+  planta): la barra muestra **Leer Zoho en vivo** y el permiso se pide al tocarlo; con el permiso dado, lee sola. Si
+  está bloqueado, el botón es **Permitir Zoho** (abre los Permisos de la página). Mientras llega, o si no se puede
+  (sin conector, sin permiso, Zoho caído, un error al armar el plan), muestra los datos publicados con la página y
+  dice por qué en los avisos, con el código de error. Relee cada 5 minutos.
+  **Diagnóstico**: la página guarda en su base (colección `diagnostico`) el resultado de la última lectura de Zoho
+  (`zoho`: ok, proyectos, tareas, ms o el código de error) y el último error del navegador (`error`), para revisarlo
+  a distancia con Claude.
+- **Servidor en una PC de planta** (`DATA_SOURCE=zoho`): OAuth con **Self Client**.
+  1. https://api-console.zoho.com → *Add Client* → *Self Client* → *Create*.
+  2. *Generate Code* con los scopes `ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasklists.READ,ZohoProjects.tasks.READ`
+     (duración 10 min) y copiar el código.
+  3. Cambiarlo por un *refresh token* (en la misma PC, antes de que venzan los 10 min):
+     `curl -X POST "https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id=ID&client_secret=SECRETO&code=CODIGO"`
+     → la respuesta trae `refresh_token`.
+  4. En `.env`: `DATA_SOURCE=zoho`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`. Si la cuenta no es
+     del centro de datos `.com`, cambiar `ZOHO_ACCOUNTS_URL` y `ZOHO_PROJECTS_API`.
+  5. `npm run dev`: la barra superior dice "Zoho". El backend renueva el access token (1 h) solo.
 
-| Dato | Cómo aparece | Ejemplo |
+  Las claves nunca van al repositorio ni al chat. La lectura es la misma que la de la página (`shared/zoho.ts`); falta
+  confirmar en la primera conexión por OAuth la ruta REST de las tareas de todo el portal (`/api/v3/portal/{id}/tasks`).
+
+## Cómo vienen los datos (API v3)
+Revisado con el conector de claude.ai el 6-oct-2026 (muestras de pocos registros).
+
+**Proyecto** (`get_projects_list`, sin `page_info`: se pide hasta una página vacía)
+
+| Campo | Ejemplo | Uso en ShopTrack |
 |---|---|---|
-| SO | Nombre del proyecto `SO-<número>-<sufijo>` | `SO-10664-MCV-1` |
-| Ítem | Lista de tareas `Ítem <línea> (<cantidad> unidades)` | `Ítem 23 (3 unidades)`, `Ítem 2-A (4 unidades)` |
-| Operación | Tarea `H. <proceso>`, en el orden de la ruta | `H. Torno CNC`, `H. Erosionado`, `H. Anodizado` |
-| Proceso / centro | Columna **Equipo asignado** | Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere |
-| Servicio externo | Tarea con equipo **No Requiere** | `H. Anodizado` |
-| Responsables | Propietarios = personas, varias por tarea | Maykel +5 |
-| Estado | Estados personalizados que mezclan avance y bloqueo | `Material Pendiente`, `Pendiente Op…` |
-| Clave de tarea | `<prefijo>-T<n>`, en orden de creación (coincide con la ruta) | `A52Y-T37` … `A52Y-T50` |
+| `id`, `key`, `name` | `"1613834000…"`, `PTS-8808`, `SO-10664-MCV-1` | id y nombre del SO; el cliente es el código del nombre (`MCV`) |
+| `status` | `{ id, name: "Pendiente de Planos ", is_closed_type }` | Estado (el nombre puede traer espacios de más) |
+| `project_group` | `{ id, name: "Producción" }` | Filtro de la vista |
+| `end_date` | `"2026-10-20"` (falta si no hay fecha) | **Fecha de entrega** del plan y del semáforo |
+| `fecha_pactada`, `fecha_final_produccion`, `fecha_de_aprobacion` | `"2026-10-20"`, `"2026-10-16"` | No se usan: la entrega es siempre la fecha final (Alvaro, 6-oct) |
+| `tags` | Prioridad Alta, Prioridad baja, Ensamble, Servicio Externo, Fecha de entrega pendiente… | No se usan (Alvaro, 6-oct) |
+| `tasks` | `{ open_count, closed_count }` | — |
 
-Consecuencias para la lectura:
-- **La máquina no está en Zoho.** Se lee el proceso (equipo asignado) y ShopTrack sugiere la máquina.
-- El nombre de la tarea tiene errores de escritura (`H. Progrmación`): el proceso se toma del **equipo**, no del texto.
-- La cantidad sale del nombre de la lista: `/^Ítem\s+(.+?)\s*\((\d+)\s*unidad(?:es)?\)/i`.
-- `H. Programación` es tiempo del programador; `H. Set Up` + el mecanizado que le sigue ocupan la misma máquina.
-- El estado `Material Pendiente` se repite en todas las tareas del ítem: es una condición del ítem.
+No hay campo de cliente: el proyecto trae contacto y correo del cliente, que ShopTrack no lee.
 
-## Por confirmar con datos reales (API)
+**Tarea** (`get_tasks_by_portal`, con `page_info.has_next_page`)
+
+| Campo | Ejemplo | Uso en ShopTrack |
+|---|---|---|
+| `project`, `tasklist` | `{ id, name: "SO-…" }`, `{ id, name: "Ítem 1 (19 unidades)" }` | SO e ítem |
+| `id`, `prefix`, `name` | `"1613834000…"`, `A22Z-T1`, `H. Torno CNC` | Operación (id estable para los ajustes) |
+| `sequence` | `{ sequence: 3 }` | Orden dentro de la lista = ruta |
+| `status` | `{ id, name: "Pendiente Operación", is_closed_type }` | Estado |
+| `teams` | `[{ id, name: "Torno CNC" }]`, a veces dos | **Equipo asociado** = proceso |
+| `owners_and_work.total_work` | `"45:00"` | Horas estimadas: total de la tarea (las horas van a un propietario y los demás llevan 0) |
+| `log_hours.total_hours` | `"08:11"` | Horas registradas |
+| `depth` | `0` | Las subtareas (`depth > 0`) no entran en la ruta |
+
+**Estados**
+
+| | Nombres (id en `zoho-mapeo.json` para los de proyecto) |
+|---|---|
+| Proyecto | En Producción, Pendiente de material, En Calidad, Pendiente de Planos, Pendiente de Compra (los de la vista); además Servicio Externo, Grabado, Ensamble, Completado… |
+| Tarea abierta | Pendiente Operación, Material Pendiente, En Producción (los que hoy tienen tareas "H."); Servicio Externo (solo en tareas de servicio externo: entra como pausa); Calidad, Pausado (fuera de la vista). "En Curso" y "Pendiente de Operación" están en la vista pero hoy no hay tareas abiertas con ellos |
+| Tarea cerrada | Cerrado |
+
+**Equipos** vistos: Fresado, Fresado CNC, Torno, Torno CNC, Erosionado, Rectificado, Tratamiento térmico,
+**No Requiere Equipo** (servicios externos: Anodizado, Flash Chrome, también *Erosionado por penetración* y *Hole
+Popper*) y Equipo de Diseño (en `H. Grabado`). Consecuencias:
+- `H. Programación` y `H. Set Up` llevan el equipo del mecanizado: la programación se reconoce por el nombre (va a la
+  cola de programadores) y el Set Up se une al mecanizado que le sigue.
+- Si el equipo no es de ningún centro (Equipo de Diseño), manda el nombre de la tarea (`H. Grabado` → Grabado).
+- Con dos equipos (`Torno CNC` y `Torno`) se toma el que coincide con el nombre de la tarea.
+
+**Listas de tareas (ítems)**: `Ítem 1 (19 unidades)`, `Ítem 12 (1 unidad)`, `Ítem 1 (1 und)` y también el número de
+parte: `PZA-0018-C (6 und)`. La cantidad sale de `item_regex`.
+
+**La máquina no está en Zoho**: se lee el proceso (equipo) y ShopTrack sugiere la máquina.
+
+## Por confirmar
 | Pregunta | Dónde se configura |
 |---|---|
-| Nombre del campo "Equipo asignado" en la API: ¿Equipos de Zoho o campo personalizado? | `config/zoho-mapeo.json` |
-| Lista completa de equipos y qué máquinas pertenecen a cada uno | `config/maquinas.json` |
-| Orden de las tareas dentro de la lista (campo de secuencia) y si hay dependencias | `server/fuentes/zoho.ts` |
-| Formato de `owners_and_work.total_work` con **varios propietarios**. Alvaro: las horas estimadas son el total de la tarea; verificar que `total_work` no las repita por persona | `server/fuentes/zoho.ts` |
-| Horas registradas por tarea (Registros de tiempo) para calcular horas pendientes | `server/fuentes/zoho.ts` |
-| Nombres exactos de los estados (hoy y después de simplificarlos) | `zoho-mapeo.json → estado_tarea` |
-| ¿La fase del SO es el estado del proyecto? ¿Dónde está el cliente? | `zoho-mapeo.json → fase / cliente` |
-| Rutas y forma de respuesta v3 (`/api/v3/portal/{id}/projects`, `/projects/{id}/tasklists`, `/projects/{id}/tasks`, paginación) | `server/fuentes/zoho.ts` (marcado `VERIFICAR`) |
+| La tarea **Material** al inicio de cada ítem (decidido el 6-oct) todavía no existe en Zoho: el material sale del estado `Material Pendiente` | `zoho-mapeo.json → lectura` |
+| Solo se leen tareas abiertas: la ruta muestra lo que falta, no los pasos ya cerrados | `shared/zoho.ts` |
+
+## Observado en un SO real (captura del 16-sep-2026)
+Vista Tareas de **SO-10664-MCV-1** agrupada por lista de tareas. Ver el modelo completo en `docs/PROCESO.md`.
+- Un SO tiene ítems (listas `Ítem <línea> (<cantidad> unidades)`); cada ítem, su ruta de tareas `H. <proceso>`.
+- `H. Programación` es tiempo del programador; `H. Set Up` + el mecanizado que le sigue ocupan la misma máquina.
+- El estado `Material Pendiente` se repite en todas las tareas del ítem: es una condición del ítem.
+- El nombre de la tarea tiene errores de escritura (`H. Progrmación`): el proceso se toma del **equipo**.
 
 ## Exportación a Excel
-Mientras no se pueda leer la API, ShopTrack lee la exportación de tareas de Zoho Projects (`DATA_SOURCE=excel`).
+Si no hay conexión con Zoho, ShopTrack lee la exportación de tareas de Zoho Projects (`DATA_SOURCE=excel`).
 El `.xlsx` se guarda en `data/exportaciones/` (no se sube al repositorio) y se usa el más reciente; `EXPORT_PATH`
 cambia la carpeta o apunta a un archivo. Código: `server/fuentes/exportacion.ts`.
 
-Observado en `task_export_1613834000021378010.xlsx` (6-oct-2026): una hoja "Todos los proyectos" con 538 tareas
-abiertas de 122 SO.
+Observado en `task_export_1613834000021378010.xlsx` (6-oct-2026, vista "Carga de trabajo"): una hoja "Todos los
+proyectos" con 538 tareas abiertas de 122 SO.
 
 | Columna | Ejemplo | Uso |
 |---|---|---|
@@ -80,23 +132,18 @@ Lo que **no** trae y cómo se suple:
   (servicio externo, grabado, limpieza) viene trabajo de máquina o programación, o cuando cambia el estado
   `Material Pendiente` (se ponía en todas las tareas de un ítem). Programación y Set Up se van con la operación
   que preparan. Ensamble, calidad y envío van a la lista Cierre del SO.
-- **Equipo asignado.** El proceso sale del nombre: `Rectificado (Balony)` y `Rectificadora (Centerless)` → Rectificado;
-  `Tratamiento térmico` y `Revenido` → horno; `Flash Chrome`, `Anodizado`, `Electroless`, `Black Oxide` → servicio
-  externo; `Grabado`, `Limpieza`, `Rebabeo` → puestos manuales; `Retrabajo <proceso>` → ese proceso.
+- **Equipo.** El proceso sale del nombre: `Rectificado (Balony)` y `Rectificadora (Centerless)` → Rectificado;
+  `Tratamiento térmico` y `Revenido` → horno; `Flash Chrome`, `Anodizado`, `Electroless`, `Black Oxide`,
+  `Erosionado por penetración`, `Hole Popper` → servicio externo; `Grabado`, `Limpieza`, `Rebabeo` → puestos manuales;
+  `Retrabajo <proceso>` → ese proceso.
 - **Fecha de entrega.** La exportación de tareas no trae la fecha del proyecto: no hay semáforo y el plan reparte por
   número de SO (el más viejo primero).
 - **Tareas cerradas.** Solo vienen las abiertas: la primera tarea abierta de cada ítem queda en cola.
 
-Para la próxima exportación conviene agregar **Lista de tareas** y **Equipo asignado** si la vista lo permite: con
-ellas se usan los ítems y procesos exactos. Las columnas se reconocen por el título, sin tildes ni mayúsculas (ver
-`COLUMNAS` en `server/fuentes/exportacion.ts`); el orden no importa.
+La vista deja agregar columnas (*Personalice las columnas que se vayan a mostrar*): con **Lista de tareas** y
+**Equipo asociado** se usan los ítems y procesos exactos. Las columnas se reconocen por el título, sin tildes ni
+mayúsculas (`COLUMNAS` en `server/fuentes/exportacion.ts`); el orden no importa.
 
 ## Acceso desde el entorno de desarrollo
-El entorno de nube donde se desarrolla bloquea `*.zoho.com` (`www`, `projects`, `accounts`, `projectsapi`).
-Para leer datos reales hay que agregar esos dominios en Network access del entorno, correr la lectura en
-una PC de PTS, o usar la exportación a Excel.
-
-## Rendimiento
-~90 SO activos × (listas + tareas) → unas 180 llamadas por refresco. Cache de 5 min (`ZOHO_REFRESH_SECONDS`).
-Las tareas se leen con 5 llamadas en paralelo. Si se queda corto: filtrar proyectos por estado en la consulta
-o pedir solo tareas abiertas, respetando los límites de la API de Zoho.
+El entorno de nube donde se desarrolla bloquea `*.zoho.com` para llamadas directas. Los datos reales se revisan con
+el conector de claude.ai (en una sesión que lo tenga conectado), en una PC de PTS o con la exportación a Excel.

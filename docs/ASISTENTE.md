@@ -55,6 +55,9 @@ navegador. Al publicarla con las capacidades `sample`, `db` y `user`:
 - el asistente usa la **cuenta de Claude de quien abre la página** (pide permiso la primera vez y gasta su uso);
 - los ajustes van a la **base compartida de la página**: todos los que la abren ven los mismos cambios, en vivo.
   Solo el dueño y quienes tengan acceso de Contributor o más pueden cambiar el plan.
+- con `PAGINA_ZOHO=1` la página declara también `mcp` (conector Zoho Projects, solo lectura) y el asistente trabaja
+  sobre los datos de Zoho en vivo. Los ajustes se guardan por id de tarea: los hechos con la exportación a Excel no
+  se aplican a los datos de Zoho (quedan "sin aplicar").
 
 ## Límites conocidos
 

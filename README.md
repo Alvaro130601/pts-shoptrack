@@ -15,7 +15,9 @@ Para datos reales hay dos caminos:
   `data/exportaciones/` y poner `DATA_SOURCE=excel`. Se usa el archivo más reciente; no se sube al repositorio.
   Qué columnas se leen y qué se deduce: `docs/ZOHO.md#exportación-a-excel`.
 - **Zoho en vivo**: crear un *Self Client* en https://api-console.zoho.com, generar el refresh token con los scopes
-  de `.env.example` y poner `DATA_SOURCE=zoho`.
+  de `.env.example` y poner `DATA_SOURCE=zoho`. Se lee lo mismo que la vista "Carga de trabajo" de Zoho.
+- **Página en claude.ai con Zoho en vivo**: `npm run build && PAGINA_ZOHO=1 DATA_SOURCE=excel npm run pagina` y
+  publicar `dist-pagina/`: lee Zoho con el conector Zoho Projects de quien la abre. Detalle: `docs/ZOHO.md`.
 
 En los dos casos revisar `config/centros.json` (qué máquinas hacen cada proceso).
 

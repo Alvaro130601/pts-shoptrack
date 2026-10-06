@@ -15,13 +15,16 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `shared/` tipos y **reglas de negocio puras**, sin I/O: `reglas.ts` (días hábiles, SLA, buffer, semáforo),
   `ruta.ts` (Zoho → SO → ítems → ruta; estados de cada paso), `plan.ts` (reparto sugerido por capacidad,
   límites hacia atrás desde la entrega, semáforo, estado de la planta), `ajustes.ts` (cambios del supervisor
-  aplicados antes de planificar) y `asistente.ts` (herramientas del asistente, sin I/O).
+  aplicados antes de planificar), `asistente.ts` (herramientas del asistente, sin I/O) y `zoho.ts` (lectura de la
+  vista "Carga de trabajo" de Zoho → proyectos crudos; la usan el servidor y la página).
 - **Asistente** (`docs/ASISTENTE.md`): chat con Claude (`@anthropic-ai/sdk`, `claude-opus-5-5`, `server/asistente.ts`)
   que consulta el plan y crea **ajustes del supervisor** (estado, material, prioridad, entrega, máquina, fuera de
   servicio). Los ajustes viven en ShopTrack (`data/ajustes.json`, no se sube), **no se escriben en Zoho** y se quitan
   desde la pestaña Cambios. Necesita `ANTHROPIC_API_KEY` en `.env`.
 - `scripts/pagina.ts` (`npm run pagina`): la app como página estática para claude.ai (plan en el navegador, ajustes
-  en la base compartida `db`, asistente con la capacidad `sample`); sale en `dist-pagina/` (no se sube).
+  en la base compartida `db`, asistente con la capacidad `sample`); sale en `dist-pagina/` (no se sube). Con
+  `PAGINA_ZOHO=1` lee **Zoho en vivo** con el conector Zoho Projects de quien la abre (capacidad `mcp`, solo
+  `get_projects_list` y `get_tasks_by_portal`) y los datos de `DATA_SOURCE` quedan de respaldo.
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados,
   `zoho` lee la API y `excel` lee la exportación de tareas más reciente de `data/exportaciones/` (`server/fuentes/exportacion.ts`).
 - `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.
@@ -32,11 +35,12 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   No editar a mano salvo correcciones puntuales; documentarlas en `docs/SPEC.md#layout`. Agregadas a mano:
   Rectificadoras #1 y #2 al fondo del Taller #1 (no están en el CAD; posición aproximada).
 - `config/maquinas.json` — máquinas: proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
-- `config/centros.json` — procesos (Equipo asignado en Zoho, o `tareas_zoho` = patrones del nombre de la tarea si no
+- `config/centros.json` — procesos (Equipo asociado en Zoho, o `tareas_zoho` = patrones del nombre de la tarea si no
   trae equipo) → máquinas que los hacen; puestos manuales (grabado, limpieza); programadores; proveedores.
   **Propuesta por confirmar con Alvaro.** Confirmado: solo 2 erosionadoras (EDM hilo, CUT E350; la E350 no lo es);
   todo el Torno CNC va al Hyundai y el Hanwa solo hace sus tareas específicas (torno suizo).
-- `config/zoho-mapeo.json` — cómo se leen proyectos, ítems, tareas y estados de Zoho (`lectura`). **Borrador por confirmar.**
+- `config/zoho-mapeo.json` — portal, la vista "Carga de trabajo" (grupos, estados de proyecto con su id, tareas "H."
+  y sus estados) y cómo se leen ítems, tareas y estados (`lectura`). Revisado con la API v3 el 6-oct-2026 (`docs/ZOHO.md`).
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 - `data/exportaciones/` — exportaciones de Zoho a Excel con **datos reales: no se suben** (`.gitignore`). Formato y
   límites en `docs/ZOHO.md#exportación-a-excel`.
@@ -44,7 +48,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 ## Proceso real (ver `docs/PROCESO.md`; visto en SO-10664-MCV-1)
 - Un SO (proyecto) tiene **ítems** = listas de tareas `Ítem <línea> (<cantidad> unidades)`. Cada ítem tiene su
   **ruta**: tareas `H. <proceso>` en el orden de la lista. Cada ítem avanza por su cuenta.
-- El proceso está en **Equipo asignado** (Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere = externo).
+- El proceso está en **Equipo asociado** (equipos de Zoho: Fresado, Fresado CNC, Torno CNC, Erosionado, Rectificado…;
+  No Requiere Equipo = externo). Programación y Set Up llevan el equipo del mecanizado: la programación se reconoce por
+  el nombre. Fecha de entrega = fecha final del proyecto (`end_date`).
   **La máquina no está en Zoho**: ShopTrack debe sugerir el reparto entre las máquinas de cada proceso.
 - `H. Programación` es tiempo del programador (no de máquina); `H. Set Up` + el mecanizado siguiente van a la misma máquina.
 - Decidido con Alvaro (6-oct): tareas con 3 estados (Pendiente, En proceso, Cerrada); una tarea **Material** al
@@ -86,6 +92,10 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   actual; por SLA serían 3): confirmar con Alvaro.
 - Etiquetas se traslapan en zonas densas (Taller #3): falta LOD / agrupación.
 - La exportación a Excel no trae lista de tareas, equipo ni fecha de entrega: los ítems se deducen del orden
-  ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Ver `docs/ZOHO.md`.
+  ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Con Zoho en vivo sí. Ver `docs/ZOHO.md`.
+- Zoho en vivo lee las tareas abiertas de la vista más las de Servicio Externo (cuenta como una pausa de la ruta);
+  Calidad y Pausado no entran. La entrega es siempre la fecha final; las etiquetas de Zoho no se usan (Alvaro, 6-oct).
+- Página con Zoho: sin permiso del conector no lo pide al abrir (botón "Leer Zoho en vivo"); guarda en su base
+  (`diagnostico`) el último resultado de Zoho y el último error del navegador para revisarlo con `ArtifactData`.
 - Horno: tratamiento y revenido se planifican uno por uno (24 h/día), sin lotes. Grabado y limpieza: 1 puesto de
   8 h/día cada uno, fuera del plano. Por confirmar con Alvaro (`docs/PROCESO.md` §7).

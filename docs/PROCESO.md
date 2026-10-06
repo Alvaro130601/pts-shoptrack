@@ -30,7 +30,7 @@ flowchart LR
 | **SO** | Proyecto `SO-10664-MCV-1` | Una orden de un cliente. Su fecha final manda la prioridad. |
 | **Ítem** | Lista de tareas `Ítem 23 (3 unidades)` | Una línea de la orden con su cantidad. Un SO puede tener muchos ítems independientes (este tiene al menos 2-A, 20, 21, 22 y 23), no solo ensambles. |
 | **Operación** | Tarea `H. <proceso>` | Cada proceso por el que pasa el ítem, en el orden de la lista (su ruta). |
-| **Proceso** | Equipo asignado | Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere (servicio externo). |
+| **Proceso** | Equipo asociado (equipos de Zoho) | Fresado, Fresado CNC, Torno CNC, Torno, Erosionado, Rectificado, Tratamiento térmico, No Requiere Equipo (servicio externo). |
 | **Máquina** | No está en Zoho | Se decide en planta. ShopTrack debe ayudar a repartir el trabajo. |
 
 Rutas vistas en ese SO:
@@ -96,7 +96,7 @@ del Equipo asignado; si la tarea no lo trae (exportación a Excel), de su nombre
 | Doblado · Soldadura | Dobladora · Soldadora (la cortadora láser se quitó del plano, 6-oct ✅) |
 | Grabado · Limpieza y rebabeo | Puestos manuales fuera del plano: 1 persona, 8 h/día cada uno ❓ |
 | Programación | Programadores: cola de personas, no ocupa máquina ✅ (1 programador, 8 h/día ❓) |
-| Servicio externo / No Requiere | Proveedores (Flash Chrome, anodizado, electroless, black oxide…): 3 días hábiles |
+| Servicio externo / No Requiere Equipo | Proveedores (Flash Chrome, anodizado, electroless, black oxide, erosionado por penetración, Hole Popper…): 3 días hábiles |
 
 Cada **operación** tiene un estado calculado con su ítem:
 
@@ -183,5 +183,9 @@ Con prioridad fijada, esos SO van primero; después manda la fecha de entrega.
 10. Horno: ¿tratamiento térmico y revenido se hacen en planta? ¿Cuántas piezas entran por ciclo?
 11. ¿Qué tareas de torno van al Hanwa y cómo se llaman en Zoho? Hoy solo las "Torno Suizo"; el resto del torno CNC va
     al Hyundai. ¿Las erosionadoras trabajan más de 16 h al día (sin operador de noche)?
-12. ¿Se puede exportar con **Lista de tareas**, **Equipo asignado** y la fecha final del proyecto? Con eso los
-    ítems son exactos y vuelve el semáforo.
+12. ~~¿Se puede exportar con Lista de tareas, Equipo asignado y la fecha final?~~ Ya no hace falta: ShopTrack lee
+    Zoho en vivo (la vista "Carga de trabajo") con listas, equipos y fecha final (`docs/ZOHO.md`).
+13. ~~¿Fecha final, fecha pactada o fecha final de producción?~~ Alvaro (6-oct): **siempre la fecha final** del proyecto.
+14. ~~¿Usamos las etiquetas (Prioridad Alta / baja…)?~~ Alvaro (6-oct): **no se usan**.
+15. ~~¿Contamos el servicio externo en curso?~~ Alvaro (6-oct): **sí, cuenta como una pausa**: la tarea en estado
+    Servicio Externo queda en proceso con el proveedor y la ruta espera. Calidad y Pausado siguen fuera, como en la vista.
