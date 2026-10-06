@@ -23,6 +23,11 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `config/zoho-mapeo.json` — cómo se lee la máquina, horas, fase y flags desde Zoho. **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 
+## Proceso real (ver `docs/PROCESO.md`, borrador por validar)
+- Un SO (proyecto) tiene **ítems** = listas de tareas (una pieza, o varias si es ensamble). Cada ítem tiene su
+  **ruta**: tareas = operaciones en orden (fresado convencional, fresado CNC, hilo…). Cada ítem avanza por su cuenta.
+- El modelo actual de la app (operación suelta por máquina, fase por SO) no lo respeta todavía.
+
 ## Reglas de negocio de PTS (no cambiar sin pedirlo)
 - Zoho Projects: portal **`ptsportal388`** (ID 714664835). Proyectos con prefijo **`SO-`**.
 - Excluir estados **Completado** y **Cancelado** salvo que se pida.
