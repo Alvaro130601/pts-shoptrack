@@ -7,15 +7,18 @@ import { BarraSuperior } from './hud/BarraSuperior';
 import { ControlesVista } from './hud/ControlesVista';
 import { MenuLateral, type Modulo } from './hud/MenuLateral';
 import { PanelMaquina } from './hud/PanelMaquina';
+import type { EstadoMaquina, Item, Operacion } from '../../shared/tipos';
 import { Alertas, type Pestana } from './modulos/Alertas';
-import { ColaCentros } from './modulos/ColaCentros';
+import { CargaProcesos } from './modulos/CargaProcesos';
 import { DondeSO } from './modulos/DondeSO';
 import { Leyenda } from './modulos/Leyenda';
-import { SinMaquina } from './modulos/SinMaquina';
+import { Material } from './modulos/Material';
+import { SinCentro } from './modulos/SinCentro';
 
 const CLAVE_PISTA = 'shoptrack.pista-vista';
 const leerPista = () => { try { return localStorage.getItem(CLAVE_PISTA) !== '1'; } catch { return true; } };
 const ocultarPista = () => { try { localStorage.setItem(CLAVE_PISTA, '1'); } catch { /* sin almacenamiento */ } };
+const planDe = (m: EstadoMaquina) => [...m.en_proceso, ...m.cola, ...m.proximas];
 
 export default function App() {
   const { layout, estado, error } = useDatos();
@@ -31,21 +34,24 @@ export default function App() {
 
   const maquinas = estado?.maquinas ?? [];
   const mapa = useMemo(() => new Map(maquinas.map(m => [m.id, m])), [maquinas]);
-  const procesos = useMemo(() => [...new Set(maquinas.map(m => m.proceso ?? 'Sin proceso'))].sort(), [maquinas]);
+  const centros = estado?.centros ?? [];
+  const nombreCentro = useMemo(() => new Map(centros.map(c => [c.id, c.nombre])), [centros]);
+  const procesos = useMemo(() => centros.filter(c => c.tipo === 'maquina').map(c => ({ id: c.id, nombre: c.nombre })), [centros]);
+  const items = useMemo(() => new Map<string, Item>((estado?.sos ?? []).flatMap(s => s.items.map(i => [i.id, i] as const))), [estado]);
 
   // Máquinas resaltadas en 3D: el SO elegido en "¿Dónde está mi SO?" manda; si no, búsqueda + filtro de proceso.
   const resaltadas = useMemo(() => {
     if (modulo === 'so' && soActivo) {
-      return new Set(maquinas.filter(m => [...m.en_proceso, ...m.cola, ...m.por_liberar].some(o => o.so === soActivo)).map(m => m.id));
+      return new Set(maquinas.filter(m => planDe(m).some(o => o.proyecto_id === soActivo)).map(m => m.id));
     }
     const q = busqueda.trim().toLowerCase();
     if (!q && proceso === 'todos') return null;
     return new Set(maquinas.filter(m =>
-      (proceso === 'todos' || (m.proceso ?? 'Sin proceso') === proceso) &&
-      (!q || `${m.nombre} ${NOMBRE_FAMILIA[m.familia ?? 'generica']}`.toLowerCase().includes(q) ||
-        [...m.en_proceso, ...m.cola, ...m.por_liberar].some(o => `${o.so} ${o.cliente} ${o.descripcion}`.toLowerCase().includes(q))),
+      (proceso === 'todos' || m.centro_id === proceso) &&
+      (!q || `${m.nombre} ${NOMBRE_FAMILIA[m.familia ?? 'generica']} ${nombreCentro.get(m.centro_id ?? '') ?? ''}`.toLowerCase().includes(q) ||
+        planDe(m).some(o => `${o.proyecto} ${o.cliente} ${o.item} ${o.nombre}`.toLowerCase().includes(q))),
     ).map(m => m.id));
-  }, [maquinas, busqueda, proceso, modulo, soActivo]);
+  }, [maquinas, busqueda, proceso, modulo, soActivo, nombreCentro]);
 
   const encuadrarMaquinas = useCallback((ids: string[], margen: number, zoomMax = 46) => {
     const pts = (layout?.elementos ?? []).filter(e => ids.includes(e.id)).flatMap(e => e.footprint);
@@ -74,11 +80,19 @@ export default function App() {
     if (m !== 'so') setSoActivo(null);
   };
 
-  const elegirSO = (so: string | null) => {
-    setSoActivo(so);
-    if (!so || !estado) return;
-    const ids = estado.maquinas.filter(m => [...m.en_proceso, ...m.cola, ...m.por_liberar].some(o => o.so === so)).map(m => m.id);
+  /** id = id del proyecto. Resalta y encuadra las máquinas donde el plan pone sus operaciones. */
+  const elegirSO = (id: string | null) => {
+    setSoActivo(id);
+    if (!id) return;
+    const ids = maquinas.filter(m => planDe(m).some(o => o.proyecto_id === id)).map(m => m.id);
     encuadrarMaquinas(ids, 5);
+  };
+  const abrirSO = (id: string) => { setSeleccion(null); setModulo('so'); elegirSO(id); };
+
+  /** Clic en un paso de una ruta: si va en una máquina, ir a ella; si no (programación, proveedor), mostrar el SO. */
+  const irAPaso = (o: Operacion) => {
+    if (o.maquina_id && mapa.has(o.maquina_id)) irA(o.maquina_id, o.id);
+    else if (!(modulo === 'so' && soActivo === o.proyecto_id)) abrirSO(o.proyecto_id);
   };
 
   // Teclado: "/" enfoca la búsqueda; Esc cierra el panel y luego el módulo.
@@ -98,7 +112,6 @@ export default function App() {
   const sel = seleccion ? mapa.get(seleccion.id) : undefined;
   // Debe coincidir con las medidas de estilos.css (--m, --menu, --cajon, --barra).
   const ocupado = { izq: 92 + (modulo ? 392 : 0), der: 12 + (seleccion ? 392 : 0), arr: 78, aba: 60 };
-  const centros = maquinas.filter(m => m.es_centro_mecanizado && (!resaltadas || resaltadas.has(m.id)));
   const cerrar = () => abrir(null);
 
   return (
@@ -109,19 +122,22 @@ export default function App() {
       </div>
 
       <MenuLateral activo={modulo} onCambiar={m => abrir(m)} onInicio={() => { abrir(null); setSeleccion(null); vistaGeneral(); }}
-        atrasadas={estado?.kpis.atrasadas ?? 0} sinMaquina={estado?.sin_maquina.length ?? 0} />
+        atrasados={estado?.kpis.atrasados ?? 0} material={estado?.kpis.esperando_material ?? 0} sinCentro={estado?.sin_centro.length ?? 0} />
 
       <BarraSuperior estado={estado} error={error} busqueda={busqueda} onBusqueda={setBusqueda}
         coincidencias={resaltadas && modulo !== 'so' ? resaltadas.size : null}
         procesos={procesos} proceso={proceso} onProceso={setProceso} onAbrir={abrir} refBusqueda={refBusqueda} />
 
-      {estado && modulo === 'cola' && <ColaCentros maquinas={centros} seleccion={seleccion?.id ?? null} onIr={id => irA(id)} onCerrar={cerrar} />}
-      {estado && modulo === 'alertas' && <Alertas maquinas={maquinas} pestana={pestana} onPestana={setPestana} onIr={irA} onCerrar={cerrar} />}
-      {estado && modulo === 'so' && <DondeSO estado={estado} so={soActivo} onSO={elegirSO} onIr={irA} onCerrar={cerrar} />}
-      {estado && modulo === 'sin_maquina' && <SinMaquina ops={estado.sin_maquina} onCerrar={cerrar} />}
-      {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} onCerrar={cerrar} />}
+      {estado && modulo === 'cola' && <CargaProcesos centros={centros} maquinas={mapa} filtro={resaltadas} seleccion={seleccion?.id ?? null}
+        onMaquina={id => irA(id)} onOp={irAPaso} onCerrar={cerrar} />}
+      {estado && modulo === 'alertas' && <Alertas sos={estado.sos} pestana={pestana} onPestana={setPestana} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+      {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+      {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+      {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
+      {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} centros={centros} onCerrar={cerrar} />}
 
-      {sel && <PanelMaquina key={sel.id} m={sel} opInicial={seleccion?.op} onCerrar={() => setSeleccion(null)} />}
+      {sel && <PanelMaquina key={sel.id} m={sel} centro={nombreCentro.get(sel.centro_id ?? '')} items={items}
+        opInicial={seleccion?.op} onPaso={irAPaso} onCerrar={() => setSeleccion(null)} />}
 
       {layout && (
         <div className="pie">
@@ -132,14 +148,14 @@ export default function App() {
             <span><i className="punto" style={{ background: 'var(--amarillo)' }} />En riesgo</span>
             <span><i className="punto" style={{ background: 'var(--rojo)' }} />Atrasada</span>
             <span><i className="cuadro" style={{ background: 'var(--acento)' }} />En proceso</span>
-            <span><i className="cuadro fantasma" />Por liberar</span>
+            <span><i className="cuadro fantasma" />Próxima</span>
           </div>
         </div>
       )}
 
       {pista && !sel && estado && (
         <div className="pista tarjeta">
-          Haz clic en una máquina para ver su cola · arrastra para mover · rueda para acercar
+          Haz clic en una máquina para ver su plan · arrastra para mover · rueda para acercar
           <button className="enlace" onClick={() => { setPista(false); ocultarPista(); }}>Entendido</button>
         </div>
       )}

@@ -1,8 +1,9 @@
 # Especificación — PTS ShopTrack v1
 
 ## Objetivo
-Que un supervisor vea en segundos, sobre la planta real, **qué está mecanizando cada centro, qué tiene en cola,
-qué viene por liberar y qué no va a llegar a tiempo**, y que pueda bajar al detalle de un SO sin abrir Zoho.
+Que un supervisor vea en segundos, sobre la planta real, **cuánto trabajo tiene cada proceso, cómo conviene
+repartirlo entre las máquinas, dónde está cada ítem de cada SO y qué no va a llegar a tiempo**, y que pueda bajar
+al detalle de un SO sin abrir Zoho. El modelo del proceso está en `docs/PROCESO.md`.
 
 ## Referencia visual (WareTrack)
 Post de @DilumSanjaya: escena 3D isométrica low-poly con objetos animados + HUD flotante en tarjetas
@@ -14,35 +15,40 @@ Construido con React + React Three Fiber. Equivalencias para PTS:
 | Bodega con muelles | Talleres #1–#4 con layout real del CAD |
 | Camión en muelle | Centro de mecanizado |
 | Tarimas / carga | Pila de bloques = operaciones en cola sobre cada máquina |
-| Línea de tiempo del envío | Fases del SO: programación → planos → material → producción → calidad → envío |
-| Tabla de muelles | Tabla "Cola por centro" (en proceso, en cola, días de carga, próximo SO) |
-| KPIs (stock, camiones, on-time) | SO abiertos, en proceso, en cola, horas en cola, atrasadas / en riesgo |
+| Línea de tiempo del envío | Ruta de cada ítem: material → programación → procesos → servicio externo |
+| Tabla de muelles | "Carga por proceso" (en proceso, en cola, en camino, días de carga, máquinas) |
+| KPIs (stock, camiones, on-time) | En proceso, en cola, sin material, ítems atrasados / en riesgo |
 
 ## Conceptos
-- **Operación**: tarea `H.*` de un proyecto `SO-` asignada a una máquina. Es la unidad de la cola.
-- **Estado en cola**: `en_proceso` (tarea en progreso, SO en Producción) · `en_cola` (SO en Producción, tarea
-  no iniciada) · `por_liberar` (SO todavía en Pend. programación/planos/material, ya con máquina asignada).
-- **Límite de producción** = fecha final del proyecto − buffer (2/5/6 días hábiles).
-- **Fin proyectado**: se simula la máquina trabajando en orden (en proceso → cola ordenada por límite) a
-  `capacidad_horas_dia`; el día hábil donde se acumulan las horas de la operación.
-- **Días de carga** de una máquina = horas pendientes (en proceso + cola) ÷ capacidad diaria.
+- **SO → ítem → operación**: proyecto `SO-…` → lista de tareas `Ítem N (Q unidades)` → tareas `H. <proceso>` en
+  el orden de la ruta. Set Up + mecanizado siguiente = una operación. Detalle en `docs/PROCESO.md`.
+- **Proceso (centro de trabajo)**: el Equipo asignado de la tarea; `config/centros.json` dice qué máquinas lo hacen.
+- **Estado de una operación**: hecha · en proceso · en cola (puede empezar ya) · en camino (la pieza viene de un
+  paso anterior) · bloqueada (falta material, planos o programa).
+- **Plan sugerido**: reparto de las operaciones entre las máquinas del proceso respetando la ruta y la capacidad
+  (`capacidad_horas_dia`). Da inicio y fin proyectados por operación. El supervisor decide.
+- **Límite** de cada paso: hacia atrás desde la entrega (cierre + lo que falta de la ruta).
+- **Días de carga** de una máquina o proceso = horas pendientes (en proceso + en cola) ÷ capacidad diaria.
 
 ## Vistas (v1)
 Pantalla limpia: la planta 3D ocupa todo el fondo; todo lo demás se abre bajo demanda.
 - **Barra superior**: búsqueda (atajo `/`), filtro por proceso, KPIs compactos que abren su módulo
   (atrasadas/en riesgo → Alertas), campana de avisos y estado de la fuente de datos.
 - **Menú lateral** con módulos (uno abierto a la vez, en un cajón a la izquierda; `Esc` cierra):
-  1. **Cola por centro**: centros ordenables por carga, peor estado o nombre; clic lleva la cámara a la máquina.
-  2. **Alertas**: atrasadas / en riesgo ordenadas por holgura, con el motivo del semáforo.
-  3. **¿Dónde está mi SO?**: elige un SO → fases, todas sus operaciones (con posición en cola) y resalta sus máquinas.
-  4. **Sin máquina**: operaciones sin máquina reconocida, agrupadas por el valor crudo de Zoho, y sin fecha válida.
-  5. **Leyenda**: semáforo, torre andon, pila de cajas, tipos de máquina y controles.
+  1. **Carga por proceso**: cada proceso (equipo de Zoho) con en proceso / en cola / en camino y días de carga;
+     al abrirlo, sus máquinas con el reparto sugerido (o la cola de programación / proveedores).
+  2. **Alertas**: ítems atrasados / en riesgo, del más crítico al menos, con su ruta y el motivo.
+  3. **¿Dónde está mi SO?**: elige un SO → cada ítem con su ruta (✓ ▶ ● ○ !), situación y fin proyectado;
+     clic en un paso de máquina lleva a la máquina sugerida. Resalta las máquinas del SO.
+  4. **Material**: ítems esperando material, ordenados por la fecha en que hace falta.
+  5. **Sin centro**: operaciones con un equipo que no está en `config/centros.json` (solo aparece si hay).
+  6. **Leyenda**: cómo se arma el plan, estados, semáforo, máquina, procesos y controles.
 - **Planta 3D**: máquinas con **forma aproximada por familia** (`config/maquinas.json → familia`) a escala del CAD,
   torre de luces andon (azul = mecanizando; rojo/amarillo/verde = peor semáforo), huella en el piso con el color
-  del semáforo, pila de cajas (azul = en proceso, color = semáforo, translúcido = por liberar). Las etiquetas
+  del semáforo, pila de cajas del plan sugerido (azul = en proceso, color = semáforo, translúcido = próxima). Las etiquetas
   se reducen a un número al alejar la cámara. Controles: General / T1–T4 / acercar / alejar.
-- **Panel de máquina** (derecha): estado, h en cola, días de carga, capacidad; En proceso / En cola / Por liberar
-  con detalle (fases, cliente, fin proyectado, motivo, buffer, horas, enlace a Zoho).
+- **Panel de máquina** (derecha): proceso, estado, horas, días de carga, capacidad; En proceso / En cola (orden
+  sugerido) / Próximas, con la ruta del ítem, horas estimadas y registradas, plan, límite, motivo y enlace a Zoho.
 - Pendiente: vista por proceso con KPIs propios, histórico simple de carga por día, frente real de cada máquina
   (hoy la ventana/panel se dibuja en ambas caras largas porque el CAD no lo indica).
 

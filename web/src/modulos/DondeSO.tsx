@@ -1,78 +1,80 @@
 import { useMemo, useState } from 'react';
-import type { EstadoPlanta, Operacion } from '../../../shared/tipos';
-import { fecha } from '../formato';
-import { LineaFases } from '../hud/LineaFases';
+import type { Operacion, SO } from '../../../shared/tipos';
+import { colorSemaforo } from '../colores';
+import { fecha, legible } from '../formato';
 import { Cajon } from './Cajon';
-import { FilaOperacion } from './FilaOperacion';
+import { RutaItem } from './RutaItem';
 
-interface Resumen { so: string; cliente: string; ops: { o: Operacion; maquinaId: string | null; maquina: string }[] }
-
-/** Agrupa todas las operaciones abiertas por SO (incluye las que no tienen máquina). */
-export function indicePorSO(estado: EstadoPlanta): Map<string, Resumen> {
-  const idx = new Map<string, Resumen>();
-  const agregar = (o: Operacion, maquinaId: string | null, maquina: string) => {
-    const r = idx.get(o.so) ?? { so: o.so, cliente: o.cliente, ops: [] };
-    r.ops.push({ o, maquinaId, maquina });
-    idx.set(o.so, r);
-  };
-  for (const m of estado.maquinas) for (const o of [...m.en_proceso, ...m.cola, ...m.por_liberar]) agregar(o, m.id, m.nombre);
-  for (const o of estado.sin_maquina) agregar(o, null, o.maquina_zoho ? `Sin mapear: ${o.maquina_zoho}` : 'Sin máquina');
-  return idx;
-}
-
-export function DondeSO({ estado, so, onSO, onIr, onCerrar }: {
-  estado: EstadoPlanta; so: string | null; onSO: (so: string | null) => void;
-  onIr: (maquinaId: string, opId: string) => void; onCerrar: () => void;
+/** Buscar un SO y ver cada ítem como su ruta de pasos: dónde está la pieza, qué falta y cuándo termina. */
+export function DondeSO({ sos, so, onSO, onPaso, onCerrar }: {
+  sos: SO[]; so: string | null; onSO: (id: string | null) => void;
+  onPaso: (o: Operacion) => void; onCerrar: () => void;
 }) {
   const [q, setQ] = useState('');
-  const indice = useMemo(() => indicePorSO(estado), [estado]);
   const candidatos = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return [...indice.values()]
-      .filter(r => !t || r.so.toLowerCase().includes(t) || r.cliente.toLowerCase().includes(t))
-      .sort((a, b) => a.so.localeCompare(b.so, 'es', { numeric: true }));
-  }, [indice, q]);
-  const actual = so ? indice.get(so) : undefined;
+    return sos
+      .filter(s => !t || s.nombre.toLowerCase().includes(t) || s.cliente.toLowerCase().includes(t)
+        || s.items.some(i => i.nombre.toLowerCase().includes(t)))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
+  }, [sos, q]);
+  const actual = so ? sos.find(s => s.id === so) : undefined;
 
   return (
-    <Cajon titulo="¿Dónde está mi SO?" sub="Elige un SO para ver en qué máquinas está y en qué lugar de la cola" onCerrar={onCerrar}
+    <Cajon titulo="¿Dónde está mi SO?" sub="Cada ítem con su ruta: ✓ hecho · ▶ en proceso · ● en cola · ○ en camino · ! bloqueado" onCerrar={onCerrar}
       extra={
         <div className="cajon-busca">
-          <input id="buscar-so" autoFocus placeholder="Número de SO o cliente…" value={q}
+          <input id="buscar-so" autoFocus placeholder="Número de SO, cliente o ítem…" value={q}
             onChange={e => { setQ(e.target.value); if (so) onSO(null); }}
-            onKeyDown={e => { if (e.key === 'Enter' && candidatos[0]) onSO(candidatos[0].so); }} />
+            onKeyDown={e => { if (e.key === 'Enter' && candidatos[0]) onSO(candidatos[0].id); }} />
         </div>
       }>
       {actual ? (
         <div className="so-detalle">
           <div className="so-cab">
             <div>
-              <h3>{actual.so}</h3>
-              <span className="sub">{actual.cliente || 'Cliente sin dato'} · entrega {fecha(actual.ops[0]?.o.fecha_entrega)}</span>
+              <h3>{actual.nombre}</h3>
+              <span className="sub">{actual.cliente || 'Cliente sin dato'} · entrega {fecha(actual.fecha_entrega)} · fin proyectado {fecha(actual.fin_proyectado)}</span>
             </div>
             <button className="enlace" onClick={() => onSO(null)}>Cambiar</button>
           </div>
-          <LineaFases fase={actual.ops[0].o.fase} />
-          <h4>{actual.ops.length} operación{actual.ops.length === 1 ? '' : 'es'} abierta{actual.ops.length === 1 ? '' : 's'}</h4>
-          {actual.ops.map(({ o, maquinaId, maquina }) => (
-            <FilaOperacion key={o.id} o={o} maquina={maquina} mostrarSO={false}
-              onClick={maquinaId ? () => onIr(maquinaId, o.id) : undefined} />
+          <div className="so-estado">
+            <span className={`estado-maq ${actual.semaforo ?? ''}`}><span className="punto" style={{ background: colorSemaforo(actual.semaforo) }} />{actual.etapa}</span>
+            {actual.motivo && actual.semaforo !== 'verde' && <span className="motivo">{legible(actual.motivo)}</span>}
+          </div>
+          {actual.items.map(i => (
+            <div key={i.id} className={`item-ruta ${i.estado === 'cerrado' ? 'cerrado' : ''}`}>
+              <div className="ir-cab">
+                <b>{i.nombre}</b>
+                {i.cantidad && <span className="cant">{i.cantidad} u</span>}
+                <span className="situacion">{i.situacion}</span>
+                {i.semaforo && <span className="pill" style={{ background: colorSemaforo(i.semaforo) }}>{i.semaforo}</span>}
+              </div>
+              <RutaItem ruta={i.ruta} actual={i.actual} onPaso={onPaso} />
+              {i.estado !== 'cerrado' && (
+                <span className="op-l-meta"><span>Fin proyectado {fecha(i.fin_proyectado)}</span><span>Límite {fecha(i.limite)}</span></span>
+              )}
+            </div>
           ))}
-          <p className="nota">Las máquinas del SO quedan resaltadas en la planta.</p>
+          {actual.cierre.length > 0 && (
+            <div className="item-ruta">
+              <div className="ir-cab"><b>Cierre del SO</b></div>
+              <RutaItem ruta={actual.cierre} />
+            </div>
+          )}
+          <p className="nota">Clic en un paso de máquina para verlo en la planta. Las máquinas del SO quedan resaltadas.</p>
+          {actual.url_zoho && <a className="enlace" href={actual.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
         </div>
       ) : (
         <div className="so-lista">
-          {candidatos.slice(0, 80).map(r => {
-            const peor = r.ops.some(x => x.o.semaforo === 'rojo') ? 'rojo' : r.ops.some(x => x.o.semaforo === 'amarillo') ? 'amarillo' : 'verde';
-            return (
-              <button key={r.so} className="so-item" onClick={() => onSO(r.so)}>
-                <span className="punto" style={{ background: `var(--${peor})` }} />
-                <b className="so">{r.so}</b>
-                <span className="cli">{r.cliente}</span>
-                <span className="num">{r.ops.length} op.</span>
-              </button>
-            );
-          })}
+          {candidatos.slice(0, 100).map(s => (
+            <button key={s.id} className="so-item" onClick={() => onSO(s.id)}>
+              <span className="punto" style={{ background: colorSemaforo(s.semaforo) }} />
+              <b className="so">{s.nombre}</b>
+              <span className="cli">{s.cliente}</span>
+              <span className="num">{s.etapa} · {s.items.length} ít.</span>
+            </button>
+          ))}
           {!candidatos.length && <p className="vacio">Ningún SO abierto coincide con “{q}”.</p>}
         </div>
       )}

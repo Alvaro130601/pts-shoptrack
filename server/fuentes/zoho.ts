@@ -1,6 +1,7 @@
-// Lectura de Zoho Projects (portal ptsportal388). ESTADO: esqueleto.
-// Los nombres de endpoints/campos marcados con VERIFICAR se confirman en la sesión 1 (docs/ZOHO.md).
-import type { MaquinaConfig, Operacion, Fase, EstadoCola } from '../../shared/tipos.ts';
+// Lectura de Zoho Projects (portal ptsportal388): proyectos SO-… → listas de tareas (ítems) → tareas (ruta).
+// Devuelve los datos crudos; la interpretación (ítems, Set Up, estados, centros) está en shared/ruta.ts.
+// Los nombres de endpoints/campos marcados con VERIFICAR se confirman con datos reales (docs/ZOHO.md).
+import type { ListaCruda, ProyectoCrudo, TareaCruda } from '../../shared/tipos.ts';
 import { esFechaISO } from '../../shared/reglas.ts';
 import { cargarMapeoZoho } from '../config.ts';
 
@@ -80,69 +81,89 @@ export function fechaZoho(p: any): string | null {
   return null;
 }
 
-export async function leerZoho(maquinas: MaquinaConfig[]): Promise<{ ops: Operacion[]; avisos: string[] }> {
+export async function leerZoho(): Promise<{ proyectos: ProyectoCrudo[]; avisos: string[] }> {
   const mapeo = cargarMapeoZoho();
   const portal = env('ZOHO_PORTAL_ID');
   const avisos: string[] = [];
-  const porNombre = new Map(maquinas.filter(m => m.zoho_nombre).map(m => [norm(m.zoho_nombre!), m.id]));
-  if (!porNombre.size) avisos.push('Ninguna máquina tiene zoho_nombre en config/maquinas.json');
 
-  // VERIFICAR rutas v3: /api/v3/portal/{portal}/projects y /api/v3/portal/{portal}/projects/{id}/tasks
+  // VERIFICAR rutas v3: /projects, /projects/{id}/tasklists y /projects/{id}/tasks (¿incluye tareas cerradas?)
   const proyectos = (await todas<any>(`/api/v3/portal/${portal}/projects`, 'projects'))
-    .filter(p => String(p.name ?? '').startsWith('SO-'))
-    .filter(p => !mapeo.fase.excluir_estados.includes(estadoProyecto(p)));
+    .filter(p => String(p.name ?? '').startsWith(mapeo.proyectos.prefijo))
+    .filter(p => !mapeo.proyectos.excluir_estados.includes(estadoProyecto(p)));
+  const datos = await enParalelo(proyectos, 5, async p => ({
+    listas: await todas<any>(`/api/v3/portal/${portal}/projects/${p.id}/tasklists`, 'tasklists'),
+    tareas: await todas<any>(`/api/v3/portal/${portal}/projects/${p.id}/tasks`, 'tasks'),
+  }));
+  const crudos = proyectos.map((p, i) => aProyecto(p, datos[i].listas, datos[i].tareas, mapeo));
+  for (const p of crudos) {
+    if (!p.fecha_entrega) console.warn(`[zoho] ${p.nombre}: fecha final no reconocida`);
+  }
+  return { proyectos: crudos, avisos };
+}
 
-  const tareasPorProyecto = await enParalelo(proyectos, 5,
-    p => todas<any>(`/api/v3/portal/${portal}/projects/${p.id}/tasks`, 'tasks'));
+function aProyecto(p: any, listas: any[], tareas: any[], mapeo: any): ProyectoCrudo {
+  const porLista = new Map<string, any[]>();
+  for (const t of tareas) {
+    if (t.parent_task_id || t.parental_info?.parent_task_id) continue; // VERIFICAR: subtareas fuera de la ruta
+    const id = String(t.tasklist?.id ?? t.tasklist_id ?? 'sin-lista');
+    porLista.set(id, [...(porLista.get(id) ?? []), t]);
+  }
+  const nombres = new Map<string, string>(listas.map(l => [String(l.id), String(l.name ?? '')]));
+  for (const t of tareas) {
+    const id = String(t.tasklist?.id ?? t.tasklist_id ?? 'sin-lista');
+    if (!nombres.has(id)) nombres.set(id, String(t.tasklist?.name ?? 'Sin lista'));
+  }
+  const resultado: ListaCruda[] = [...nombres].filter(([id]) => porLista.has(id)).map(([id, nombre]) => ({
+    id, nombre, tareas: (porLista.get(id) ?? []).sort((a, b) => ordenTarea(a) - ordenTarea(b)).map(t => aTarea(t, mapeo)),
+  }));
+  return {
+    id: String(p.id), nombre: String(p.name), estado: estadoProyecto(p), cliente: campo(p, mapeo.cliente.campo) ?? '',
+    fecha_entrega: fechaZoho(p) ?? '', url: p.link?.web?.url, listas: resultado,
+  };
+}
 
-  const ops: Operacion[] = [];
-  proyectos.forEach((p, ip) => {
-    const fase = estadoProyecto(p) as Fase;
-    const tareas = tareasPorProyecto[ip];
-    const fechaEntrega = fechaZoho(p);
-    if (!fechaEntrega) console.warn(`[zoho] ${p.name}: fecha final no reconocida`, { end_date: p.end_date, end_date_long: p.end_date_long });
-    const texto = JSON.stringify(tareas.map(t => [t.name, t.tasklist?.name]));
-    const ext = texto.includes(mapeo.flags_proyecto.servicio_externo.texto);
-    const ens = texto.includes(mapeo.flags_proyecto.ensamble.texto);
-    for (const t of tareas) {
-      if (!String(t.name ?? '').startsWith(mapeo.tareas_horas.prefijo)) continue;
-      const estTarea = String(t.status?.name ?? t.status ?? '');
-      if (mapeo.estado_tarea.terminada.includes(estTarea)) continue;
-      const crudo = maquinaDeTarea(t, mapeo);
-      const horas = Number(t.owners_and_work?.total_work ?? 0) || 0; // VERIFICAR formato ("12:30" vs número)
-      const estado: EstadoCola = fase !== 'Producción' ? 'por_liberar'
-        : mapeo.estado_tarea.en_proceso.includes(estTarea) ? 'en_proceso' : 'en_cola';
-      if (!['Producción', 'Pend. programación', 'Pend. planos', 'Pend. material'].includes(fase)) continue;
-      ops.push({
-        id: String(t.id), so: String(p.name).split(/\s/)[0], proyecto_id: String(p.id),
-        cliente: String(p.custom_fields?.[mapeo.cliente.campo] ?? ''), descripcion: String(t.name),
-        maquina_id: crudo ? porNombre.get(norm(crudo)) ?? null : null, maquina_zoho: crudo,
-        fase, estado_cola: estado, horas_totales: horas,
-        horas_pendientes: horas, // VERIFICAR: ¿Zoho da horas registradas/avance para restar?
-        fecha_entrega: fechaEntrega ?? '', // vacía → armarEstado la aparta con aviso
-        requiere_servicio_externo: ext, requiere_ensamble: ens,
-        url_zoho: p.link?.web?.url,
-      });
-    }
-  });
-  return { ops, avisos };
+function aTarea(t: any, mapeo: any): TareaCruda {
+  return {
+    id: String(t.id), clave: t.key ? String(t.key) : undefined, nombre: String(t.name ?? ''),
+    equipo: equipoDe(t, mapeo.equipo.campo),
+    estado: String(t.status?.name ?? t.status ?? ''),
+    horas_estimadas: horas(t.owners_and_work?.total_work),                 // VERIFICAR: total de la tarea, no por persona
+    horas_registradas: horas(t.log_hours?.total_hours ?? t.log_hours?.total ?? 0), // VERIFICAR nombre del campo
+    url: t.link?.web?.url,
+  };
+}
+
+/** Orden dentro de la lista: secuencia de Zoho si viene; si no, el número de la clave (A52Y-T37 → 37). VERIFICAR. */
+function ordenTarea(t: any): number {
+  const sec = Number(t.sequence ?? t.order_sequence ?? t.order);
+  if (Number.isFinite(sec)) return sec;
+  const n = String(t.key ?? '').match(/-T(\d+)$/i);
+  return n ? Number(n[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+/** "Equipo asignado": equipos de Zoho o campo personalizado con ese nombre. VERIFICAR. */
+function equipoDe(t: any, nombreCampo: string): string | null {
+  const equipo = t.teams?.[0]?.name ?? t.associated_teams?.[0]?.name;
+  return equipo ? String(equipo) : campo(t, nombreCampo);
+}
+
+function campo(x: any, nombre: string): string | null {
+  const cf = x.custom_fields ?? x.custom_fields_values ?? [];
+  const hit = Array.isArray(cf) ? cf.find((c: any) => c.label_name === nombre || c.name === nombre || c.display_name === nombre) : cf[nombre];
+  const v = hit?.value ?? (typeof hit === 'string' ? hit : null);
+  return v == null || v === '' ? null : String(Array.isArray(v) ? v[0] : v);
+}
+
+/** Horas: número, "12", "12.5" o "12:30". */
+export function horas(v: unknown): number {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+  const s = String(v ?? '').trim();
+  const hm = s.match(/^(\d+):(\d{1,2})$/);
+  if (hm) return Number(hm[1]) + Number(hm[2]) / 60;
+  const n = Number(s.replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
 }
 
 function estadoProyecto(p: any): string {
   return String(p.status?.name ?? p.custom_status_name ?? p.status ?? '');
 }
-function maquinaDeTarea(t: any, mapeo: any): string | null {
-  const m = mapeo.maquina;
-  switch (m.fuente) {
-    case 'campo_personalizado': {
-      const cf = t.custom_fields ?? t.custom_fields_values ?? [];
-      const hit = Array.isArray(cf) ? cf.find((c: any) => c.label_name === m.campo || c.name === m.campo) : cf[m.campo];
-      return hit ? String(hit.value ?? hit) : null;
-    }
-    case 'etiqueta': return t.tags?.[0]?.name ?? null;
-    case 'nombre_tarea': return String(t.name).match(new RegExp(m.regex_nombre_tarea))?.[1] ?? null;
-    case 'lista_tareas': return t.tasklist?.name ?? null;
-    default: return null;
-  }
-}
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();

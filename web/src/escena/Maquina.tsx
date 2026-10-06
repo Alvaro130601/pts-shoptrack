@@ -29,7 +29,7 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
   const op = atenuada ? 0.18 : 1;
   const realce = seleccionada || hover;
 
-  const pila: Operacion[] = estado ? [...estado.en_proceso, ...estado.cola, ...estado.por_liberar] : [];
+  const pila: Operacion[] = estado ? [...estado.en_proceso, ...estado.cola, ...estado.proximas] : [];
   const visibles = pila.slice(0, MAX_PILA);
   const lado = Math.max(0.4, Math.min(0.72, Math.min(e.w, e.d) * 0.5));
   const yPila = h + 0.45;
@@ -144,12 +144,12 @@ function Andon({ x, z, alto, sem, trabajando, op }:
 
 function Bloque({ op, y, lado }: { op: Operacion; y: number; lado: number }) {
   const ref = useRef<THREE.Group>(null);
-  const enProceso = op.estado_cola === 'en_proceso';
+  const enProceso = op.estado === 'en_proceso';
   useFrame(({ clock }) => {
     if (ref.current && enProceso) ref.current.position.y = y + Math.sin(clock.elapsedTime * 2.2) * 0.04;
   });
   const color = enProceso ? C.acento : colorSemaforo(op.semaforo);
-  const fantasma = op.estado_cola === 'por_liberar';
+  const fantasma = op.estado === 'en_camino' || op.estado === 'bloqueada';
   return (
     <group ref={ref} position-y={y}>
       <RoundedBox args={[lado, ALTO_BLOQUE, lado]} radius={0.05} smoothness={2} castShadow={!fantasma}>

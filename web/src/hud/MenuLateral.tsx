@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { IcoAlerta, IcoBandeja, IcoBuscarSO, IcoCola, IcoInicio, IcoLeyenda } from '../iconos';
+import { IcoAlerta, IcoBandeja, IcoBuscarSO, IcoCola, IcoInicio, IcoLeyenda, IcoMaterial } from '../iconos';
 
-export type Modulo = 'cola' | 'alertas' | 'so' | 'sin_maquina' | 'leyenda';
+export type Modulo = 'cola' | 'alertas' | 'so' | 'material' | 'sin_centro' | 'leyenda';
 
 interface Item { id: Modulo; etiqueta: string; icono: ReactNode; badge?: number; tono?: 'rojo' | 'gris' }
 
@@ -9,16 +9,18 @@ interface Props {
   activo: Modulo | null;
   onCambiar: (m: Modulo | null) => void;
   onInicio: () => void;
-  atrasadas: number;
-  sinMaquina: number;
+  atrasados: number;
+  material: number;
+  sinCentro: number;
 }
 
-export function MenuLateral({ activo, onCambiar, onInicio, atrasadas, sinMaquina }: Props) {
+export function MenuLateral({ activo, onCambiar, onInicio, atrasados, material, sinCentro }: Props) {
   const items: Item[] = [
-    { id: 'cola', etiqueta: 'Cola', icono: <IcoCola /> },
-    { id: 'alertas', etiqueta: 'Alertas', icono: <IcoAlerta />, badge: atrasadas, tono: 'rojo' },
+    { id: 'cola', etiqueta: 'Carga', icono: <IcoCola /> },
+    { id: 'alertas', etiqueta: 'Alertas', icono: <IcoAlerta />, badge: atrasados, tono: 'rojo' },
     { id: 'so', etiqueta: 'Buscar SO', icono: <IcoBuscarSO /> },
-    { id: 'sin_maquina', etiqueta: 'Sin máquina', icono: <IcoBandeja />, badge: sinMaquina, tono: 'gris' },
+    { id: 'material', etiqueta: 'Material', icono: <IcoMaterial />, badge: material, tono: 'gris' },
+    ...(sinCentro ? [{ id: 'sin_centro' as const, etiqueta: 'Sin centro', icono: <IcoBandeja />, badge: sinCentro, tono: 'gris' as const }] : []),
   ];
   const boton = (it: Item) => (
     <button key={it.id} className={`menu-item ${activo === it.id ? 'activo' : ''}`}

@@ -76,9 +76,11 @@ Con eso no hay que mantener estados a mano en otros niveles; ShopTrack los calcu
 - **Ítem**: Pendiente (nada empezado), En proceso, Cerrado (todas sus tareas cerradas).
 - **Fase del SO** (programación, material, producción, calidad, envío): sale de sus ítems y de la lista Cierre.
 
-## 4. Cómo lo usaría ShopTrack
+## 4. Cómo lo hace ShopTrack ✅ (implementado el 6-oct-2026)
 
-**Centros de trabajo = equipos de Zoho**, cada uno con sus máquinas (propuesta ❓):
+Código: `shared/ruta.ts` (lectura y estados) y `shared/plan.ts` (plan), con tests en `tests/`.
+
+**Centros de trabajo = equipos de Zoho**, cada uno con sus máquinas (`config/centros.json`, propuesta ❓):
 
 | Equipo | Máquinas |
 |---|---|
@@ -98,18 +100,27 @@ Cada **operación** tiene un estado calculado con su ítem:
 | En proceso | Se está trabajando | Tarea en proceso |
 | En cola | La pieza está esperando frente al centro | Las anteriores del ítem están cerradas y el material está listo |
 | En camino | La pieza todavía va en una operación anterior | Alguna anterior del ítem está abierta |
-| Bloqueada | Falta material, planos o programa | Tarea Material, Planos o Programación abierta |
-| Fuera | En un proveedor | Servicio externo en proceso |
+| Bloqueada | Falta material, planos o programa | Material o Planos abiertos, o Programación sin cerrar |
+| En proceso (servicio externo) | En un proveedor | Tarea de servicio externo en proceso |
 
-Y con eso:
-- **Reparto de trabajo**: por cada centro, la cola ordenada por prioridad (límite de producción) y una
-  **máquina sugerida** según la carga de cada una. Set Up y mecanizado van juntos a la misma máquina. El
-  supervisor decide.
-- **Horas pendientes** = horas estimadas − horas registradas.
-- **Cola de cada máquina**: solo lo que está en proceso o realmente esperando; lo "en camino" se ve aparte.
-- **¿Dónde está mi SO?**: cada ítem como una cadena de pasos con el actual resaltado.
-- **Proyección**: simulación hacia adelante que respeta la ruta de cada ítem y la capacidad de cada centro.
-  Da fin proyectado por operación, ítem y SO; el semáforo compara contra la entrega menos el buffer.
+Dependencias: la **programación** solo espera los planos (se programa mientras llega el material); las
+operaciones de **máquina** y el **servicio externo** esperan todo lo anterior de su ruta.
+
+Cómo se arma el plan:
+1. Lo que ya está **en proceso** ocupa su máquina (o programador) desde hoy. Zoho no dice en qué máquina está:
+   el plan la estima.
+2. Luego, SO por SO en orden de prioridad (fecha en que deben terminar sus rutas), cada ítem recorre su ruta:
+   cada operación se pone en la máquina de su proceso que la **termina antes** (aprovechando huecos libres), sin
+   empezar antes de que termine lo que la precede. Set Up y mecanizado van juntos a la misma máquina.
+3. Duraciones: máquina y programación = horas pendientes ÷ capacidad diaria del recurso; servicio externo,
+   material y planos = su SLA (3, 3 y 5 días hábiles); ensamble, calidad y envío = 1 día.
+4. **Límites hacia atrás** desde la entrega: las rutas terminan `bufferDias − 3` días antes si llevan servicio
+   externo (si no, `bufferDias`), o según la lista Cierre si existe; cada paso debe terminar a tiempo para que
+   los que dependen de él quepan antes de su propio límite.
+5. **Semáforo** de cada paso: fin proyectado contra su límite (rojo si no llega o el límite pasó; amarillo con
+   holgura ≤ 1 día). El ítem y el SO toman el peor.
+
+Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso, media hora).
 
 ## 5. Observaciones
 
@@ -125,7 +136,8 @@ Y con eso:
 
 ## 6. Preguntas abiertas
 
-1. Lista completa de equipos y qué máquinas pertenecen a cada uno (la tabla de la sección 4 es una propuesta).
+1. Lista completa de equipos y qué máquinas pertenecen a cada uno (la tabla de la sección 4 es una propuesta),
+   y cuántos programadores hay (hoy se supone 1, 8 h/día).
 2. Calidad, ensamble y envío: ¿lista final **Cierre** en cada SO, o siguen en el estado del proyecto?
 3. Planos: ¿diseño interno o planos del cliente? ¿Una tarea **Planos** por ítem, como Material?
 4. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?

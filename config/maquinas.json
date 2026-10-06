@@ -1,5 +1,5 @@
 {
- "_instrucciones": "Completar zoho_nombre con el valor EXACTO con que la máquina aparece en Zoho Projects (campo/etiqueta/nombre de tarea). Confirmar proceso y capacidad_horas_dia (horas productivas por día hábil sumando turnos; 16 = 2 turnos, valor provisional). activa=false oculta la máquina. familia = forma 3D aproximada: fresadora_cnc | fresadora_convencional | torno_cnc | torno_convencional | torno_suizo | edm_hilo | laser | horno | dobladora | guillotina | soldadora | generica (sin identificar).",
+ "_instrucciones": "Máquinas de la planta (ids del layout). La máquina NO está en Zoho: el proceso viene del Equipo asignado y config/centros.json dice qué máquinas hacen cada proceso. proceso = descripción; familia = forma 3D aproximada: fresadora_cnc | fresadora_convencional | torno_cnc | torno_convencional | torno_suizo | edm_hilo | laser | horno | dobladora | guillotina | soldadora | generica (sin identificar). capacidad_horas_dia = horas productivas por día hábil sumando turnos (16 = 2 turnos, provisional). activa=false oculta la máquina.",
  "maquinas": [
   {
    "id": "horno",
@@ -7,7 +7,6 @@
    "taller": "taller-1",
    "proceso": "Tratamiento térmico?",
    "familia": "horno",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": false,
    "activa": true
@@ -18,7 +17,6 @@
    "taller": "taller-1",
    "proceso": "Fabricación",
    "familia": "dobladora",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": false,
    "activa": true
@@ -29,7 +27,6 @@
    "taller": "taller-1",
    "proceso": "Fabricación",
    "familia": "soldadora",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": false,
    "activa": true
@@ -40,7 +37,6 @@
    "taller": "taller-1",
    "proceso": "Fabricación",
    "familia": "guillotina",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": false,
    "activa": true
@@ -51,7 +47,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -62,7 +57,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -73,7 +67,6 @@
    "taller": "taller-2",
    "proceso": "Torno (convencional?)",
    "familia": "torno_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -84,7 +77,6 @@
    "taller": "taller-2",
    "proceso": "Torno (convencional?)",
    "familia": "torno_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -95,7 +87,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -106,7 +97,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -117,7 +107,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -128,7 +117,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -139,7 +127,6 @@
    "taller": "taller-2",
    "proceso": "Fresado (convencional?)",
    "familia": "fresadora_convencional",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -150,7 +137,6 @@
    "taller": "taller-3",
    "proceso": "Fresado CNC",
    "familia": "fresadora_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -161,7 +147,6 @@
    "taller": "taller-3",
    "proceso": "Fresado CNC",
    "familia": "fresadora_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -172,7 +157,6 @@
    "taller": "taller-3",
    "proceso": "Fresado CNC",
    "familia": "fresadora_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -183,7 +167,6 @@
    "taller": "taller-3",
    "proceso": "Por confirmar",
    "familia": "generica",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -194,7 +177,6 @@
    "taller": "taller-3",
    "proceso": "Fresado CNC",
    "familia": "fresadora_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -205,7 +187,6 @@
    "taller": "taller-3",
    "proceso": "Fresado CNC",
    "familia": "fresadora_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -216,7 +197,6 @@
    "taller": "taller-4",
    "proceso": "Por confirmar",
    "familia": "generica",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -227,7 +207,6 @@
    "taller": "taller-4",
    "proceso": "Torno CNC",
    "familia": "torno_cnc",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -238,7 +217,6 @@
    "taller": "taller-4",
    "proceso": "Por confirmar",
    "familia": "generica",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true
@@ -249,7 +227,6 @@
    "taller": "taller-4",
    "proceso": "Torno Suizo?",
    "familia": "torno_suizo",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -260,7 +237,6 @@
    "taller": "taller-4",
    "proceso": "Erosionado",
    "familia": "edm_hilo",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -271,7 +247,6 @@
    "taller": "taller-4",
    "proceso": "Erosionado",
    "familia": "edm_hilo",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 16,
    "es_centro_mecanizado": true,
    "activa": true
@@ -282,7 +257,6 @@
    "taller": null,
    "proceso": "Corte láser",
    "familia": "laser",
-   "zoho_nombre": null,
    "capacidad_horas_dia": 8,
    "es_centro_mecanizado": true,
    "activa": true

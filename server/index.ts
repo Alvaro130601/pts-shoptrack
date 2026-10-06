@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
 import { existsSync, readFileSync } from 'node:fs';
-import { armarEstado } from '../shared/reglas.ts';
+import { armarEstado } from '../shared/plan.ts';
 import type { EstadoPlanta } from '../shared/tipos.ts';
-import { cargarFeriados, cargarMaquinas, hoyCR, rutaRaiz } from './config.ts';
+import { cargarCentros, cargarFeriados, cargarMaquinas, cargarReglasLectura, hoyCR, rutaRaiz } from './config.ts';
 import { generarSeed } from './fuentes/seed.ts';
 import { leerZoho } from './fuentes/zoho.ts';
 
@@ -18,12 +18,16 @@ let ultimoError: { mensaje: string; t: number } | null = null;
 let enCurso: Promise<void> | null = null;
 
 async function refrescar() {
-  const maquinas = cargarMaquinas(), feriados = cargarFeriados(), hoy = hoyCR();
+  const feriados = cargarFeriados(), hoy = hoyCR();
   try {
-    const { ops, avisos } = FUENTE === 'zoho'
-      ? await leerZoho(maquinas)
-      : { ops: generarSeed(maquinas, hoy, feriados), avisos: ['Datos simulados (DATA_SOURCE=seed)'] };
-    cache = { estado: armarEstado(maquinas, ops, FUENTE, hoy, feriados, avisos), t: Date.now() };
+    const { proyectos, avisos } = FUENTE === 'zoho'
+      ? await leerZoho()
+      : { proyectos: generarSeed(hoy, feriados), avisos: ['Datos simulados (DATA_SOURCE=seed)'] };
+    const estado = armarEstado({
+      proyectos, maquinas: cargarMaquinas(), centros: cargarCentros(), reglas: cargarReglasLectura(),
+      fuente: FUENTE, hoy, feriados, avisos,
+    });
+    cache = { estado, t: Date.now() };
     ultimoError = null;
   } catch (e) {
     ultimoError = { mensaje: (e as Error).message, t: Date.now() };

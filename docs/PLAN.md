@@ -3,17 +3,21 @@
 ## Hito 0 — Prototipo (listo)
 Escena 3D con el layout real, colas por máquina con datos simulados, panel, tabla, búsqueda, reglas de buffer y semáforo.
 
+## Hito 0.5 — Proceso real (listo, 6-oct-2026)
+Modelo SO → ítems → ruta visto en Zoho (`docs/PROCESO.md`), estados de cada paso según la ruta, carga por proceso,
+plan sugerido entre máquinas, ¿dónde está mi SO? con rutas, material, menú lateral y formas por familia.
+
 ## Hito 1 — Datos reales de Zoho
 1. Credenciales Self Client en `.env`.
 2. Inspeccionar SO reales y cerrar las preguntas de `docs/ZOHO.md`.
-3. Ajustar `server/fuentes/zoho.ts` y `config/zoho-mapeo.json`; completar `zoho_nombre` de cada máquina.
-4. Bandeja "sin máquina" visible en el HUD con el valor crudo que vino de Zoho.
+3. Ajustar `server/fuentes/zoho.ts` y `config/zoho-mapeo.json` (campos marcados VERIFICAR); confirmar
+   `config/centros.json` (equipo → máquinas, programadores).
+4. ~~Bandeja con el valor crudo de Zoho cuando no se reconoce.~~ Hecho: módulo "Sin centro".
 5. ~~Tests de `shared/reglas.ts` (vitest) con casos de buffer 2/5/6 y feriados.~~ Hecho (`tests/`); ampliar con casos reales de Zoho.
 
 ## Hito 2 — Pulido visual tipo WareTrack
-Modelos low-poly por familia (fresadora vertical, torno, suizo, EDM) en vez de cajas; LOD de etiquetas;
-cámara con botones de taller; animación de entrada de una operación a la máquina cuando cambia de estado;
-modo "¿dónde está mi SO?".
+~~Modelos low-poly por familia, LOD de etiquetas, cámara con botones de taller, modo "¿dónde está mi SO?".~~ Hecho.
+Falta: animación de entrada de una operación a la máquina cuando cambia de estado; frente real de cada máquina.
 
 ## Hito 3 — Puesta en planta
 Servir build + API desde una PC de la red de PTS (`npm run build && npm start`), arranque automático,

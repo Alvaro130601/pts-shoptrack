@@ -9,7 +9,7 @@ interface Props {
   busqueda: string;
   onBusqueda: (q: string) => void;
   coincidencias: number | null; // máquinas que coinciden con búsqueda/filtro; null = sin filtro
-  procesos: string[];
+  procesos: { id: string; nombre: string }[];
   proceso: string;
   onProceso: (p: string) => void;
   onAbrir: (m: Modulo, pestana?: 'rojo' | 'amarillo') => void;
@@ -44,27 +44,30 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
       </label>
       <select id="proceso" value={proceso} onChange={e => onProceso(e.target.value)} aria-label="Filtrar por proceso">
         <option value="todos">Todos los procesos</option>
-        {procesos.map(p => <option key={p}>{p}</option>)}
+        {procesos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
       </select>
 
       {k && (
         <div className="kpis" role="group" aria-label="Resumen">
-          <button className="kpi sec" onClick={() => onAbrir('cola')} title="SO con operaciones en máquina">
+          <button className="kpi sec" onClick={() => onAbrir('so')} title={`${k.items_abiertos} ítems abiertos`}>
             <b>{k.so_abiertos}</b><span>SO abiertos</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('cola')} title="Operaciones mecanizándose ahora">
+          <button className="kpi" onClick={() => onAbrir('cola')} title="Operaciones en proceso: máquinas, programación y proveedores">
             <b className="azul">{k.en_proceso}</b><span>en proceso</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('cola')} title={`${k.por_liberar} más por liberar`}>
+          <button className="kpi" onClick={() => onAbrir('cola')} title="Operaciones de máquina listas para empezar">
             <b>{k.en_cola}</b><span>en cola</span>
           </button>
-          <button className="kpi sec" onClick={() => onAbrir('cola')} title="Horas pendientes en centros">
+          <button className="kpi sec" onClick={() => onAbrir('cola')} title="Horas de máquina en proceso o en cola">
             <b>{k.horas_cola.toLocaleString('es-CR')}</b><span>h en cola</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('alertas', 'rojo')} title="Ver operaciones atrasadas">
-            <b className={k.atrasadas ? 'rojo' : 'verde'}>{k.atrasadas}</b><span>atrasadas</span>
+          <button className="kpi" onClick={() => onAbrir('material')} title="Ítems esperando material">
+            <b className={k.esperando_material ? 'morado' : ''}>{k.esperando_material}</b><span>sin material</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('alertas', 'amarillo')} title="Ver operaciones en riesgo">
+          <button className="kpi" onClick={() => onAbrir('alertas', 'rojo')} title="Ítems que no llegan a la entrega">
+            <b className={k.atrasados ? 'rojo' : 'verde'}>{k.atrasados}</b><span>atrasados</span>
+          </button>
+          <button className="kpi" onClick={() => onAbrir('alertas', 'amarillo')} title="Ítems con 1 día de holgura o menos">
             <b className={k.en_riesgo ? 'amarillo' : 'verde'}>{k.en_riesgo}</b><span>en riesgo</span>
           </button>
         </div>

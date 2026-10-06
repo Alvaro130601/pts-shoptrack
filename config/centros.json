@@ -1,0 +1,21 @@
+{
+  "_instrucciones": "Centros de trabajo = procesos (Equipo asignado en Zoho). equipos_zoho: valores exactos (sin importar tildes ni mayúsculas) que caen en el centro. tipo maquina: las máquinas que pueden hacer ese trabajo (ids de maquinas.json); ShopTrack reparte entre ellas. tipo programacion: programadores (personas × horas por día). tipo externo: proveedor, días hábiles por servicio. PROPUESTA del 6-oct-2026: confirmar con Alvaro qué máquinas hace cada equipo y cuántos programadores hay.",
+  "centros": [
+    { "id": "fresado-cnc", "nombre": "Fresado CNC", "tipo": "maquina", "equipos_zoho": ["Fresado CNC"],
+      "maquinas": ["haas-vf-2", "svm-4100-1", "svm-4100-2", "haas-mini-mill-1", "haas-mini-mill-2", "syl"] },
+    { "id": "fresado", "nombre": "Fresado", "tipo": "maquina", "equipos_zoho": ["Fresado", "Fresado convencional"],
+      "maquinas": ["fresadora-1", "fresadora-2", "fresadora-3", "fresadora-4", "fresadora-5", "fresadora-6", "fresadora-7"] },
+    { "id": "torno-cnc", "nombre": "Torno CNC", "tipo": "maquina", "equipos_zoho": ["Torno CNC", "Torno suizo"],
+      "maquinas": ["torno-hyundai", "torno-hanwa"] },
+    { "id": "torno", "nombre": "Torno", "tipo": "maquina", "equipos_zoho": ["Torno", "Torno convencional"],
+      "maquinas": ["torno-1", "torno-2"] },
+    { "id": "erosionado", "nombre": "Erosionado", "tipo": "maquina", "equipos_zoho": ["Erosionado", "Hilo", "EDM"],
+      "maquinas": ["edm-hilo", "cut-e350", "e350"] },
+    { "id": "corte-laser", "nombre": "Corte láser", "tipo": "maquina", "equipos_zoho": ["Corte láser", "Láser"],
+      "maquinas": ["cortadora-laser"] },
+    { "id": "programacion", "nombre": "Programación", "tipo": "programacion", "equipos_zoho": ["Programación"],
+      "personas": 1, "horas_dia": 8 },
+    { "id": "externo", "nombre": "Servicio externo", "tipo": "externo", "equipos_zoho": ["No Requiere", "Servicio externo"],
+      "dias": 3 }
+  ]
+}

@@ -1,17 +1,19 @@
 # PTS ShopTrack — contexto para Claude Code
 
-Planta 3D interactiva de **PTS Costa Rica** (mecanizado de precisión para dispositivos médicos) que muestra,
-para cada centro de mecanizado, **la orden en proceso, la cola de órdenes y las que vienen por liberar**,
-con semáforo de cumplimiento. Inspirado visualmente en *WareTrack* de Dilum Sanjaya (ver `docs/referencia/`).
+Planta 3D interactiva de **PTS Costa Rica** (mecanizado de precisión para dispositivos médicos) que muestra
+la carga de cada proceso, **un reparto sugerido del trabajo entre sus máquinas**, la ruta de cada ítem de cada SO
+y qué no llega a tiempo, con semáforo de cumplimiento. Inspirado visualmente en *WareTrack* de Dilum Sanjaya (ver `docs/referencia/`).
 Usuarios: **supervisores de producción en PC**, uso interactivo (clic en máquina, filtros, detalle).
 Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de UI y docs: **español**.
 
 ## Stack
 - `web/` React 19 + Vite + **React Three Fiber** + drei (escena 3D isométrica con cámara ortográfica) + CSS propio.
   `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, menú lateral, panel, controles),
-  `modulos/` (cajones del menú: cola, alertas, ¿dónde está mi SO?, sin máquina, leyenda).
+  `modulos/` (cajones del menú: carga por proceso, alertas, ¿dónde está mi SO?, material, sin centro, leyenda).
 - `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`. Cachea la lectura de Zoho.
-- `shared/` tipos y **reglas de negocio puras** (`reglas.ts`): días hábiles, buffer, cola, semáforo. Sin I/O.
+- `shared/` tipos y **reglas de negocio puras**, sin I/O: `reglas.ts` (días hábiles, SLA, buffer, semáforo),
+  `ruta.ts` (Zoho → SO → ítems → ruta; estados de cada paso) y `plan.ts` (reparto sugerido por capacidad,
+  límites hacia atrás desde la entrega, semáforo, estado de la planta).
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados.
 - `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.
 
@@ -19,11 +21,13 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `data/layout/planta_pts.json` — **posiciones reales** (m) de talleres y máquinas, exportadas del ensamble
   SolidWorks `Ensamble final de taller.SLDASM`. Proyectado a planta, sin la inclinación de 2.41° que tiene el CAD.
   No editar a mano salvo correcciones puntuales; documentarlas en `docs/SPEC.md#layout`.
-- `config/maquinas.json` — máquinas: `zoho_nombre` (valor exacto en Zoho), proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
-- `config/zoho-mapeo.json` — cómo se lee la máquina, horas, fase y flags desde Zoho. **Borrador por confirmar.**
+- `config/maquinas.json` — máquinas: proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
+- `config/centros.json` — procesos (Equipo asignado en Zoho) → máquinas que los hacen; programadores; proveedores.
+  **Propuesta por confirmar con Alvaro.**
+- `config/zoho-mapeo.json` — cómo se leen proyectos, ítems, tareas y estados de Zoho (`lectura`). **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 
-## Proceso real (ver `docs/PROCESO.md`, borrador por validar; visto en SO-10664-MCV-1)
+## Proceso real (ver `docs/PROCESO.md`; visto en SO-10664-MCV-1)
 - Un SO (proyecto) tiene **ítems** = listas de tareas `Ítem <línea> (<cantidad> unidades)`. Cada ítem tiene su
   **ruta**: tareas `H. <proceso>` en el orden de la lista. Cada ítem avanza por su cuenta.
 - El proceso está en **Equipo asignado** (Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere = externo).
@@ -32,7 +36,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - Decidido con Alvaro (6-oct): tareas con 3 estados (Pendiente, En proceso, Cerrada); una tarea **Material** al
   inicio de cada ítem; programación = cola de programadores aparte; ShopTrack **sugiere** máquina por carga y el
   supervisor decide (no escribe en Zoho); horas estimadas = total de la tarea.
-- El modelo actual de la app (operación suelta por máquina, fase por SO) no lo respeta todavía.
+- La app ya trabaja así: estados de cada paso según su ruta (hecha, en proceso, en cola, en camino, bloqueada) y
+  plan hacia adelante que respeta la ruta y la capacidad de cada máquina. La programación avanza mientras llega
+  el material; la máquina espera material y programa.
 
 ## Reglas de negocio de PTS (no cambiar sin pedirlo)
 - Zoho Projects: portal **`ptsportal388`** (ID 714664835). Proyectos con prefijo **`SO-`**.
@@ -44,12 +50,15 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   ensamble 1, servicio externo 3; producción sin SLA fijo.
 - **Buffer** antes de la entrega final (días hábiles): Servicio externo + Ensamble → producción termina 6 días antes;
   solo Servicio externo → 5; flujo estándar → 2. La fecha final del proyecto manda la prioridad.
-- Semáforo de una operación en máquina: rojo si el límite ya pasó o el fin proyectado (por cola + capacidad) cae
-  después del límite; amarillo si la holgura ≤ 1 día hábil; verde en otro caso. (Propuesta v0 — confirmar con Alvaro.)
+- Con la ruta completa, el servicio externo es un paso dentro de la ruta: las rutas terminan `bufferDias − 3`
+  días antes de la entrega (calidad y envío, + ensamble) y el límite de cada paso se calcula hacia atrás con lo
+  que falta de la ruta. Con el servicio externo al final da los mismos 2/5/6 días.
+- Semáforo de una operación: rojo si el límite ya pasó o el fin proyectado (por plan + capacidad) cae después del
+  límite; amarillo si la holgura ≤ 1 día hábil; verde en otro caso. (Propuesta v0 — confirmar con Alvaro.)
 - La planificación de recursos del proyecto se llama "Gestión de Recursos del Proyecto".
 
 ## Convenciones
-- TypeScript estricto. Lógica de negocio en `shared/reglas.ts` con tests (vitest) antes de tocarla.
+- TypeScript estricto. Lógica de negocio en `shared/` con tests (vitest) antes de tocarla.
 - Nunca subir `.env` ni credenciales. Los datos simulados (`server/fuentes/seed.ts`) usan clientes ficticios.
 - No inventar campos de Zoho: si no se sabe cómo viene un dato, inspeccionarlo con la API/MCP y documentarlo en `docs/ZOHO.md`.
 - Cambios visuales: verificar con captura (Playwright) antes de dar por terminado.
@@ -58,5 +67,7 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - drei `<Html>` emite en consola "Attempted to synchronously unmount a root…" con React 19 (cosmético).
 - Las dependencias (three/drei, ~1.1 MB) van en un chunk `vendor` aparte, cacheable entre versiones.
 - Las fuentes vienen de Google Fonts: sin internet en la PC de planta se usa la fuente del sistema.
-- Por liberar se pone amarillo con ≤ 2 días hábiles al límite (en máquina es ≤ 1): confirmar con Alvaro.
+- La máquina en proceso no está en Zoho: el plan la estima (la que equilibra la carga). Material sin fecha: se
+  supone que llega en 3 días hábiles (SLA). Un SO con ensamble y sin servicio externo lleva buffer 2 (regla
+  actual; por SLA serían 3): confirmar con Alvaro.
 - Etiquetas se traslapan en zonas densas (Taller #3): falta LOD / agrupación.

@@ -1,5 +1,6 @@
 // Reglas de negocio de PTS (ver CLAUDE.md). Puras: sin red ni I/O, para poder testearlas.
-import type { EstadoMaquina, EstadoPlanta, MaquinaConfig, Operacion, Semaforo } from './tipos.ts';
+// El modelo de ruta está en shared/ruta.ts y el plan (capacidad, máquina sugerida, semáforo) en shared/plan.ts.
+import type { Semaforo } from './tipos.ts';
 
 // ---------- días hábiles ----------
 const iso = (d: Date) => d.toISOString().slice(0, 10);
@@ -40,97 +41,42 @@ export function habilesEntre(a: string, b: string, feriados: Set<string>): numbe
   }
   return n;
 }
+/** La misma fecha si es hábil; si no, el siguiente día hábil (p. ej. un sábado → lunes). */
+export function primerHabil(fecha: string, feriados: Set<string>): string {
+  return esHabil(parse(fecha), feriados) ? fecha : sumarHabiles(fecha, 1, feriados);
+}
 
-// ---------- buffer antes de la entrega ----------
+// ---------- SLA y buffer antes de la entrega ----------
+/** SLA en días hábiles (CLAUDE.md). Se usan como duración estimada de los pasos sin horas. */
+export const SLA = { programacion: 1, planos: 5, material: 3, calidad: 1, envio: 1, ensamble: 1, servicio_externo: 3 } as const;
+
 /** Servicio externo + Ensamble → 6 · solo Servicio externo → 5 · flujo estándar → 2 (días hábiles) */
-export function bufferDias(op: Pick<Operacion, 'requiere_servicio_externo' | 'requiere_ensamble'>) {
-  if (op.requiere_servicio_externo && op.requiere_ensamble) return 6;
-  if (op.requiere_servicio_externo) return 5;
+export function bufferDias(so: { requiere_servicio_externo: boolean; requiere_ensamble: boolean }) {
+  if (so.requiere_servicio_externo && so.requiere_ensamble) return 6;
+  if (so.requiere_servicio_externo) return 5;
   return 2;
 }
 
-// ---------- cola y semáforo por máquina ----------
-const RANGO: Record<Semaforo, number> = { verde: 0, amarillo: 1, rojo: 2 };
-
-export function ordenarCola(ops: Operacion[]) {
-  return [...ops].sort((a, b) =>
-    (a.fecha_limite_produccion ?? '').localeCompare(b.fecha_limite_produccion ?? '') ||
-    a.fecha_entrega.localeCompare(b.fecha_entrega) ||
-    a.so.localeCompare(b.so));
+/** Días hábiles que quedan entre el fin de las rutas de los ítems y la entrega (calidad, envío y ensamble).
+ *  Es el buffer sin el servicio externo, porque ahora el servicio externo es un paso dentro de la ruta.
+ *  Con el servicio externo al final de la ruta, la producción vuelve a quedar 2/5/6 días antes de la entrega. */
+export function diasDeCierre(so: { requiere_servicio_externo: boolean; requiere_ensamble: boolean }) {
+  return bufferDias(so) - (so.requiere_servicio_externo ? SLA.servicio_externo : 0);
 }
 
-export function calcularMaquina(cfg: MaquinaConfig, entrada: Operacion[], hoy: string, feriados: Set<string>): EstadoMaquina {
-  // Copias: no se modifican las operaciones recibidas.
-  const ops = entrada.map(o => ({ ...o }));
-  for (const op of ops) op.fecha_limite_produccion = sumarHabiles(op.fecha_entrega, -bufferDias(op), feriados);
-  const enProceso = ordenarCola(ops.filter(o => o.estado_cola === 'en_proceso'));
-  const cola = ordenarCola(ops.filter(o => o.estado_cola === 'en_cola'));
-  const porLiberar = ordenarCola(ops.filter(o => o.estado_cola === 'por_liberar'));
+// ---------- semáforo ----------
+export const RANGO: Record<Semaforo, number> = { verde: 0, amarillo: 1, rojo: 2 };
+export const peorSemaforo = (a: Semaforo | undefined, b: Semaforo | undefined): Semaforo | undefined =>
+  !a ? b : !b ? a : RANGO[b] > RANGO[a] ? b : a;
 
-  // Proyección: la máquina trabaja la secuencia en_proceso → cola a capacidad_horas_dia.
-  const cap = Math.max(cfg.capacidad_horas_dia, 0.1);
-  let acumulado = 0;
-  [...enProceso, ...cola].forEach((op, i) => {
-    acumulado += op.horas_pendientes;
-    const dias = Math.ceil(acumulado / cap);
-    op.posicion = op.estado_cola === 'en_proceso' ? 0 : i - enProceso.length + 1;
-    op.fin_proyectado = sumarHabiles(hoy, Math.max(dias - 1, 0), feriados);
-    evaluar(op, hoy, feriados);
-  });
-  // Por liberar: solo se evalúa contra el límite (aún no consume máquina).
-  for (const op of porLiberar) {
-    op.fin_proyectado = undefined;
-    const margen = habilesEntre(hoy, op.fecha_limite_produccion!, feriados);
-    op.holgura_dias = margen;
-    if (margen < 0) { op.semaforo = 'rojo'; op.motivo = 'Límite de producción vencido y aún no se libera'; }
-    else if (margen <= 2) { op.semaforo = 'amarillo'; op.motivo = `Faltan ${margen} días hábiles al límite y sigue en ${op.fase}`; }
-    else { op.semaforo = 'verde'; op.motivo = 'En tiempo'; }
-  }
-
-  const activas = [...enProceso, ...cola];
-  const horas = activas.reduce((s, o) => s + o.horas_pendientes, 0);
-  const peor = activas.reduce<Semaforo | 'libre'>((p, o) =>
-    p === 'libre' || RANGO[o.semaforo!] > RANGO[p as Semaforo] ? o.semaforo! : p, 'libre');
-  return { ...cfg, en_proceso: enProceso, cola, por_liberar: porLiberar,
-    horas_cola: round1(horas), dias_carga: round1(horas / cap), semaforo: peor };
+/** Rojo si el límite ya pasó o el fin proyectado cae después del límite; amarillo si la holgura ≤ 1 día hábil. */
+export function evaluarSemaforo(fin: string, limite: string, hoy: string, feriados: Set<string>):
+  { semaforo: Semaforo; holgura: number; motivo: string } {
+  const holgura = habilesEntre(fin, limite, feriados);
+  if (limite < hoy) return { semaforo: 'rojo', holgura, motivo: `Límite ${limite} ya pasó` };
+  if (holgura < 0) return { semaforo: 'rojo', holgura, motivo: `Con el plan actual termina ${-holgura} día(s) hábil(es) tarde` };
+  if (holgura <= 1) return { semaforo: 'amarillo', holgura, motivo: `Holgura de ${holgura} día(s) hábil(es)` };
+  return { semaforo: 'verde', holgura, motivo: `Holgura de ${holgura} días hábiles` };
 }
 
-function evaluar(op: Operacion, hoy: string, feriados: Set<string>) {
-  const lim = op.fecha_limite_produccion!;
-  op.holgura_dias = habilesEntre(op.fin_proyectado!, lim, feriados);
-  if (lim < hoy) { op.semaforo = 'rojo'; op.motivo = `Límite de producción ${lim} ya pasó`; }
-  else if (op.holgura_dias < 0) { op.semaforo = 'rojo'; op.motivo = `Con la cola actual termina ${-op.holgura_dias} días hábiles tarde`; }
-  else if (op.holgura_dias <= 1) { op.semaforo = 'amarillo'; op.motivo = `Holgura de ${op.holgura_dias} día(s) hábil(es)`; }
-  else { op.semaforo = 'verde'; op.motivo = `Holgura de ${op.holgura_dias} días hábiles`; }
-}
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
-export function armarEstado(
-  maquinas: MaquinaConfig[], ops: Operacion[], fuente: EstadoPlanta['fuente'],
-  hoy: string, feriados: Set<string>, avisos: string[] = []): EstadoPlanta {
-  const activas = maquinas.filter(m => m.activa);
-  const ids = new Set(activas.map(m => m.id));
-  // Una fecha de entrega inválida no debe tumbar todo el tablero: esa operación se aparta con aviso.
-  const sinFecha = ops.filter(o => !esFechaISO(o.fecha_entrega));
-  const validas = ops.filter(o => esFechaISO(o.fecha_entrega));
-  const estados = activas.map(m => calcularMaquina(m, validas.filter(o => o.maquina_id === m.id), hoy, feriados));
-  const sinMaquina = validas.filter(o => !o.maquina_id || !ids.has(o.maquina_id));
-  const todas = estados.flatMap(m => [...m.en_proceso, ...m.cola, ...m.por_liberar]);
-  const avisosFinal = [...avisos];
-  if (sinMaquina.length) avisosFinal.push(`${sinMaquina.length} operaciones abiertas sin máquina reconocida (revisar config/maquinas.json → zoho_nombre)`);
-  if (sinFecha.length) avisosFinal.push(`${sinFecha.length} operaciones sin fecha de entrega válida, no se incluyen: ${[...new Set(sinFecha.map(o => o.so))].slice(0, 5).join(', ')}${sinFecha.length > 5 ? '…' : ''}`);
-  return {
-    actualizado: new Date().toISOString(), fuente, hoy,
-    maquinas: estados, sin_maquina: [...sinMaquina, ...sinFecha],
-    kpis: {
-      so_abiertos: new Set(todas.map(o => o.so)).size,
-      en_proceso: todas.filter(o => o.estado_cola === 'en_proceso').length,
-      en_cola: todas.filter(o => o.estado_cola === 'en_cola').length,
-      por_liberar: todas.filter(o => o.estado_cola === 'por_liberar').length,
-      atrasadas: todas.filter(o => o.semaforo === 'rojo').length,
-      en_riesgo: todas.filter(o => o.semaforo === 'amarillo').length,
-      horas_cola: round1(estados.reduce((s, m) => s + m.horas_cola, 0)),
-    },
-    avisos: avisosFinal,
-  };
-}
+export const round1 = (n: number) => Math.round(n * 10) / 10;
