@@ -67,7 +67,7 @@ export interface EstadoPlanta {
   fuente: 'seed' | 'zoho';
   hoy: string;                  // ISO date usada para los cálculos
   maquinas: EstadoMaquina[];
-  sin_maquina: Operacion[];     // operaciones abiertas que no se pudieron ubicar en una máquina
+  sin_maquina: Operacion[];     // operaciones abiertas que no se pudieron ubicar en una máquina o sin fecha de entrega válida
   kpis: {
     so_abiertos: number;
     en_proceso: number;

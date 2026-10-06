@@ -51,7 +51,10 @@ export default function App() {
       {estado && <TablaCentros maquinas={visiblesTabla} seleccion={seleccion} onSeleccionar={setSeleccion} />}
 
       {(error || (estado?.avisos.length ?? 0) > 0) && (
-        <div className="avisos">{error ? <p className="err">{error}</p> : estado!.avisos.map(a => <p key={a}>{a}</p>)}</div>
+        <div className="avisos">
+          {error && <p className="err">{error}</p>}
+          {estado?.avisos.map(a => <p key={a}>{a}</p>)}
+        </div>
       )}
     </div>
   );

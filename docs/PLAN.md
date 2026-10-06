@@ -8,7 +8,7 @@ Escena 3D con el layout real, colas por máquina con datos simulados, panel, tab
 2. Inspeccionar SO reales y cerrar las preguntas de `docs/ZOHO.md`.
 3. Ajustar `server/fuentes/zoho.ts` y `config/zoho-mapeo.json`; completar `zoho_nombre` de cada máquina.
 4. Bandeja "sin máquina" visible en el HUD con el valor crudo que vino de Zoho.
-5. Tests de `shared/reglas.ts` (vitest) con casos de buffer 2/5/6 y feriados.
+5. ~~Tests de `shared/reglas.ts` (vitest) con casos de buffer 2/5/6 y feriados.~~ Hecho (`tests/`); ampliar con casos reales de Zoho.
 
 ## Hito 2 — Pulido visual tipo WareTrack
 Modelos low-poly por familia (fresadora vertical, torno, suizo, EDM) en vez de cajas; LOD de etiquetas;

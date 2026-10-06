@@ -3,7 +3,17 @@ import type { EstadoMaquina, EstadoPlanta, MaquinaConfig, Operacion, Semaforo } 
 
 // ---------- días hábiles ----------
 const iso = (d: Date) => d.toISOString().slice(0, 10);
-const parse = (s: string) => new Date(s + 'T12:00:00Z');
+const parse = (s: string) => {
+  if (!esFechaISO(s)) throw new RangeError(`Fecha inválida: "${s}" (se espera yyyy-mm-dd)`);
+  return new Date(s + 'T12:00:00Z');
+};
+
+/** true si s es una fecha real en formato yyyy-mm-dd */
+export function esFechaISO(s: unknown): s is string {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(s + 'T12:00:00Z');
+  return !Number.isNaN(d.getTime()) && iso(d) === s;
+}
 
 export function esHabil(d: Date, feriados: Set<string>) {
   const w = d.getUTCDay();
@@ -21,11 +31,10 @@ export function sumarHabiles(desde: string, n: number, feriados: Set<string>): s
 }
 /** días hábiles de a → b (negativo si b < a) */
 export function habilesEntre(a: string, b: string, feriados: Set<string>): number {
-  if (a === b) return 0;
-  const signo = b > a ? 1 : -1;
-  const d = parse(a);
+  const d = parse(a), fin = parse(b).getTime();
+  const signo = fin > d.getTime() ? 1 : -1;
   let n = 0;
-  while (iso(d) !== b) {
+  while (d.getTime() !== fin) {
     d.setUTCDate(d.getUTCDate() + signo);
     if (esHabil(d, feriados)) n += signo;
   }
@@ -50,7 +59,9 @@ export function ordenarCola(ops: Operacion[]) {
     a.so.localeCompare(b.so));
 }
 
-export function calcularMaquina(cfg: MaquinaConfig, ops: Operacion[], hoy: string, feriados: Set<string>): EstadoMaquina {
+export function calcularMaquina(cfg: MaquinaConfig, entrada: Operacion[], hoy: string, feriados: Set<string>): EstadoMaquina {
+  // Copias: no se modifican las operaciones recibidas.
+  const ops = entrada.map(o => ({ ...o }));
   for (const op of ops) op.fecha_limite_produccion = sumarHabiles(op.fecha_entrega, -bufferDias(op), feriados);
   const enProceso = ordenarCola(ops.filter(o => o.estado_cola === 'en_proceso'));
   const cola = ordenarCola(ops.filter(o => o.estado_cola === 'en_cola'));
@@ -99,14 +110,20 @@ export function armarEstado(
   hoy: string, feriados: Set<string>, avisos: string[] = []): EstadoPlanta {
   const activas = maquinas.filter(m => m.activa);
   const ids = new Set(activas.map(m => m.id));
-  const estados = activas.map(m => calcularMaquina(m, ops.filter(o => o.maquina_id === m.id), hoy, feriados));
-  const sinMaquina = ops.filter(o => !o.maquina_id || !ids.has(o.maquina_id));
+  // Una fecha de entrega inválida no debe tumbar todo el tablero: esa operación se aparta con aviso.
+  const sinFecha = ops.filter(o => !esFechaISO(o.fecha_entrega));
+  const validas = ops.filter(o => esFechaISO(o.fecha_entrega));
+  const estados = activas.map(m => calcularMaquina(m, validas.filter(o => o.maquina_id === m.id), hoy, feriados));
+  const sinMaquina = validas.filter(o => !o.maquina_id || !ids.has(o.maquina_id));
   const todas = estados.flatMap(m => [...m.en_proceso, ...m.cola, ...m.por_liberar]);
+  const avisosFinal = [...avisos];
+  if (sinMaquina.length) avisosFinal.push(`${sinMaquina.length} operaciones abiertas sin máquina reconocida (revisar config/maquinas.json → zoho_nombre)`);
+  if (sinFecha.length) avisosFinal.push(`${sinFecha.length} operaciones sin fecha de entrega válida, no se incluyen: ${[...new Set(sinFecha.map(o => o.so))].slice(0, 5).join(', ')}${sinFecha.length > 5 ? '…' : ''}`);
   return {
     actualizado: new Date().toISOString(), fuente, hoy,
-    maquinas: estados, sin_maquina: sinMaquina,
+    maquinas: estados, sin_maquina: [...sinMaquina, ...sinFecha],
     kpis: {
-      so_abiertos: new Set(ops.map(o => o.so)).size,
+      so_abiertos: new Set(todas.map(o => o.so)).size,
       en_proceso: todas.filter(o => o.estado_cola === 'en_proceso').length,
       en_cola: todas.filter(o => o.estado_cola === 'en_cola').length,
       por_liberar: todas.filter(o => o.estado_cola === 'por_liberar').length,
@@ -114,6 +131,6 @@ export function armarEstado(
       en_riesgo: todas.filter(o => o.semaforo === 'amarillo').length,
       horas_cola: round1(estados.reduce((s, m) => s + m.horas_cola, 0)),
     },
-    avisos: sinMaquina.length ? [...avisos, `${sinMaquina.length} operaciones abiertas sin máquina reconocida (revisar config/maquinas.json → zoho_nombre)`] : avisos,
+    avisos: avisosFinal,
   };
 }

@@ -1,6 +1,7 @@
 // Lectura de Zoho Projects (portal ptsportal388). ESTADO: esqueleto.
 // Los nombres de endpoints/campos marcados con VERIFICAR se confirman en la sesión 1 (docs/ZOHO.md).
 import type { MaquinaConfig, Operacion, Fase, EstadoCola } from '../../shared/tipos.ts';
+import { esFechaISO } from '../../shared/reglas.ts';
 import { cargarMapeoZoho } from '../config.ts';
 
 const env = (k: string) => {
@@ -10,9 +11,15 @@ const env = (k: string) => {
 };
 
 let token: { valor: string; vence: number } | null = null;
+let tokenEnCurso: Promise<string> | null = null;
 
-async function accessToken(): Promise<string> {
-  if (token && Date.now() < token.vence - 60_000) return token.valor;
+/** Zoho limita cuántos access tokens se generan por minuto: una sola renovación a la vez. */
+function accessToken(): Promise<string> {
+  if (token && Date.now() < token.vence - 60_000) return Promise.resolve(token.valor);
+  return tokenEnCurso ??= renovarToken().finally(() => { tokenEnCurso = null; });
+}
+
+async function renovarToken(): Promise<string> {
   const url = new URL('/oauth/v2/token', env('ZOHO_ACCOUNTS_URL'));
   url.search = new URLSearchParams({
     refresh_token: env('ZOHO_REFRESH_TOKEN'), client_id: env('ZOHO_CLIENT_ID'),
@@ -36,14 +43,41 @@ async function get<T = any>(ruta: string, params: Record<string, string | number
 
 /** Paginación genérica. VERIFICAR nombre de la colección en la respuesta v3 ("projects", "tasks"). */
 async function todas<T = any>(ruta: string, clave: string, porPagina = 100): Promise<T[]> {
+  const MAX_PAGINAS = 200;
   const out: T[] = [];
-  for (let page = 1; page < 200; page++) {
+  for (let page = 1; ; page++) {
     const j = await get<any>(ruta, { page, per_page: porPagina });
     const lote: T[] = j[clave] ?? [];
     out.push(...lote);
-    if (lote.length < porPagina) break;
+    // Si la respuesta trae page_info se usa; si no, una página incompleta es la última.
+    const hayMas = j.page_info?.has_next_page ?? lote.length >= porPagina;
+    if (!hayMas || !lote.length) break;
+    if (page >= MAX_PAGINAS) throw new Error(`Más de ${MAX_PAGINAS} páginas en ${ruta}: revisar la paginación`);
   }
   return out;
+}
+
+/** Aplica fn a cada elemento con a lo sumo `limite` llamadas simultáneas, conservando el orden. */
+async function enParalelo<T, R>(items: T[], limite: number, fn: (x: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let i = 0;
+  const trabajador = async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k]); } };
+  await Promise.all(Array.from({ length: Math.min(limite, items.length) }, trabajador));
+  return out;
+}
+
+/** Normaliza fechas de Zoho a yyyy-mm-dd. Acepta ISO (con o sin hora), MM-DD-YYYY y milisegundos.
+ *  VERIFICAR el formato real de end_date en v3 (depende del formato de fecha del portal). */
+export function fechaZoho(p: any): string | null {
+  const s = String(p.end_date ?? '').trim();
+  const iso = s.slice(0, 10);
+  if (esFechaISO(iso)) return iso;
+  const mdy = s.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
+  if (mdy) { const f = `${mdy[3]}-${mdy[1]}-${mdy[2]}`; if (esFechaISO(f)) return f; }
+  // Último recurso: milisegundos, interpretados en hora de Costa Rica (UTC−6). VERIFICAR.
+  const largo = Number(p.end_date_long);
+  if (Number.isFinite(largo) && largo > 0) return new Date(largo - 6 * 3600_000).toISOString().slice(0, 10);
+  return null;
 }
 
 export async function leerZoho(maquinas: MaquinaConfig[]): Promise<{ ops: Operacion[]; avisos: string[] }> {
@@ -58,10 +92,15 @@ export async function leerZoho(maquinas: MaquinaConfig[]): Promise<{ ops: Operac
     .filter(p => String(p.name ?? '').startsWith('SO-'))
     .filter(p => !mapeo.fase.excluir_estados.includes(estadoProyecto(p)));
 
+  const tareasPorProyecto = await enParalelo(proyectos, 5,
+    p => todas<any>(`/api/v3/portal/${portal}/projects/${p.id}/tasks`, 'tasks'));
+
   const ops: Operacion[] = [];
-  for (const p of proyectos) {
+  proyectos.forEach((p, ip) => {
     const fase = estadoProyecto(p) as Fase;
-    const tareas = await todas<any>(`/api/v3/portal/${portal}/projects/${p.id}/tasks`, 'tasks');
+    const tareas = tareasPorProyecto[ip];
+    const fechaEntrega = fechaZoho(p);
+    if (!fechaEntrega) console.warn(`[zoho] ${p.name}: fecha final no reconocida`, { end_date: p.end_date, end_date_long: p.end_date_long });
     const texto = JSON.stringify(tareas.map(t => [t.name, t.tasklist?.name]));
     const ext = texto.includes(mapeo.flags_proyecto.servicio_externo.texto);
     const ens = texto.includes(mapeo.flags_proyecto.ensamble.texto);
@@ -80,12 +119,12 @@ export async function leerZoho(maquinas: MaquinaConfig[]): Promise<{ ops: Operac
         maquina_id: crudo ? porNombre.get(norm(crudo)) ?? null : null, maquina_zoho: crudo,
         fase, estado_cola: estado, horas_totales: horas,
         horas_pendientes: horas, // VERIFICAR: ¿Zoho da horas registradas/avance para restar?
-        fecha_entrega: String(p.end_date ?? '').slice(0, 10),
+        fecha_entrega: fechaEntrega ?? '', // vacía → armarEstado la aparta con aviso
         requiere_servicio_externo: ext, requiere_ensamble: ens,
         url_zoho: p.link?.web?.url,
       });
     }
-  }
+  });
   return { ops, avisos };
 }
 

@@ -11,6 +11,7 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`. Cachea la lectura de Zoho.
 - `shared/` tipos y **reglas de negocio puras** (`reglas.ts`): días hábiles, buffer, cola, semáforo. Sin I/O.
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados.
+- `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.
 
 ## Datos
 - `data/layout/planta_pts.json` — **posiciones reales** (m) de talleres y máquinas, exportadas del ensamble
@@ -42,5 +43,7 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 
 ## Conocido / pendiente
 - drei `<Html>` emite en consola "Attempted to synchronously unmount a root…" con React 19 (cosmético).
-- Bundle de 1.1 MB: dividir three/drei con `manualChunks` si molesta.
+- Las dependencias (three/drei, ~1.1 MB) van en un chunk `vendor` aparte, cacheable entre versiones.
+- Las fuentes vienen de Google Fonts: sin internet en la PC de planta se usa la fuente del sistema.
+- Por liberar se pone amarillo con ≤ 2 días hábiles al límite (en máquina es ≤ 1): confirmar con Alvaro.
 - Etiquetas se traslapan en zonas densas (Taller #3): falta LOD / agrupación.

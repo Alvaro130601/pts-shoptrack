@@ -11,11 +11,13 @@ const FUENTE = (process.env.DATA_SOURCE ?? 'seed') as 'seed' | 'zoho';
 const TTL = Number(process.env.ZOHO_REFRESH_SECONDS ?? 300) * 1000;
 const app = express();
 
-let cache: { estado: EstadoPlanta; t: number } | null = null;
-let ultimoError: string | null = null;
+const REINTENTO_MS = 60_000; // tras un fallo, no volver a leer Zoho antes de esto
 
-async function estado(): Promise<EstadoPlanta> {
-  if (cache && Date.now() - cache.t < (FUENTE === 'seed' ? 30_000 : TTL)) return cache.estado;
+let cache: { estado: EstadoPlanta; t: number } | null = null;
+let ultimoError: { mensaje: string; t: number } | null = null;
+let enCurso: Promise<void> | null = null;
+
+async function refrescar() {
   const maquinas = cargarMaquinas(), feriados = cargarFeriados(), hoy = hoyCR();
   try {
     const { ops, avisos } = FUENTE === 'zoho'
@@ -24,12 +26,21 @@ async function estado(): Promise<EstadoPlanta> {
     cache = { estado: armarEstado(maquinas, ops, FUENTE, hoy, feriados, avisos), t: Date.now() };
     ultimoError = null;
   } catch (e) {
-    ultimoError = (e as Error).message;
-    console.error('[estado]', ultimoError);
-    if (!cache) throw e; // sin datos previos no hay qué mostrar
-    cache.estado.avisos = [`Último intento de leer Zoho falló: ${ultimoError}. Mostrando datos de ${cache.estado.actualizado}`];
+    ultimoError = { mensaje: (e as Error).message, t: Date.now() };
+    console.error('[estado]', ultimoError.mensaje);
   }
-  return cache.estado;
+}
+
+async function estado(): Promise<EstadoPlanta> {
+  const ttl = FUENTE === 'seed' ? 30_000 : TTL;
+  const vencido = !cache || Date.now() - cache.t >= ttl;
+  const enEspera = ultimoError && Date.now() - ultimoError.t < REINTENTO_MS;
+  // Una sola lectura a la vez: las peticiones concurrentes esperan la misma promesa.
+  if (vencido && !enEspera) await (enCurso ??= refrescar().finally(() => { enCurso = null; }));
+  if (!cache) throw new Error(ultimoError?.mensaje ?? 'Sin datos todavía');
+  if (!ultimoError) return cache.estado;
+  return { ...cache.estado, avisos: [...cache.estado.avisos,
+    `Último intento de leer Zoho falló: ${ultimoError.mensaje}. Mostrando datos de ${cache.estado.actualizado}`] };
 }
 
 app.get('/api/estado', async (_req, res) => {
@@ -39,7 +50,7 @@ app.get('/api/estado', async (_req, res) => {
 app.get('/api/layout', (_req, res) => {
   res.type('json').send(readFileSync(rutaRaiz + 'data/layout/planta_pts.json', 'utf8'));
 });
-app.get('/api/salud', (_req, res) => res.json({ fuente: FUENTE, ultimoError, cacheado: cache?.estado.actualizado ?? null }));
+app.get('/api/salud', (_req, res) => res.json({ fuente: FUENTE, ultimoError: ultimoError?.mensaje ?? null, cacheado: cache?.estado.actualizado ?? null }));
 
 if (process.argv.includes('--prod') && existsSync(rutaRaiz + 'dist')) {
   app.use(express.static(rutaRaiz + 'dist'));

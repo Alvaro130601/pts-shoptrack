@@ -7,7 +7,9 @@ export function useDatos(intervaloMs = 60_000) {
   const [estado, setEstado] = useState<EstadoPlanta | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { fetch('/api/layout').then(r => r.json()).then(setLayout).catch(e => setError(String(e))); }, []);
+  useEffect(() => { fetch('/api/layout')
+    .then(r => { if (!r.ok) throw new Error(`No se pudo cargar el layout (${r.status})`); return r.json(); })
+    .then(setLayout).catch(e => setError(String(e))); }, []);
   useEffect(() => {
     let vivo = true;
     const cargar = () => fetch('/api/estado')

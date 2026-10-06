@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { bufferDias } from '../../../shared/reglas';
 import type { EstadoMaquina, Operacion } from '../../../shared/tipos';
 import { colorSemaforo } from '../colores';
 import { LineaFases } from './LineaFases';
@@ -46,7 +47,7 @@ export function PanelMaquina({ m, onCerrar }: { m: EstadoMaquina; onCerrar: () =
                       <dt>Cliente</dt><dd>{o.cliente || '—'}</dd>
                       <dt>Fin proyectado</dt><dd>{fecha(o.fin_proyectado)}</dd>
                       <dt>Semáforo</dt><dd>{o.motivo}</dd>
-                      <dt>Buffer</dt><dd>{o.requiere_servicio_externo ? (o.requiere_ensamble ? 'Serv. externo + ensamble (6 d)' : 'Serv. externo (5 d)') : 'Estándar (2 d)'}</dd>
+                      <dt>Buffer</dt><dd>{o.requiere_servicio_externo ? (o.requiere_ensamble ? 'Serv. externo + ensamble' : 'Serv. externo') : 'Estándar'} ({bufferDias(o)} d)</dd>
                     </dl>
                     {o.url_zoho && <a href={o.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
                   </div>
