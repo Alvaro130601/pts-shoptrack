@@ -1,0 +1,25 @@
+{
+  "_estado": "BORRADOR — confirmar en la sesión 1 inspeccionando datos reales de ptsportal388 (ver docs/ZOHO.md)",
+  "maquina": {
+    "_opciones_fuente": "campo_personalizado | etiqueta | nombre_tarea | lista_tareas",
+    "fuente": "campo_personalizado",
+    "campo": "Máquina",
+    "regex_nombre_tarea": "\\[(.+?)\\]"
+  },
+  "tareas_horas": { "prefijo": "H.", "campo_horas": "owners_and_work.total_work" },
+  "fase": {
+    "_nota": "La fase del SO sale del estado del proyecto (Pend. programación, Pend. planos, Pend. material, Producción, Calidad, Envío...)",
+    "fuente": "estado_proyecto",
+    "excluir_estados": ["Completado", "Cancelado"]
+  },
+  "estado_tarea": {
+    "en_proceso": ["En progreso", "In Progress", "En proceso"],
+    "terminada": ["Cerrada", "Closed", "Completada", "Completado"]
+  },
+  "flags_proyecto": {
+    "_nota": "Cómo saber si el SO lleva Servicio externo / Ensamble (afecta el buffer 2/5/6 días)",
+    "servicio_externo": { "fuente": "tarea_o_lista_contiene", "texto": "Servicio externo" },
+    "ensamble": { "fuente": "tarea_o_lista_contiene", "texto": "Ensamble" }
+  },
+  "cliente": { "fuente": "campo_personalizado", "campo": "Cliente" }
+}
