@@ -87,10 +87,10 @@ del Equipo asignado; si la tarea no lo trae (exportación a Excel), de su nombre
 |---|---|
 | Fresado CNC | Haas VF-2, SVM 4100 #1 y #2, Haas Mini Mill #1 y #2, SYL |
 | Fresado | Fresadora #1 a #7 |
-| Torno CNC | Torno Hyundai, Torno Hanwa |
-| Torno suizo | Torno Hanwa |
+| Torno CNC | Torno Hyundai ✅ (todo el torno CNC) |
+| Torno suizo | Torno Hanwa ✅ (solo tareas específicas de torno; hoy, las "Torno Suizo") |
 | Torno | Torno #1 y #2 |
-| Erosionado | EDM hilo, CUT E350, E350 |
+| Erosionado | EDM hilo y CUT E350 ✅ (solo 2 erosionadoras) |
 | Rectificado | Rectificadora #1 y #2, al fondo del Taller #1 ✅ (posición aproximada) |
 | Tratamiento térmico y revenido | Horno |
 | Doblado · Soldadura · Corte láser | Dobladora · Soldadora · Cortadora láser |
@@ -137,7 +137,8 @@ Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso,
   sino un paso de unos 3 días dentro de la ruta. Con la ruta completa en Zoho ya no hace falta el buffer por tipo
   de SO: el tiempo de cada paso sale de la ruta.
 - Máquinas sin identificar (hipótesis por nombre y tamaño): **SYL** ≈ SYIL, fresadora CNC compacta;
-  **E350** ≈ GF FORM E 350, electroerosión por penetración (está junto a la CUT E 350 de hilo);
+  **E350** no es una erosionadora (Alvaro, 6-oct: solo hay dos, EDM hilo y CUT E350); queda en el plano sin proceso
+  (¿equipo auxiliar de la CUT E 350?);
   **H32Z** sin hipótesis.
 
 ## 6. Lo que muestra la primera exportación (foto del 6-oct-2026)
@@ -147,13 +148,14 @@ Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso,
 | Proceso | Horas abiertas | Listas para empezar | Días de carga lista |
 |---|---|---|---|
 | Fresado CNC (6 máquinas) | 610 h | 157 h | 1,8 |
-| Erosionado (3) | 551 h | 401 h | **10** |
-| Torno CNC (2) | 282 h | 230 h | **7,2** |
+| Erosionado (2 máquinas) | 551 h | 401 h | **12,5** |
+| Torno CNC (solo el Hyundai) | 282 h | 230 h | **14,3** |
 | Fresado (7) | 204 h | 113 h | 2 |
 | Rectificado (2) | 163 h | 33 h | 2 |
 | Tratamiento térmico y revenido (horno) | 112 h | 10 h | 0,4 |
 
-- **Erosionado es el cuello de botella**: diez días de trabajo listo en tres máquinas. Torno CNC le sigue.
+- **Torno CNC es el cuello de botella**: 14 días de trabajo listo, todo en el Hyundai (el Hanwa queda para sus
+  tareas específicas). **Erosionado** le sigue con 12,5 días en sus dos máquinas.
 - Fresado CNC tiene la mayor carga total, pero casi toda espera programa, material u otra operación.
 - Rectificado llega sobre todo después del tratamiento térmico: su carga lista crecerá cuando salgan del horno.
 - Tratamiento térmico (5 h) y revenido (2 h) tienen horas fijas por tarea: parecen ciclos de horno que se pueden
@@ -169,11 +171,12 @@ Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso,
 3. Planos: ¿diseño interno o planos del cliente? ¿Una tarea **Planos** por ítem, como Material?
 4. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?
 5. Calidad: ¿solo inspección final o también dentro de la ruta?
-6. ¿Qué máquinas son SYL, E350 y H32Z?
+6. ¿Qué máquinas son SYL y H32Z? ¿Y la E350, si no es erosionadora?
 7. ~~¿Qué significa `Pendiente Op…`?~~ En la exportación es `Pendiente Operación`: se trata como Pendiente.
 8. Rectificadoras: ¿cuál es la *centerless*? ¿Posición exacta y horas por día?
 9. Grabado y limpieza: ¿dónde se hacen y cuántas personas o equipos hay? (hoy, un puesto de 8 h/día cada uno)
 10. Horno: ¿tratamiento térmico y revenido se hacen en planta? ¿Cuántas piezas entran por ciclo?
-11. Erosionado: si la E350 es de penetración, ¿qué tareas le tocan? Hoy se reparte "Erosionado" entre las tres.
+11. ¿Qué tareas de torno van al Hanwa y cómo se llaman en Zoho? Hoy solo las "Torno Suizo"; el resto del torno CNC va
+    al Hyundai. ¿Las erosionadoras trabajan más de 16 h al día (sin operador de noche)?
 12. ¿Se puede exportar con **Lista de tareas**, **Equipo asignado** y la fecha final del proyecto? Con eso los
     ítems son exactos y vuelve el semáforo.

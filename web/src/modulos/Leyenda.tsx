@@ -1,4 +1,5 @@
 import { C } from '../colores';
+import { colorFamilia } from '../escena/modelos';
 import { NOMBRE_FAMILIA } from '../familias';
 import type { EstadoCentro, EstadoMaquina, FamiliaMaquina } from '../../../shared/tipos';
 import { Cajon } from './Cajon';
@@ -76,9 +77,12 @@ export function Leyenda({ maquinas, centros, onCerrar }: { maquinas: EstadoMaqui
       <section className="leyenda-sec">
         <h4>Tipos de máquina</h4>
         <ul className="familias">
-          {[...cuenta].sort((a, b) => b[1] - a[1]).map(([f, n]) => <li key={f}>{NOMBRE_FAMILIA[f]} <small>{n}</small></li>)}
+          {[...cuenta].sort((a, b) => b[1] - a[1]).map(([f, n]) => (
+            <li key={f}><i className="muestra" style={{ background: colorFamilia(f) }} />{NOMBRE_FAMILIA[f]} <small>{n}</small></li>
+          ))}
         </ul>
-        <p className="nota">Formas aproximadas a escala del CAD. Se configuran en config/maquinas.json → familia.</p>
+        <p className="nota">Formas aproximadas a escala del CAD; el color suave es el tipo de máquina (los colores fuertes son
+          de estado). Se configuran en config/maquinas.json → familia.</p>
       </section>
       <section className="leyenda-sec">
         <h4>Controles</h4>

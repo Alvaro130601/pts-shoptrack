@@ -36,7 +36,7 @@ const RUTAS: { peso: number; pasos: Paso[] }[] = [
 const PESO_TOTAL = RUTAS.reduce((s, r) => s + r.peso, 0);
 /** Cuántas tareas pueden estar "En proceso" a la vez por equipo (≈ máquinas o programadores disponibles). */
 const CUPOS: Record<string, number> = {
-  'Fresado CNC': 5, Fresado: 4, 'Torno CNC': 2, Torno: 2, Erosionado: 2, Rectificado: 2, 'Tratamiento térmico': 1,
+  'Fresado CNC': 5, Fresado: 4, 'Torno CNC': 1, Torno: 2, Erosionado: 2, Rectificado: 2, 'Tratamiento térmico': 1,
   'Corte láser': 1, Programación: 1, 'No Requiere': 3,
 };
 

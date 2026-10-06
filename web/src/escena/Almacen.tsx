@@ -3,7 +3,8 @@ import type { ElementoLayout } from '../tipos-layout';
 export function Almacen({ e, atenuada }: { e: ElementoLayout; atenuada: boolean }) {
   const morado = e.nombre.includes('morado');
   const bines = e.nombre.includes('bines');
-  const color = morado ? '#a996e6' : bines ? '#8fb2f0' : '#b9c2d6';
+  const barras = e.nombre.includes('barras');
+  const color = morado ? '#a996e6' : bines ? '#8fb2f0' : barras ? '#d3b38c' : '#b9c2d6';
   const niveles = 4;
   const op = atenuada ? 0.25 : 1;
   return (

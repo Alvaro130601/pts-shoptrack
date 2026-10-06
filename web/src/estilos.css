@@ -159,6 +159,7 @@ kbd { font-family: var(--mono); font-size: 10.5px; background: #fff; border: 1px
 .piso-mini { display: inline-block; width: 14px; height: 9px; border-radius: 2px; background: rgba(229,72,77,.3); margin-top: 3px; flex: none; }
 .familias { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 12px; }
 .familias small { font-family: var(--mono); color: var(--tenue); margin-left: 4px; }
+.familias .muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 
 /* ---------- panel de máquina (derecha) ---------- */
 .panel { position: absolute; top: calc(var(--m) * 2 + var(--barra)); right: var(--m); bottom: var(--m); width: var(--cajon); z-index: 25;

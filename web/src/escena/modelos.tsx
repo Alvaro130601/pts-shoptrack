@@ -5,22 +5,41 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { FamiliaMaquina } from '../../../shared/tipos';
 import { C } from '../colores';
 
-// Paleta neutra a propósito: el color fuerte queda reservado para el estado (semáforo, azul = en proceso).
+// Paleta suave a propósito: el color fuerte queda reservado para el estado (semáforo, azul = en proceso).
 type Tono = 'cuerpo' | 'techo' | 'oscuro' | 'metal' | 'vidrio' | 'panel' | 'pintura';
 const TONOS: Record<Tono, string> = {
   cuerpo: '#eceff6', techo: '#d6dce8', oscuro: '#7f89a2', metal: '#b7bfcd', vidrio: '#a9cdf2', panel: '#2b3550', pintura: '#a2adbf',
 };
 
+/** Pintura de cada tipo de máquina: tonos apagados que distinguen la familia sin competir con los colores de estado. */
+const PALETAS: Partial<Record<FamiliaMaquina, Partial<Record<Tono, string>>>> = {
+  fresadora_cnc: { pintura: '#8aa1d1', cuerpo: '#e3eafa', techo: '#b7c6e9' },  // azul acero
+  fresadora_convencional: { pintura: '#7fb2a2', cuerpo: '#edf5f2' },  // verde máquina
+  torno_cnc: { pintura: '#72a8c1', cuerpo: '#e1eff5', techo: '#accfdd' },      // azul petróleo
+  torno_suizo: { pintura: '#6eb0b2', cuerpo: '#e2f2f2', techo: '#a9d3d3' },    // turquesa
+  torno_convencional: { pintura: '#93b487', cuerpo: '#f0f5ed' },      // verde salvia
+  edm_hilo: { pintura: '#a598d4', cuerpo: '#f2f0fa', oscuro: '#8a82ad' }, // lavanda
+  rectificadora: { pintura: '#c8aa83', cuerpo: '#f8f3ec' },           // arena
+  horno: { pintura: '#cf9a84', oscuro: '#ad8a80' },                    // terracota
+  laser: { pintura: '#d0a978', cuerpo: '#faf5ee' },                    // ocre
+  dobladora: { pintura: '#86a5c8' }, guillotina: { pintura: '#9fae8b' }, soldadora: { pintura: '#c79b87' },
+};
+
+/** Color de pintura de una familia (para la leyenda). */
+export const colorFamilia = (f: FamiliaMaquina) => PALETAS[f]?.pintura ?? TONOS.pintura;
+
 interface Ctx { op: number; realce: boolean }
 export const ModeloCtx = createContext<Ctx>({ op: 1, realce: false });
+const PaletaCtx = createContext<Partial<Record<Tono, string>>>({});
 
 function Mat({ t }: { t: Tono }) {
   const { op, realce } = useContext(ModeloCtx);
+  const paleta = useContext(PaletaCtx);
   const vidrio = t === 'vidrio';
   const resalta = realce && t === 'cuerpo';
   return (
     <meshStandardMaterial
-      color={resalta ? '#ffffff' : TONOS[t]}
+      color={resalta ? '#ffffff' : paleta[t] ?? TONOS[t]}
       emissive={resalta ? C.acento : '#000000'} emissiveIntensity={resalta ? 0.14 : 0}
       metalness={t === 'metal' ? 0.35 : 0.05} roughness={vidrio ? 0.15 : 0.7}
       transparent opacity={(vidrio ? 0.5 : 1) * op} depthWrite={!vidrio && op === 1} />
@@ -282,6 +301,7 @@ const MODELOS: Record<FamiliaMaquina, (d: Dim) => ReactNode> = {
 };
 
 export function ModeloMaquina({ familia, ...dim }: Dim & { familia?: FamiliaMaquina }) {
-  const M = MODELOS[familia ?? 'generica'] ?? Generica;
-  return <M {...dim} />;
+  const f = familia ?? 'generica';
+  const M = MODELOS[f] ?? Generica;
+  return <PaletaCtx.Provider value={PALETAS[f] ?? {}}><M {...dim} /></PaletaCtx.Provider>;
 }

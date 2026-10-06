@@ -26,7 +26,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `config/maquinas.json` — máquinas: proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
 - `config/centros.json` — procesos (Equipo asignado en Zoho, o `tareas_zoho` = patrones del nombre de la tarea si no
   trae equipo) → máquinas que los hacen; puestos manuales (grabado, limpieza); programadores; proveedores.
-  **Propuesta por confirmar con Alvaro.**
+  **Propuesta por confirmar con Alvaro.** Confirmado: solo 2 erosionadoras (EDM hilo, CUT E350; la E350 no lo es);
+  todo el Torno CNC va al Hyundai y el Hanwa solo hace sus tareas específicas (torno suizo).
 - `config/zoho-mapeo.json` — cómo se leen proyectos, ítems, tareas y estados de Zoho (`lectura`). **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 - `data/exportaciones/` — exportaciones de Zoho a Excel con **datos reales: no se suben** (`.gitignore`). Formato y

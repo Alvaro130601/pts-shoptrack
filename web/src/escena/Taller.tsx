@@ -5,6 +5,13 @@ import type { TallerLayout } from '../tipos-layout';
 import { C } from '../colores';
 
 const ALTO_MURO = 2.4;
+/** Tinte suave del piso de cada taller y color de su etiqueta, para ubicarse de un vistazo. */
+const TINTES: Record<string, { piso: string; texto: string }> = {
+  'taller-1': { piso: '#f8f2e8', texto: '#a07f52' },
+  'taller-2': { piso: '#edf6f1', texto: '#58957a' },
+  'taller-3': { piso: '#edf2fd', texto: '#6380c6' },
+  'taller-4': { piso: '#f3eefb', texto: '#8770bd' },
+};
 
 export function Taller({ t }: { t: TallerLayout }) {
   const forma = useMemo(() => {
@@ -33,7 +40,7 @@ export function Taller({ t }: { t: TallerLayout }) {
     <group>
       <mesh rotation-x={-Math.PI / 2} position-y={0.01} receiveShadow>
         <extrudeGeometry args={[forma, { depth: 0.08, bevelEnabled: false }]} />
-        <meshStandardMaterial color={t.aproximado ? '#f1f3f9' : C.piso} />
+        <meshStandardMaterial color={TINTES[t.id]?.piso ?? (t.aproximado ? '#f1f3f9' : C.piso)} />
       </mesh>
       {muros.map((m, i) => (
         <mesh key={i} position={[m.x, m.alto / 2, m.z]} rotation-y={m.rot} castShadow receiveShadow>
@@ -43,7 +50,8 @@ export function Taller({ t }: { t: TallerLayout }) {
       ))}
       <Html position={[esquina[0] + 0.6, 0.1, esquina[1] + 0.6]} center={false} zIndexRange={[5, 0]}
         style={{ pointerEvents: 'none' }}>
-        <div className="etiqueta-taller" title={t.aproximado ? 'Contorno aproximado: no viene en el CAD' : undefined}>{t.nombre}</div>
+        <div className="etiqueta-taller" style={{ color: TINTES[t.id]?.texto }}
+          title={t.aproximado ? 'Contorno aproximado: no viene en el CAD' : undefined}>{t.nombre}</div>
       </Html>
     </group>
   );
