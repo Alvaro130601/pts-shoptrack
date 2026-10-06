@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { IcoAlerta, IcoBandeja, IcoBuscarSO, IcoCola, IcoInicio, IcoLeyenda, IcoMaterial } from '../iconos';
+import { IcoAlerta, IcoAsistente, IcoBandeja, IcoBuscarSO, IcoCola, IcoInicio, IcoLeyenda, IcoMaterial } from '../iconos';
 
-export type Modulo = 'cola' | 'alertas' | 'so' | 'material' | 'sin_centro' | 'leyenda';
+export type Modulo = 'asistente' | 'cola' | 'alertas' | 'so' | 'material' | 'sin_centro' | 'leyenda';
 
-interface Item { id: Modulo; etiqueta: string; icono: ReactNode; badge?: number; tono?: 'rojo' | 'gris' }
+interface Item { id: Modulo; etiqueta: string; icono: ReactNode; badge?: number; tono?: 'rojo' | 'gris' | 'azul'; trabajando?: boolean }
 
 interface Props {
   activo: Modulo | null;
@@ -12,10 +12,13 @@ interface Props {
   atrasados: number;
   material: number;
   sinCentro: number;
+  cambios: number;          // ajustes del supervisor vigentes
+  trabajando: boolean;      // el asistente está respondiendo
 }
 
-export function MenuLateral({ activo, onCambiar, onInicio, atrasados, material, sinCentro }: Props) {
+export function MenuLateral({ activo, onCambiar, onInicio, atrasados, material, sinCentro, cambios, trabajando }: Props) {
   const items: Item[] = [
+    { id: 'asistente', etiqueta: 'Asistente', icono: <IcoAsistente />, badge: cambios, tono: 'azul', trabajando },
     { id: 'cola', etiqueta: 'Carga', icono: <IcoCola /> },
     { id: 'alertas', etiqueta: 'Alertas', icono: <IcoAlerta />, badge: atrasados, tono: 'rojo' },
     { id: 'so', etiqueta: 'Buscar SO', icono: <IcoBuscarSO /> },
@@ -23,7 +26,7 @@ export function MenuLateral({ activo, onCambiar, onInicio, atrasados, material, 
     ...(sinCentro ? [{ id: 'sin_centro' as const, etiqueta: 'Sin centro', icono: <IcoBandeja />, badge: sinCentro, tono: 'gris' as const }] : []),
   ];
   const boton = (it: Item) => (
-    <button key={it.id} className={`menu-item ${activo === it.id ? 'activo' : ''}`}
+    <button key={it.id} className={`menu-item ${activo === it.id ? 'activo' : ''} ${it.trabajando ? 'trabajando' : ''}`}
       aria-pressed={activo === it.id} title={it.etiqueta}
       onClick={() => onCambiar(activo === it.id ? null : it.id)}>
       {it.icono}

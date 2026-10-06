@@ -25,6 +25,7 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
   const [hover, setHover] = useState(false);
   const trabajando = (estado?.en_proceso.length ?? 0) > 0;
   const sem = estado?.semaforo ?? 'libre';
+  const fuera = !!estado?.fuera_de_servicio;
   const h = Math.min(e.h, 2.8);
   const op = atenuada ? 0.18 : 1;
   const realce = seleccionada || hover;
@@ -35,7 +36,7 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
   const yPila = h + 0.45;
   const activas = (estado?.en_proceso.length ?? 0) + (estado?.cola.length ?? 0);
   const secundaria = estado?.es_centro_mecanizado === false;
-  const mostrarChip = !atenuada && (realce || (!secundaria && (detalle || activas > 0)));
+  const mostrarChip = !atenuada && (realce || fuera || (!secundaria && (detalle || activas > 0)));
 
   return (
     <group position={[e.px, 0, e.py]}>
@@ -45,7 +46,7 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
         onPointerOver={ev => { ev.stopPropagation(); setHover(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHover(false); document.body.style.cursor = ''; }}
       >
-        <Huella w={e.w} d={e.d} color={colorSemaforo(sem)} op={op} libre={sem === 'libre'} />
+        <Huella w={e.w} d={e.d} color={fuera ? C.fuera : colorSemaforo(sem)} op={op} libre={sem === 'libre' && !fuera} />
         <ModeloCtx.Provider value={{ op, realce }}>
           <group position-y={0.022}>
             <ModeloMaquina familia={estado?.familia} w={e.w} d={e.d} h={h} />
@@ -63,7 +64,13 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
       {mostrarChip && (
         <Html position={[0, yPila + 0.2 + visibles.length * (ALTO_BLOQUE + SEP_BLOQUE), 0]} center zIndexRange={[20, 10]}
           style={{ pointerEvents: 'none' }}>
-          {detalle || realce ? (
+          {fuera ? (
+            <div className={`chip-maquina fuera ${realce ? 'activo' : ''}`} title={estado!.fuera_de_servicio}>
+              <span className="punto" />
+              <b>{estado!.nombre}</b>
+              <span className="cuenta">fuera de servicio</span>
+            </div>
+          ) : detalle || realce ? (
             <div className={`chip-maquina ${realce ? 'activo' : ''} ${secundaria ? 'secundaria' : ''}`}>
               <span className="punto" style={{ background: colorSemaforo(sem) }} />
               <b>{estado?.nombre ?? e.nombre}</b>

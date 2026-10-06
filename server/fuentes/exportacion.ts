@@ -41,6 +41,8 @@ export function horasExport(v: unknown): number | null {
 }
 
 const texto = (v: unknown) => (v == null ? '' : String(v).trim());
+/** "H. Erosionado (#1)" → "erosionado-(#1)" */
+const slug = (nombre: string) => norm(nombre).replace(/^h\s*\.\s*/, '').replace(/[^a-z0-9#()]+/g, '-').replace(/^-+|-+$/g, '');
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
 /** Código del cliente en el nombre del proyecto: "SO-11338-SMT-1" → "SMT". */
@@ -60,16 +62,22 @@ export function proyectosDesdeFilas(filas: unknown[][], reglas: ReglasLectura, c
   }
 
   const porProyecto = new Map<string, { lista: string; t: TareaCruda }[]>();
+  const repetidas = new Map<string, number>();
   let otras = 0;
-  filas.slice(iTitulos + 1).forEach((f, k) => {
+  filas.slice(iTitulos + 1).forEach(f => {
     const proyecto = texto(f[c.proyecto]), nombre = texto(f[c.tarea]);
     if (!proyecto || !nombre) return;
     if (!/^\s*SO-/i.test(proyecto)) { otras++; return; }
     const estimadas = Math.max(horasExport(f[c.horas]) ?? 0, 0);
     const registradas = c.registradas >= 0 ? horasExport(f[c.registradas]) ?? 0
       : c.diferencia >= 0 ? estimadas - (horasExport(f[c.diferencia]) ?? estimadas) : 0;   // diferencia = estimadas − registradas
+    // Id estable entre exportaciones (los ajustes del supervisor lo usan): proyecto + nombre + cuántas tareas con ese
+    // nombre van en el proyecto. El número de fila cambiaría con cada exportación.
+    const clave = `${proyecto}/${slug(nombre)}`;
+    const n = (repetidas.get(clave) ?? 0) + 1;
+    repetidas.set(clave, n);
     const t: TareaCruda = {
-      id: `fila-${iTitulos + k + 2}`,   // número de fila en Excel
+      id: `${clave}/${n}`,
       nombre, equipo: c.equipo >= 0 ? texto(f[c.equipo]) || null : null,
       estado: c.estado >= 0 ? texto(f[c.estado]) : '',
       horas_estimadas: r2(estimadas), horas_registradas: r2(Math.max(registradas, 0)),

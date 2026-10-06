@@ -56,6 +56,15 @@ describe('proyectosDesdeFilas', () => {
     expect(avisos.some(a => a.includes('no trae la lista de tareas ni el equipo asignado'))).toBe(true);
   });
 
+  it('da ids estables: proyecto + nombre + repetición, no el número de fila', () => {
+    const a = leer(...hoja('SO-1001-ABC-1', 'H. Grabado', 'H. Fresado CNC (#1)', 'H. Grabado')).proyectos[0];
+    const b = leer(['H. Otra', '01:00', PO, '(+) 01:00', 'SO-0999-XYZ-1'],
+      ...hoja('SO-1001-ABC-1', 'H. Grabado', 'H. Fresado CNC (#1)', 'H. Grabado')).proyectos[1];
+    const ids = (p: ProyectoCrudo) => p.listas.flatMap(l => l.tareas.map(t => t.id));
+    expect(ids(a)).toEqual(['SO-1001-ABC-1/grabado/1', 'SO-1001-ABC-1/fresado-cnc-(#1)/1', 'SO-1001-ABC-1/grabado/2']);
+    expect(ids(b)).toEqual(ids(a));
+  });
+
   it('usa la lista de tareas y el equipo si la exportación los trae', () => {
     const { proyectos, avisos } = proyectosDesdeFilas([
       ['Nombre del proyecto', 'Lista de tareas', 'Nombre de Tarea', 'Equipo asignado', 'Estado', 'Horas de trabajo'],

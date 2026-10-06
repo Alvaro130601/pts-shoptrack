@@ -18,3 +18,4 @@ export const IcoMas = () => <Base><path d="M12 5v14M5 12h14" /></Base>;
 export const IcoMenos = () => <Base><path d="M5 12h14" /></Base>;
 export const IcoCerrar = () => <Base><path d="M18 6 6 18M6 6l12 12" /></Base>;
 export const IcoLupa = () => <Base><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Base>;
+export const IcoAsistente = () => <Base><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z" /><path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01" /></Base>;

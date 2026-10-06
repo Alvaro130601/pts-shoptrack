@@ -18,6 +18,16 @@ export const baseTarea = (nombre: string) =>
 /** "H. Fresado CNC" → "Fresado CNC" */
 export const nombreCorto = (nombre: string) => nombre.replace(/^\s*H\s*\.\s*/i, '').trim();
 
+/** Nombre corto de un paso de la ruta: el de la tarea de máquina ("Revenido", "Rectificado (Balony)"; con Set Up,
+ *  el del mecanizado), "Programación", "Material", "Anodizado"… */
+export function etiquetaPaso(o: Pick<Operacion, 'tipo' | 'nombre' | 'proceso'>): string {
+  if (o.tipo === 'maquina') return nombreCorto(o.nombre.split(' + ').at(-1) ?? '') || o.proceso;
+  if (o.tipo === 'programacion') return 'Programación';
+  if (o.tipo === 'material') return 'Material';
+  if (o.tipo === 'planos') return 'Planos';
+  return nombreCorto(o.nombre);
+}
+
 export interface ResultadoLectura { sos: SO[]; estados_desconocidos: string[] }
 
 export function normalizarProyectos(proyectos: ProyectoCrudo[], reglas: ReglasLectura, centros: CentroConfig[]): ResultadoLectura {
@@ -109,6 +119,7 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
     return {
       id: p.id, so, nombre: p.nombre, cliente: p.cliente, fecha_entrega: p.fecha_entrega, estado_zoho: p.estado,
       requiere_servicio_externo, requiere_ensamble, etapa: etapaSO(items, cierre), items, cierre, url_zoho: p.url,
+      ...(p.prioridad != null && { prioridad: p.prioridad }), ...(p.ajustes?.length && { ajustes: p.ajustes }),
     };
   }
 
@@ -149,6 +160,7 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
         horas_totales: x.t.horas_estimadas, horas_registradas: x.t.horas_registradas, horas_pendientes: pend,
         so: base.so, proyecto: base.proyecto, proyecto_id: base.proyecto_id, cliente: base.cliente,
         item_id: itemId, item: itemNombre, cantidad, fecha_entrega: base.fecha_entrega, url_zoho: x.t.url ?? base.url,
+        ...(x.t.maquina && { maquina_fija: x.t.maquina }), ...(x.t.ajustes?.length && { ajustes: x.t.ajustes }),
       };
     };
     for (let i = 0; i < crudas.length; i++) {
@@ -207,6 +219,8 @@ function unir(setUp: Operacion, mec: Operacion): Operacion {
     horas_totales: setUp.horas_totales + mec.horas_totales,
     horas_registradas: setUp.horas_registradas + mec.horas_registradas,
     horas_pendientes: Math.round((setUp.horas_pendientes + mec.horas_pendientes) * 10) / 10,
+    ...((mec.maquina_fija ?? setUp.maquina_fija) && { maquina_fija: mec.maquina_fija ?? setUp.maquina_fija }),
+    ...((setUp.ajustes || mec.ajustes) && { ajustes: [...new Set([...(setUp.ajustes ?? []), ...(mec.ajustes ?? [])])] }),
   };
 }
 

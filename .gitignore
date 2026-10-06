@@ -6,3 +6,8 @@ dist
 # Exportaciones de Zoho: datos reales de órdenes, no se suben
 data/exportaciones/*
 !data/exportaciones/LEEME.md
+# Ajustes del supervisor (nombran SO reales)
+data/ajustes.json
+data/ajustes.json.tmp
+# Página estática con datos (npm run pagina)
+dist-pagina

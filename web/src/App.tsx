@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDatos } from './api';
+import { backendServidor, type Backend } from './backend';
+import { backendPagina, type ConfigPagina } from './backend-pagina';
 import { NOMBRE_FAMILIA } from './familias';
 import { Planta, cajaDe, cajaPlanta } from './escena/Planta';
 import type { CamaraApi } from './escena/Camara';
@@ -9,6 +11,7 @@ import { MenuLateral, type Modulo } from './hud/MenuLateral';
 import { PanelMaquina } from './hud/PanelMaquina';
 import type { EstadoMaquina, Item, Operacion } from '../../shared/tipos';
 import { Alertas, type Pestana } from './modulos/Alertas';
+import { Asistente, useChat } from './modulos/Asistente';
 import { CargaProcesos } from './modulos/CargaProcesos';
 import { DondeSO } from './modulos/DondeSO';
 import { Leyenda } from './modulos/Leyenda';
@@ -20,8 +23,13 @@ const leerPista = () => { try { return localStorage.getItem(CLAVE_PISTA) !== '1'
 const ocultarPista = () => { try { localStorage.setItem(CLAVE_PISTA, '1'); } catch { /* sin almacenamiento */ } };
 const planDe = (m: EstadoMaquina) => [...m.en_proceso, ...m.cola, ...m.proximas];
 
+// Página publicada en claude.ai: su index.html define window.SHOPTRACK_PAGINA y no hay servidor.
+const config = (window as unknown as { SHOPTRACK_PAGINA?: ConfigPagina }).SHOPTRACK_PAGINA;
+const BACKEND: Backend = config ? backendPagina(config) : backendServidor;
+
 export default function App() {
-  const { layout, estado, error } = useDatos();
+  const { layout, estado, error, recargar } = useDatos(BACKEND);
+  const chat = useChat(BACKEND, recargar);
   const [seleccion, setSeleccion] = useState<{ id: string; op?: string } | null>(null);
   const [modulo, setModulo] = useState<Modulo | null>(null);
   const [pestana, setPestana] = useState<Pestana>('rojo');
@@ -98,7 +106,7 @@ export default function App() {
   // Teclado: "/" enfoca la búsqueda; Esc cierra el panel y luego el módulo.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const escribiendo = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
+      const escribiendo = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === '/' && !escribiendo) { e.preventDefault(); refBusqueda.current?.focus(); }
       if (e.key === 'Escape' && !escribiendo) {
         if (seleccion) setSeleccion(null);
@@ -122,7 +130,8 @@ export default function App() {
       </div>
 
       <MenuLateral activo={modulo} onCambiar={m => abrir(m)} onInicio={() => { abrir(null); setSeleccion(null); vistaGeneral(); }}
-        atrasados={estado?.kpis.atrasados ?? 0} material={estado?.kpis.esperando_material ?? 0} sinCentro={estado?.sin_centro.length ?? 0} />
+        atrasados={estado?.kpis.atrasados ?? 0} material={estado?.kpis.esperando_material ?? 0} sinCentro={estado?.sin_centro.length ?? 0}
+        cambios={estado?.ajustes.length ?? 0} trabajando={chat.ocupado} />
 
       <BarraSuperior estado={estado} error={error} busqueda={busqueda} onBusqueda={setBusqueda}
         coincidencias={resaltadas && modulo !== 'so' ? resaltadas.size : null}
@@ -135,6 +144,7 @@ export default function App() {
       {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
       {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
       {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} centros={centros} onCerrar={cerrar} />}
+      {estado && modulo === 'asistente' && <Asistente chat={chat} estado={estado} backend={BACKEND} onCambio={recargar} onCerrar={cerrar} />}
 
       {sel && <PanelMaquina key={sel.id} m={sel} centro={nombreCentro.get(sel.centro_id ?? '')} items={items}
         opInicial={seleccion?.op} onPaso={irAPaso} onCerrar={() => setSeleccion(null)} />}

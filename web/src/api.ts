@@ -1,24 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { EstadoPlanta } from '../../shared/tipos';
+import type { Backend } from './backend';
 import type { Layout } from './tipos-layout';
 
-export function useDatos(intervaloMs = 60_000) {
+/** Layout y estado de la planta. `recargar()` vuelve a pedir el estado al momento (después de un ajuste). */
+export function useDatos(backend: Backend) {
   const [layout, setLayout] = useState<Layout | null>(null);
   const [estado, setEstado] = useState<EstadoPlanta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
+  const recargar = useCallback(() => setVersion(v => v + 1), []);
 
-  useEffect(() => { fetch('/api/layout')
-    .then(r => { if (!r.ok) throw new Error(`No se pudo cargar el layout (${r.status})`); return r.json(); })
-    .then(setLayout).catch(e => setError(String(e))); }, []);
+  useEffect(() => {
+    backend.layout().then(setLayout).catch(e => setError(String(e.message ?? e)));
+  }, [backend]);
   useEffect(() => {
     let vivo = true;
-    const cargar = () => fetch('/api/estado')
-      .then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; })
-      .then(j => { if (vivo) { setEstado(j); setError(null); } })
+    const cargar = () => backend.estado()
+      .then(e => { if (vivo) { setEstado(e); setError(null); } })
       .catch(e => vivo && setError(String(e.message ?? e)));
     cargar();
-    const t = setInterval(cargar, intervaloMs);
-    return () => { vivo = false; clearInterval(t); };
-  }, [intervaloMs]);
-  return { layout, estado, error };
+    const t = backend.refrescoMs ? setInterval(cargar, backend.refrescoMs) : undefined;
+    const dejar = backend.alCambiar(cargar);
+    return () => { vivo = false; if (t) clearInterval(t); dejar(); };
+  }, [backend, version]);
+  return { layout, estado, error, recargar };
 }

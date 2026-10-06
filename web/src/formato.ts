@@ -23,15 +23,7 @@ export function estadoLargo(o: Operacion): string {
   return ESTADO_OP[o.estado];
 }
 
-/** Nombre corto de un paso de la ruta: el de la tarea de máquina ("Revenido", "Rectificado (Balony)"; con Set Up,
- *  el del mecanizado), "Programación", "Material", "Anodizado"… */
-export function etiquetaPaso(o: Operacion): string {
-  if (o.tipo === 'maquina') return nombreCorto(o.nombre.split(' + ').at(-1) ?? '') || o.proceso;
-  if (o.tipo === 'programacion') return 'Programación';
-  if (o.tipo === 'material') return 'Material';
-  if (o.tipo === 'planos') return 'Planos';
-  return nombreCorto(o.nombre);
-}
+export { etiquetaPaso } from '../../shared/ruta';
 
 /** "Ítem 23 · 3 u" */
 export const itemCorto = (o: { item: string; cantidad: number | null }) =>

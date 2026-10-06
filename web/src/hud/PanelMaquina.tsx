@@ -36,7 +36,9 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
         <div>
           <div className="sup">{centro ?? 'Sin proceso asignado'} · {NOMBRE_FAMILIA[m.familia ?? 'generica']} · {tallerNombre(m.taller)}</div>
           <h2>{m.nombre}</h2>
-          <span className={`estado-maq ${m.semaforo}`}><span className="punto" style={{ background: colorSemaforo(m.semaforo) }} />{estadoMaq(m)}</span>
+          {m.fuera_de_servicio
+            ? <span className="estado-maq fuera"><span className="punto" />Fuera de servicio · {m.fuera_de_servicio}</span>
+            : <span className={`estado-maq ${m.semaforo}`}><span className="punto" style={{ background: colorSemaforo(m.semaforo) }} />{estadoMaq(m)}</span>}
         </div>
         <button className="icono-btn" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)"><IcoCerrar /></button>
       </header>
@@ -60,6 +62,7 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
                       <span className="pos">{o.posicion === 0 ? '▶' : o.posicion ?? '·'}</span>
                       <span className="so">{o.proyecto}</span>
                       <span className="desc">{itemCorto(o)} · {etiquetaPaso(o)}</span>
+                      {!!o.ajustes?.length && <span className="tag-ajuste" title={o.maquina_fija ? 'Máquina fijada por el supervisor' : 'Cambio del supervisor'}>{o.maquina_fija ? 'fijada' : 'ajustado'}</span>}
                       {o.semaforo && <span className="pill" style={{ background: colorSemaforo(o.semaforo) }}>{o.semaforo}</span>}
                     </span>
                     <span className="op-meta">

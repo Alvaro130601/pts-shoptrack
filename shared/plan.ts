@@ -2,9 +2,10 @@
 // la ruta de cada ítem y la capacidad de cada recurso; calcula el límite de cada paso hacia atrás desde la entrega
 // y el semáforo. Puro: sin red ni I/O. Es una sugerencia: el supervisor decide. Ver docs/PROCESO.md.
 import type {
-  CentroConfig, EstadoCentro, EstadoMaquina, EstadoPlanta, Item, MaquinaConfig, Operacion, ProyectoCrudo,
+  Ajuste, CentroConfig, EstadoCentro, EstadoMaquina, EstadoPlanta, Item, MaquinaConfig, Operacion, ProyectoCrudo,
   ReglasLectura, Semaforo, SO,
 } from './tipos.ts';
+import { aplicarAjustes } from './ajustes.ts';
 import { depende, norm, normalizarProyectos } from './ruta.ts';
 import { RANGO, SLA, diasDeCierre, esFechaISO, evaluarSemaforo, peorSemaforo, primerHabil, round1, sumarHabiles } from './reglas.ts';
 
@@ -41,9 +42,12 @@ export interface DatosPlanta {
   hoy: string;
   feriados: Set<string>;
   avisos?: string[];
+  ajustes?: Ajuste[];         // del supervisor: se aplican antes de planificar (shared/ajustes.ts)
 }
 
-export function armarEstado(d: DatosPlanta): EstadoPlanta {
+export function armarEstado(datos: DatosPlanta): EstadoPlanta {
+  const aj = aplicarAjustes(datos.proyectos, datos.maquinas, datos.ajustes ?? [], datos.reglas, datos.hoy);
+  const d = { ...datos, proyectos: aj.proyectos, maquinas: aj.maquinas };
   const { sos, estados_desconocidos } = normalizarProyectos(d.proyectos, d.reglas, d.centros);
   const plan = planificar(sos, d.centros, d.maquinas, d.hoy, d.feriados);
   const abiertas = (so: SO) => [...so.items.flatMap(i => i.ruta), ...so.cierre].filter(o => o.estado !== 'hecha');
@@ -104,6 +108,14 @@ export function armarEstado(d: DatosPlanta): EstadoPlanta {
   }
   const sinHoras = ops.filter(o => (o.tipo === 'maquina' || o.tipo === 'programacion') && o.horas_totales <= 0).length;
   if (sinHoras) avisos.push(`${sinHoras} operaciones sin horas estimadas: el plan las cuenta como 0 h`);
+  for (const c of centros) {
+    const fuera = (d.centros.find(x => x.id === c.id)?.maquinas ?? []).filter(id => d.maquinas.find(m => m.id === id)?.fuera_de_servicio);
+    if (c.tipo === 'maquina' && fuera.length && !c.recursos.length && c.ops.length) {
+      avisos.push(`${c.nombre}: ninguna máquina disponible (${fuera.map(id => d.maquinas.find(m => m.id === id)!.nombre).join(', ')} fuera de servicio)`);
+    }
+  }
+  const sinAplicar = aj.estado.filter(a => !a.aplicado).length;
+  if (aj.estado.length) avisos.push(`${aj.estado.length} ajustes del supervisor${sinAplicar ? `, ${sinAplicar} sin aplicar` : ''} (ver Asistente)`);
 
   return {
     actualizado: new Date().toISOString(), fuente: d.fuente, datos_de: d.datos_de, hoy: d.hoy,
@@ -120,13 +132,15 @@ export function armarEstado(d: DatosPlanta): EstadoPlanta {
       horas_cola: round1(centros.filter(c => c.tipo === 'maquina').reduce((s, c) => s + c.horas_cola, 0)),
     },
     avisos,
+    ajustes: aj.estado,
   };
 }
 
 /** Reparte el trabajo y calcula fechas, límites y semáforos. Modifica las operaciones de `sos` (recién creadas). */
 export function planificar(sos: SO[], centros: CentroConfig[], maquinas: MaquinaConfig[], hoy: string, feriados: Set<string>) {
   const base = primerHabil(hoy, feriados);
-  const activas = new Map(maquinas.filter(m => m.activa).map(m => [m.id, m]));
+  // Fuera de servicio (ajuste del supervisor): se sigue dibujando, pero el plan no le reparte trabajo.
+  const activas = new Map(maquinas.filter(m => m.activa && !m.fuera_de_servicio).map(m => [m.id, m]));
   const porId = new Map<string, Recurso>();
   const recursos = new Map<string, Recurso[]>();
   for (const c of centros) {
@@ -159,14 +173,24 @@ export function planificar(sos: SO[], centros: CentroConfig[], maquinas: Maquina
     }
   };
 
-  // Prioridad: la fecha en que deben terminar las rutas del SO (entrega − cierre); la fecha final manda.
+  // Prioridad: primero los SO que el supervisor priorizó (1, 2, …); luego la fecha en que deben terminar sus
+  // rutas (entrega − cierre): la fecha final manda; sin fecha, por número de SO.
   const finRutas = new Map(sos.map(s => [s.id, esFechaISO(s.fecha_entrega) ? sumarHabiles(s.fecha_entrega, -diasDeCierre(s), feriados) : '9999-12-31']));
-  const orden = [...sos].sort((a, b) =>
+  const orden = [...sos].sort((a, b) => (a.prioridad ?? Infinity) - (b.prioridad ?? Infinity) ||
     finRutas.get(a.id)!.localeCompare(finRutas.get(b.id)!) || a.fecha_entrega.localeCompare(b.fecha_entrega) || a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
 
+  /** Máquina que fijó el supervisor, aunque no sea de su proceso, si está disponible. */
+  const recursoFijo = (id: string): Recurso | undefined => {
+    const m = activas.get(id);
+    if (!m) return undefined;
+    let r = porId.get(id);
+    if (!r) porId.set(id, r = { id, cap: Math.max(m.capacidad_horas_dia, 0.1), ocupado: [], carga: 0 });
+    return r;
+  };
   const t = new Map<string, [number, number]>();
   const colocar = (op: Operacion, desde: number) => {
-    const recs = op.centro_id ? recursos.get(op.centro_id) : undefined;
+    const fijo = op.tipo === 'maquina' && op.maquina_fija ? recursoFijo(op.maquina_fija) : undefined;
+    const recs = fijo ? [fijo] : op.centro_id ? recursos.get(op.centro_id) : undefined;
     if ((op.tipo === 'maquina' || op.tipo === 'programacion') && recs?.length) {
       let mejor: { r: Recurso; s: number; e: number } | null = null;
       for (const r of recs) {

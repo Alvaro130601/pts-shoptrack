@@ -128,6 +128,11 @@ Cómo se arma el plan:
 
 Horas pendientes = estimadas − registradas (si ya se pasó y sigue en proceso, media hora).
 
+**Ajustes del supervisor** ✅ (pedido de Alvaro, 6-oct): desde el asistente (`docs/ASISTENTE.md`) el supervisor cambia
+estados, marca la llegada de material, fija prioridad o fecha de entrega de un SO, fija la máquina de una operación
+o saca una máquina del plan. Se guardan en ShopTrack (no en Zoho), se aplican antes de planificar y se pueden quitar.
+Con prioridad fijada, esos SO van primero; después manda la fecha de entrega.
+
 ## 5. Observaciones
 
 - **El buffer es la suma de los SLA que van después de producción**: calidad 1 + envío 1 = 2; + servicio

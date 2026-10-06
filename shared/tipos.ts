@@ -11,6 +11,8 @@ export interface TareaCruda {
   horas_estimadas: number;    // total de la tarea, aunque tenga varios propietarios
   horas_registradas: number;  // registros de tiempo
   url?: string;
+  maquina?: string | null;    // máquina indicada por el supervisor (ajuste); Zoho no la trae
+  ajustes?: string[];         // ids de los ajustes del supervisor que tocan esta tarea
 }
 
 export interface ListaCruda {
@@ -27,6 +29,8 @@ export interface ProyectoCrudo {
   fecha_entrega: string;      // yyyy-mm-dd; '' si no se pudo leer
   url?: string;
   listas: ListaCruda[];
+  prioridad?: number;         // fijada por el supervisor: 1 = primero (ajuste)
+  ajustes?: string[];
 }
 
 // ---------- Configuración ----------
@@ -46,6 +50,7 @@ export interface MaquinaConfig {
   capacidad_horas_dia: number;
   es_centro_mecanizado: boolean;
   activa: boolean;
+  fuera_de_servicio?: string; // motivo, si el supervisor la sacó del plan (ajuste)
 }
 
 /** maquina: Set Up y mecanizado en máquinas del layout · programacion: programadores ·
@@ -113,6 +118,8 @@ export interface Operacion {
   cantidad: number | null;
   fecha_entrega: string;
   url_zoho?: string;
+  maquina_fija?: string | null; // máquina que fijó el supervisor (ajuste)
+  ajustes?: string[];         // ajustes del supervisor que la tocan
   // ---- plan (calculado por shared/plan.ts) ----
   maquina_id?: string | null; // máquina sugerida, o "programacion-1" para un programador
   inicio_proyectado?: string;
@@ -158,6 +165,8 @@ export interface SO {
   items: Item[];
   cierre: Operacion[];        // pasos finales del SO (lista "Cierre"), si existen
   url_zoho?: string;
+  prioridad?: number;         // fijada por el supervisor (1 = primero)
+  ajustes?: string[];
   fin_proyectado?: string;
   semaforo?: Semaforo;
   motivo?: string;
@@ -210,4 +219,35 @@ export interface EstadoPlanta {
     horas_cola: number;
   };
   avisos: string[];
+  ajustes: AjusteEstado[];    // ajustes del supervisor y si se pudieron aplicar
+}
+
+// ---------- Ajustes del supervisor ----------
+// Cambios hechos en ShopTrack (no en Zoho) para organizar el trabajo: se guardan aparte y se aplican sobre los
+// datos crudos antes de planificar (shared/ajustes.ts). Las tareas se identifican por id; si una tarea desaparece
+// de los datos (se cerró en Zoho), el ajuste queda sin aplicar hasta que el supervisor lo quite.
+interface AjusteBase {
+  id: string;
+  creado: string;             // ISO
+  descripcion: string;        // "SO-11357-SMT-3 · Grupo 2 · Fresado CNC → Cerrada"
+  nota?: string;              // por qué, si el supervisor lo dijo
+}
+export type Ajuste = AjusteBase & (
+  | { tipo: 'estado'; proyecto_id: string; tareas: string[]; estado: EstadoTarea }
+  | { tipo: 'material'; proyecto_id: string; tareas: string[] }   // llegó el material de esas tareas
+  | { tipo: 'prioridad'; proyecto_id: string; prioridad: number }
+  | { tipo: 'entrega'; proyecto_id: string; fecha: string }
+  | { tipo: 'maquina'; proyecto_id: string; tareas: string[]; maquina_id: string }
+  | { tipo: 'fuera_servicio'; maquina_id: string; motivo: string; hasta?: string }
+);
+export type TipoAjuste = Ajuste['tipo'];
+
+export interface AjusteEstado {
+  id: string;
+  tipo: TipoAjuste;
+  creado: string;
+  descripcion: string;
+  nota?: string;
+  aplicado: boolean;
+  motivo?: string;            // por qué no se aplicó
 }

@@ -11,6 +11,7 @@ export function FilaOperacion({ o, onClick }: { o: Operacion; onClick?: () => vo
         <span className="op-l-arriba">
           <b className="so">{o.proyecto}</b>
           <span className="maq">{itemCorto(o)}</span>
+          {!!o.ajustes?.length && <span className="tag-ajuste" title="Cambio del supervisor">ajustado</span>}
           <span className="estado">{estadoLargo(o)}</span>
         </span>
         <span className="desc">{etiquetaPaso(o)}{o.tipo === 'maquina' && o.nombre.includes('+') ? ' (con Set Up)' : ''} · {o.cliente}</span>

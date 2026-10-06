@@ -11,9 +11,11 @@
     "build": "tsc -p tsconfig.json --noEmit && vitest run && vite build",
     "start": "tsx server/index.ts --prod",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pagina": "tsx scripts/pagina.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "dotenv": "^18.0.5",

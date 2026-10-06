@@ -10,10 +10,18 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `web/` React 19 + Vite + **React Three Fiber** + drei (escena 3D isométrica con cámara ortográfica) + CSS propio.
   `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, menú lateral, panel, controles),
   `modulos/` (cajones del menú: carga por proceso, alertas, ¿dónde está mi SO?, material, sin centro, leyenda).
-- `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`. Cachea la lectura de Zoho.
+- `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`, `/api/ajustes` y
+  `/api/asistente` (NDJSON). Cachea la lectura de Zoho y rearma el plan al momento cuando cambian los ajustes.
 - `shared/` tipos y **reglas de negocio puras**, sin I/O: `reglas.ts` (días hábiles, SLA, buffer, semáforo),
-  `ruta.ts` (Zoho → SO → ítems → ruta; estados de cada paso) y `plan.ts` (reparto sugerido por capacidad,
-  límites hacia atrás desde la entrega, semáforo, estado de la planta).
+  `ruta.ts` (Zoho → SO → ítems → ruta; estados de cada paso), `plan.ts` (reparto sugerido por capacidad,
+  límites hacia atrás desde la entrega, semáforo, estado de la planta), `ajustes.ts` (cambios del supervisor
+  aplicados antes de planificar) y `asistente.ts` (herramientas del asistente, sin I/O).
+- **Asistente** (`docs/ASISTENTE.md`): chat con Claude (`@anthropic-ai/sdk`, `claude-opus-5-5`, `server/asistente.ts`)
+  que consulta el plan y crea **ajustes del supervisor** (estado, material, prioridad, entrega, máquina, fuera de
+  servicio). Los ajustes viven en ShopTrack (`data/ajustes.json`, no se sube), **no se escriben en Zoho** y se quitan
+  desde la pestaña Cambios. Necesita `ANTHROPIC_API_KEY` en `.env`.
+- `scripts/pagina.ts` (`npm run pagina`): la app como página estática para claude.ai (plan en el navegador, ajustes
+  en la base compartida `db`, asistente con la capacidad `sample`); sale en `dist-pagina/` (no se sube).
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados,
   `zoho` lee la API y `excel` lee la exportación de tareas más reciente de `data/exportaciones/` (`server/fuentes/exportacion.ts`).
 - `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.

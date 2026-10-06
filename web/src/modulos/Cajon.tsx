@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { IcoCerrar } from '../iconos';
 
-/** Contenedor de un módulo del menú lateral: título, ayuda corta y contenido con scroll. */
-export function Cajon({ titulo, sub, onCerrar, children, extra }:
-  { titulo: string; sub?: string; onCerrar: () => void; children: ReactNode; extra?: ReactNode }) {
+/** Contenedor de un módulo del menú lateral: título, ayuda corta, contenido con scroll y un pie fijo opcional. */
+export function Cajon({ titulo, sub, onCerrar, children, extra, pie }:
+  { titulo: string; sub?: string; onCerrar: () => void; children: ReactNode; extra?: ReactNode; pie?: ReactNode }) {
   return (
     <section className="cajon tarjeta" aria-label={titulo}>
       <header>
@@ -15,6 +15,7 @@ export function Cajon({ titulo, sub, onCerrar, children, extra }:
       </header>
       {extra}
       <div className="cajon-cuerpo">{children}</div>
+      {pie}
     </section>
   );
 }
