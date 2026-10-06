@@ -23,9 +23,12 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `config/zoho-mapeo.json` — cómo se lee la máquina, horas, fase y flags desde Zoho. **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 
-## Proceso real (ver `docs/PROCESO.md`, borrador por validar)
-- Un SO (proyecto) tiene **ítems** = listas de tareas (una pieza, o varias si es ensamble). Cada ítem tiene su
-  **ruta**: tareas = operaciones en orden (fresado convencional, fresado CNC, hilo…). Cada ítem avanza por su cuenta.
+## Proceso real (ver `docs/PROCESO.md`, borrador por validar; visto en SO-10664-MCV-1)
+- Un SO (proyecto) tiene **ítems** = listas de tareas `Ítem <línea> (<cantidad> unidades)`. Cada ítem tiene su
+  **ruta**: tareas `H. <proceso>` en el orden de la lista. Cada ítem avanza por su cuenta.
+- El proceso está en **Equipo asignado** (Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere = externo).
+  **La máquina no está en Zoho**: ShopTrack debe sugerir el reparto entre las máquinas de cada proceso.
+- `H. Programación` es tiempo del programador (no de máquina); `H. Set Up` + el mecanizado siguiente van a la misma máquina.
 - El modelo actual de la app (operación suelta por máquina, fase por SO) no lo respeta todavía.
 
 ## Reglas de negocio de PTS (no cambiar sin pedirlo)

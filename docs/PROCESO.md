@@ -1,126 +1,121 @@
 # Proceso de una orden en PTS
 
-> **Borrador para validar con Alvaro** (6-oct-2026). Describe cómo entiendo el flujo real de una orden y qué
-> tiene que cambiar en ShopTrack para respetarlo. Lo marcado con ❓ es suposición; las preguntas abiertas
-> están al final.
+> **Borrador para validar con Alvaro.** Actualizado el 6-oct-2026 con una captura real de **SO-10664-MCV-1**.
+> ✅ = visto en Zoho · ❓ = por confirmar · 💡 = propuesta. Detalle de campos en `docs/ZOHO.md`.
 
-## 1. Estructura de una orden
+## 1. Estructura de una orden ✅
 
 ```mermaid
-flowchart TD
-  SO["SO-1234 · proyecto en Zoho<br/>cliente · fecha final de entrega"]
-  SO --> IA["Ítem A · Placa base<br/>(lista de tareas)"]
-  SO --> IB["Ítem B · Pin localizador<br/>(lista de tareas)"]
-  SO -. si es ensamble .-> EN["Ensamble ❓"]
-  IA --> A1["Fresado CNC · 6 h"] --> A2["Hilo · 3 h"]
-  IB --> B1["Torno CNC · 1.5 h"] --> B2["Servicio externo · temple ❓"] --> B3["Hilo · 1 h"]
+flowchart LR
+  SO["SO-10664-MCV-1"]
+  SO --> I2A["Ítem 2-A · 4 u"] --> A1["H. Fresado<br/>Fresado"]
+  SO --> I22["Ítem 22 · 3 u"] --> B1["H. Programación<br/>Fresado CNC"] --> B2["H. Set Up<br/>Fresado CNC"] --> B3["H. Fresado CNC<br/>Fresado CNC"]
+  SO --> I23["Ítem 23 · 3 u"] --> C1["H. Torno CNC<br/>Torno CNC"] --> C2["H. Erosionado<br/>Erosionado"] --> C3["H. Anodizado<br/>No Requiere"]
 ```
 
 | Nivel | En Zoho | Qué es |
 |---|---|---|
-| **SO** | Proyecto `SO-…` | Una orden de un cliente. Su fecha final manda la prioridad. |
-| **Ítem** | Lista de tareas | Cada pieza distinta. Un SO de una sola pieza tiene un ítem; un ensamble tiene varios. |
-| **Operación** | Tarea dentro de la lista | Cada proceso por el que pasa la pieza (fresado convencional, fresado CNC, torno, hilo…), en orden. Lleva las horas estimadas. |
+| **SO** | Proyecto `SO-10664-MCV-1` | Una orden de un cliente. Su fecha final manda la prioridad. |
+| **Ítem** | Lista de tareas `Ítem 23 (3 unidades)` | Una línea de la orden con su cantidad. Un SO puede tener muchos ítems independientes (este tiene al menos 2-A, 20, 21, 22 y 23), no solo ensambles. |
+| **Operación** | Tarea `H. <proceso>` | Cada proceso por el que pasa el ítem, en el orden de la lista (su ruta). |
+| **Proceso** | Equipo asignado | Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere (servicio externo). |
+| **Máquina** | No está en Zoho | Se decide en planta. ShopTrack debe ayudar a repartir el trabajo. |
 
-Es la misma estructura que usan los sistemas de taller (MES/ERP): orden → ítem → **ruta** de operaciones →
-**centro de trabajo** donde se hace cada operación.
+Rutas vistas en ese SO:
 
-## 2. Cómo avanza una orden
+| Ítem | Cantidad | Ruta |
+|---|---|---|
+| 2-A | 4 | Fresado (convencional) |
+| 20, 21, 22 | 3 cada uno | Programación → Set Up → Fresado CNC |
+| 23 | 3 | Torno CNC → Erosionado → Anodizado (servicio externo) |
 
-```mermaid
-flowchart LR
-  L[Llega la orden] --> C[Se crea el SO en Zoho]
-  C --> P["Preparación<br/>programación · planos · material"]
-  P --> RA["Ítem A recorre su ruta"]
-  P --> RB["Ítem B recorre su ruta"]
-  RA --> E{"¿Ensamble?"}
-  RB --> E
-  E --> Q[Calidad] --> S[Envío]
-```
+Avance ✅: se cambia el estado de la tarea y se registran horas (Registros de tiempo). El orden de la ruta es el
+de la lista; a veces se altera por prioridades.
 
-- Un SO **no está en una sola fase**: cada ítem avanza por su cuenta. El ítem A puede estar en hilo mientras el
-  B espera material. El estado del proyecto en Zoho (un valor por SO) resume, pero no dice dónde está cada pieza.
-- Entre una operación y la siguiente, la pieza **espera en la cola** del siguiente centro. En un taller de alta
-  variedad esa espera suele ser la mayor parte del tiempo de entrega, más que las horas de máquina.
-- El ensamble solo puede empezar cuando **todos** los ítems que lo forman terminaron su ruta.
+## 2. Lo que enseña la captura
 
-## 3. Por qué el modelo actual de ShopTrack no alcanza
+1. **Programación, Set Up y mecanizado son tareas separadas.**
+   - Programación es tiempo del programador, no de la máquina, y es la condición para que el ítem pase a máquina.
+   - Set Up y Fresado CNC ocupan la misma máquina, uno detrás del otro: para repartir se tratan como una sola
+     visita a la máquina.
+   - Hoy ShopTrack sumaría las horas de programación como carga de máquina.
+2. **El servicio externo es un paso más de la ruta** (Anodizado, equipo "No Requiere"). Dura días de proveedor,
+   no horas de máquina.
+3. **Los estados mezclan avance y bloqueo.** `Material Pendiente` está puesto en todas las tareas del ítem, aunque
+   es una condición del ítem. Por eso el estado de las tareas no dice qué está pasando de verdad.
+4. **Los nombres tienen errores de escritura** (`H. Progrmación`): el proceso se toma del equipo asignado.
+5. Un SO puede ser una orden grande con muchas líneas, no solo un ensamble.
 
-- Trata cada tarea `H.*` como una operación suelta en una máquina, **sin ítem ni orden**. Cuando un SO pasa a
-  Producción, todas sus operaciones aparecen "en cola" a la vez en todas sus máquinas, aunque la pieza apenas
-  esté en la primera. Eso infla las colas (sobre todo de los procesos del final de la ruta, como hilo) y el semáforo.
-- La proyección se calcula **por máquina, por separado**: puede dar que el hilo termine antes que el fresado que
-  va antes en la ruta.
-- La fase sale del estado del proyecto, así que todas las piezas de un SO muestran la misma fase.
-- Servicio externo y ensamble se detectan buscando texto en los nombres y solo cambian el buffer (2/5/6 días);
-  no aparecen como pasos con su propio tiempo.
+## 3. Propuesta para ordenar Zoho 💡
 
-## 4. Modelo propuesto para la app
+| Hoy | Propuesta |
+|---|---|
+| Estados que mezclan avance y bloqueo (`Material Pendiente`, `Pendiente Op…`) | Tres estados por tarea: **Pendiente, En proceso, Cerrada** |
+| `Material Pendiente` repetido en cada tarea | Una tarea **Material** al inicio de cada ítem (sin `H.`), que se cierra cuando llega el material ❓ |
+| Planos ❓ | Igual: tarea **Planos** al inicio del ítem o del SO |
+| Calidad, ensamble y envío en el estado del proyecto | Lista final **Cierre** en cada SO: Ensamble (si aplica), Calidad, Envío ❓ |
+| Equipo "No Requiere" para servicios externos | Equipo **Servicio externo**, con el proveedor en el nombre de la tarea |
+| Máquina sin registrar | La sugiere ShopTrack; si se quiere dejar constancia, un campo **Máquina** en la tarea ❓ |
 
-Cada **operación** tiene un estado que depende de su ítem:
+Con eso no hay que mantener estados a mano en otros niveles; ShopTrack los calcula:
+- **Ítem**: Pendiente (nada empezado), En proceso, Cerrado (todas sus tareas cerradas).
+- **Fase del SO** (programación, material, producción, calidad, envío): sale de sus ítems y de la lista Cierre.
 
-| Estado | Significa | Regla (por confirmar) |
+## 4. Cómo lo usaría ShopTrack
+
+**Centros de trabajo = equipos de Zoho**, cada uno con sus máquinas (propuesta ❓):
+
+| Equipo | Máquinas |
+|---|---|
+| Fresado | Fresadora #1 a #7 |
+| Fresado CNC | Haas VF-2, SVM 4100 #1 y #2, Haas Mini Mill #1 y #2, SYL |
+| Torno CNC | Torno Hyundai, Torno Hanwa |
+| Torno | Torno #1 y #2 |
+| Erosionado | EDM hilo, CUT E350, E350 |
+| Programación | Programadores (personas, no máquinas) |
+| Servicio externo / No Requiere | Proveedores, fuera de planta |
+
+Cada **operación** tiene un estado calculado con su ítem:
+
+| Estado | Significa | Regla |
 |---|---|---|
 | Hecha | Ya pasó por ese proceso | Tarea cerrada |
-| En proceso | Se está trabajando | Tarea en progreso |
-| En cola | La pieza está esperando frente al centro | La operación anterior está hecha y la preparación está lista |
-| En camino | La pieza todavía va en una operación anterior | Alguna operación anterior del ítem está abierta |
-| Bloqueada | Falta programa, plano o material | Preparación pendiente ❓ |
-| Fuera | En un proveedor | Servicio externo en progreso |
+| En proceso | Se está trabajando | Tarea en proceso |
+| En cola | La pieza está esperando frente al centro | Las anteriores del ítem están cerradas y el material está listo |
+| En camino | La pieza todavía va en una operación anterior | Alguna anterior del ítem está abierta |
+| Bloqueada | Falta material, planos o programa | Tarea Material, Planos o Programación abierta |
+| Fuera | En un proveedor | Servicio externo en proceso |
 
-Con eso:
+Y con eso:
+- **Reparto de trabajo**: por cada centro, la cola ordenada por prioridad (límite de producción) y una
+  **máquina sugerida** según la carga de cada una. Set Up y mecanizado van juntos a la misma máquina. El
+  supervisor decide.
+- **Horas pendientes** = horas estimadas − horas registradas.
+- **Cola de cada máquina**: solo lo que está en proceso o realmente esperando; lo "en camino" se ve aparte.
+- **¿Dónde está mi SO?**: cada ítem como una cadena de pasos con el actual resaltado.
+- **Proyección**: simulación hacia adelante que respeta la ruta de cada ítem y la capacidad de cada centro.
+  Da fin proyectado por operación, ítem y SO; el semáforo compara contra la entrega menos el buffer.
 
-- **Cola de cada centro**: solo lo que está en proceso o realmente esperando. Lo "en camino" se ve aparte
-  (translúcido), con cuándo llegaría.
-- **¿Dónde está mi SO?**: cada ítem como una cadena de pasos con el paso actual resaltado.
-- **Proyección**: simulación hacia adelante que respeta el orden de cada ruta y la capacidad de cada centro. Una
-  operación no empieza antes de que termine la anterior del mismo ítem ni antes de que el centro se libere. Da
-  fin proyectado por operación, por ítem y por SO; el semáforo compara contra la entrega menos el buffer.
-
-## 5. Cómo se leería de Zoho (por verificar con un SO real)
-
-| Concepto | Dónde podría estar ❓ | Por confirmar |
-|---|---|---|
-| SO | Proyecto `SO-…` | Estado = fase; `end_date` = entrega; campo de cliente |
-| Ítem | Lista de tareas | Formato del nombre (número de parte, descripción, cantidad) |
-| Operación | Tarea de la lista | Nombre (¿`H. Fresado CNC`?), estado, horas (`owners_and_work`), horas registradas |
-| Orden de la ruta | Posición en la lista, o dependencias (FS/SS/SF/FF) | Cuál se usa |
-| Máquina | Campo personalizado, responsable/recurso, nombre de la tarea, o solo el proceso | Cuál se usa |
-| Preparación | Estado del SO, tareas dentro de cada ítem, o Fases de Zoho | Cuál se usa |
-
-Notas:
-
-- En Zoho los antiguos "hitos" ahora se llaman **Fases**, y una lista de tareas puede asociarse a una fase. No
-  son lo mismo que el estado del proyecto, que es lo que hoy la app usa como fase.
-- Endpoints v3 a probar (VERIFICAR): `GET /api/v3/portal/{portal}/projects/{id}/tasklists` y
-  `GET /api/v3/portal/{portal}/projects/{id}/tasks`. Hay fallas reportadas en la API v3 de horas registradas
-  (timelogs); la v2 funciona.
-- El entorno de nube donde se desarrolla no tiene acceso a `*.zoho.com`. Para leer datos reales hay que
-  habilitar esos dominios en el entorno o correr la lectura en una PC de PTS.
-
-## 6. Observaciones
+## 5. Observaciones
 
 - **El buffer es la suma de los SLA que van después de producción**: calidad 1 + envío 1 = 2; + servicio
   externo 3 = 5; + ensamble 1 = 6. Con esa lógica, un SO con ensamble pero **sin** servicio externo debería
   llevar 3 días, pero la regla actual le da 2. ❓
-- Si el servicio externo va **en medio** de la ruta (por ejemplo temple y después hilo o rectificado), no es un
-  buffer al final: es un paso de unos 3 días dentro de la ruta del ítem.
-- Máquinas sin identificar (hipótesis por nombre y tamaño):
-  - **SYL** ≈ SYIL, fresadora CNC compacta.
-  - **E350** ≈ GF FORM E 350, electroerosión por penetración. Cuadra con que esté junto a la CUT E 350 (hilo)
-    y con los electrodos que aparecen entre las piezas.
-  - **H32Z**: sin hipótesis.
+- Si el servicio externo va **en medio** de la ruta (por ejemplo temple y después hilo), no es un buffer al final
+  sino un paso de unos 3 días dentro de la ruta. Con la ruta completa en Zoho ya no hace falta el buffer por tipo
+  de SO: el tiempo de cada paso sale de la ruta.
+- Máquinas sin identificar (hipótesis por nombre y tamaño): **SYL** ≈ SYIL, fresadora CNC compacta;
+  **E350** ≈ GF FORM E 350, electroerosión por penetración (está junto a la CUT E 350 de hilo);
+  **H32Z** sin hipótesis.
 
-## 7. Preguntas abiertas
+## 6. Preguntas abiertas
 
-1. ¿Dónde está la máquina de cada operación en Zoho, o solo se indica el proceso y la máquina se decide en planta?
-2. ¿El orden de la ruta es el orden de las tareas en la lista, o usan dependencias en Zoho?
-3. Programación, planos y material: ¿son por SO (estado del proyecto) o por ítem (tareas)? ¿"Planos" es diseño
-   interno de PTS o planos que manda el cliente?
-4. ¿Cómo se registra el avance: cambio de estado de la tarea, horas registradas, o ambos? ¿Quién lo hace y cuándo?
-5. ¿El servicio externo puede ir en medio de la ruta? ¿Cómo aparece en Zoho (tarea, lista, nombre)?
-6. Ensamble: ¿es una lista de tareas aparte, una tarea final, u otro proyecto?
+1. Material: ¿se controla por ítem o por SO?
+2. Programación: ¿la hace un programador aparte o se programa en la máquina?
+3. Con varios propietarios (Maykel +5), ¿las horas estimadas son del total de la tarea o se repiten por persona?
+4. Lista completa de equipos y qué máquinas pertenecen a cada uno.
+5. ¿Qué significa `Pendiente Op…`?
+6. Planos: ¿diseño interno o planos del cliente? ¿Por ítem o por SO?
 7. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?
-8. ¿Calidad es una inspección final por SO, o también hay inspecciones dentro de la ruta?
-9. ¿Las horas de la tarea son por todas las piezas del ítem? ¿Dónde está la cantidad?
-10. ¿Qué máquinas son SYL, E350 y H32Z?
+8. Calidad: ¿solo inspección final o también dentro de la ruta?
+9. ¿Qué máquinas son SYL, E350 y H32Z?
