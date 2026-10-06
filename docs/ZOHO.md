@@ -2,10 +2,27 @@
 
 Portal `ptsportal388` (ID `714664835`). Lectura únicamente.
 
-## Autenticación
-OAuth 2.0 con **Self Client** (api-console.zoho.com): generar *grant token* con scopes
-`ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasks.READ` y cambiarlo por un
-*refresh token*. El backend renueva el access token (1 h) solo. Variables en `.env` (ver `.env.example`).
+## Cómo conectar Zoho
+
+**A. Conector de Zoho Projects en claude.ai** (para revisar datos reales con Claude y para la página publicada):
+conectarlo en https://claude.ai/customize/connectors con la cuenta del portal `ptsportal388` y abrir una sesión
+nueva de Claude Code (los conectores se leen al iniciar la sesión). ShopTrack solo usaría sus herramientas de
+lectura (proyectos, listas de tareas, tareas); no escribe en Zoho. La página publicada puede leerlo con la
+capacidad `mcp`, con la conexión de quien la abre.
+
+**B. Servidor de ShopTrack en una PC de planta** (`DATA_SOURCE=zoho`): OAuth 2.0 con **Self Client**.
+1. https://api-console.zoho.com → *Add Client* → *Self Client* → *Create*.
+2. *Generate Code* con los scopes `ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasklists.READ,ZohoProjects.tasks.READ`
+   (duración 10 min) y copiar el código.
+3. Cambiarlo por un *refresh token* (en la misma PC, antes de que venzan los 10 min):
+   `curl -X POST "https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id=ID&client_secret=SECRETO&code=CODIGO"`
+   → la respuesta trae `refresh_token`.
+4. En `.env`: `DATA_SOURCE=zoho`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN` (el portal
+   `714664835` ya está). Si la cuenta no es del centro de datos `.com`, cambiar `ZOHO_ACCOUNTS_URL` y `ZOHO_PROJECTS_API`.
+5. `npm run dev`: la barra superior dice "Zoho". El backend renueva el access token (1 h) solo.
+
+Las claves nunca van al repositorio ni al chat. La lectura (`server/fuentes/zoho.ts`) todavía no se probó con datos
+reales: los campos marcados `VERIFICAR` se confirman en la primera conexión (lo más rápido es con la opción A).
 
 ## Observado en un SO real
 Fuente: captura de la vista Tareas de **SO-10664-MCV-1** (clave `PTS-8808`), agrupada por lista de tareas,
