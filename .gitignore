@@ -11,3 +11,4 @@ data/ajustes.json
 data/ajustes.json.tmp
 # Página estática con datos (npm run pagina)
 dist-pagina
+*.tsbuildinfo
