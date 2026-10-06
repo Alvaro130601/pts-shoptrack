@@ -43,7 +43,7 @@ export function Taller({ t }: { t: TallerLayout }) {
       ))}
       <Html position={[esquina[0] + 0.6, 0.1, esquina[1] + 0.6]} center={false} zIndexRange={[5, 0]}
         style={{ pointerEvents: 'none' }}>
-        <div className="etiqueta-taller">{t.nombre}{t.aproximado ? ' · contorno aprox.' : ''}</div>
+        <div className="etiqueta-taller" title={t.aproximado ? 'Contorno aproximado: no viene en el CAD' : undefined}>{t.nombre}</div>
       </Html>
     </group>
   );

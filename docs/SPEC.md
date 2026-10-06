@@ -28,16 +28,23 @@ Construido con React + React Three Fiber. Equivalencias para PTS:
 - **Días de carga** de una máquina = horas pendientes (en proceso + cola) ÷ capacidad diaria.
 
 ## Vistas (v1)
-1. **Planta 3D** (implementado v0): talleres, máquinas orientadas como en el CAD, baliza animada si hay operación
-   en proceso, franja de color con el peor semáforo, pila de bloques (azul = en proceso, color = semáforo,
-   translúcido = por liberar), chip con nombre y conteos. Clic → panel. Pan/zoom/rotar.
-2. **Panel de máquina** (v0): resumen (h en cola, días de carga, capacidad), listas En proceso / En cola /
-   Por liberar, detalle expandible con fases, cliente, fin proyectado, motivo del semáforo, buffer y enlace a Zoho.
-3. **Tabla "Cola por centro"** (v0): ordenada por días de carga, clic selecciona la máquina en 3D.
-4. **Búsqueda y filtro** (v0): por SO, cliente, pieza o máquina; por proceso. Atenúa las máquinas que no coinciden.
-5. Pendiente v1: modo "¿dónde está mi SO?" (resalta todas las máquinas por las que pasa un SO y su secuencia),
-   bandeja de operaciones **sin máquina** reconocida, vista por proceso (Fresado CNC / Torno CNC / Torno Suizo /
-   Erosionado), histórico simple de carga por día.
+Pantalla limpia: la planta 3D ocupa todo el fondo; todo lo demás se abre bajo demanda.
+- **Barra superior**: búsqueda (atajo `/`), filtro por proceso, KPIs compactos que abren su módulo
+  (atrasadas/en riesgo → Alertas), campana de avisos y estado de la fuente de datos.
+- **Menú lateral** con módulos (uno abierto a la vez, en un cajón a la izquierda; `Esc` cierra):
+  1. **Cola por centro**: centros ordenables por carga, peor estado o nombre; clic lleva la cámara a la máquina.
+  2. **Alertas**: atrasadas / en riesgo ordenadas por holgura, con el motivo del semáforo.
+  3. **¿Dónde está mi SO?**: elige un SO → fases, todas sus operaciones (con posición en cola) y resalta sus máquinas.
+  4. **Sin máquina**: operaciones sin máquina reconocida, agrupadas por el valor crudo de Zoho, y sin fecha válida.
+  5. **Leyenda**: semáforo, torre andon, pila de cajas, tipos de máquina y controles.
+- **Planta 3D**: máquinas con **forma aproximada por familia** (`config/maquinas.json → familia`) a escala del CAD,
+  torre de luces andon (azul = mecanizando; rojo/amarillo/verde = peor semáforo), huella en el piso con el color
+  del semáforo, pila de cajas (azul = en proceso, color = semáforo, translúcido = por liberar). Las etiquetas
+  se reducen a un número al alejar la cámara. Controles: General / T1–T4 / acercar / alejar.
+- **Panel de máquina** (derecha): estado, h en cola, días de carga, capacidad; En proceso / En cola / Por liberar
+  con detalle (fases, cliente, fin proyectado, motivo, buffer, horas, enlace a Zoho).
+- Pendiente: vista por proceso con KPIs propios, histórico simple de carga por día, frente real de cada máquina
+  (hoy la ventana/panel se dibuja en ambas caras largas porque el CAD no lo indica).
 
 ## Fuera de alcance v1
 Editar datos en Zoho, reprogramar la cola desde la app, login por usuario (se sirve en la red interna).

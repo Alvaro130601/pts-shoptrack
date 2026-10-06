@@ -8,6 +8,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 
 ## Stack
 - `web/` React 19 + Vite + **React Three Fiber** + drei (escena 3D isométrica con cámara ortográfica) + CSS propio.
+  `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, menú lateral, panel, controles),
+  `modulos/` (cajones del menú: cola, alertas, ¿dónde está mi SO?, sin máquina, leyenda).
 - `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`. Cachea la lectura de Zoho.
 - `shared/` tipos y **reglas de negocio puras** (`reglas.ts`): días hábiles, buffer, cola, semáforo. Sin I/O.
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados.
@@ -17,7 +19,7 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `data/layout/planta_pts.json` — **posiciones reales** (m) de talleres y máquinas, exportadas del ensamble
   SolidWorks `Ensamble final de taller.SLDASM`. Proyectado a planta, sin la inclinación de 2.41° que tiene el CAD.
   No editar a mano salvo correcciones puntuales; documentarlas en `docs/SPEC.md#layout`.
-- `config/maquinas.json` — máquinas: `zoho_nombre` (valor exacto en Zoho), proceso, `capacidad_horas_dia`, activa.
+- `config/maquinas.json` — máquinas: `zoho_nombre` (valor exacto en Zoho), proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
 - `config/zoho-mapeo.json` — cómo se lee la máquina, horas, fase y flags desde Zoho. **Borrador por confirmar.**
 - `config/feriados.json` — feriados de Costa Rica (verificar cada año).
 

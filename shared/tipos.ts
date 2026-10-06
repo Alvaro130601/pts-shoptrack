@@ -42,11 +42,19 @@ export interface Operacion {
   posicion?: number;                // 0 = en proceso, 1.. = orden en cola
 }
 
+/** Forma 3D aproximada con que se dibuja la máquina en la planta. */
+export const FAMILIAS = [
+  'fresadora_cnc', 'fresadora_convencional', 'torno_cnc', 'torno_convencional', 'torno_suizo',
+  'edm_hilo', 'laser', 'horno', 'dobladora', 'guillotina', 'soldadora', 'generica',
+] as const;
+export type FamiliaMaquina = (typeof FAMILIAS)[number];
+
 export interface MaquinaConfig {
   id: string;
   nombre: string;
   taller: string | null;
   proceso: string | null;
+  familia?: FamiliaMaquina;   // si falta se dibuja como "generica"
   zoho_nombre: string | null;
   capacidad_horas_dia: number;
   es_centro_mecanizado: boolean;

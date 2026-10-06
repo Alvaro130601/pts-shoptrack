@@ -16,7 +16,7 @@ scopes de `.env.example`, poner `DATA_SOURCE=zoho` y completar `config/maquinas.
 ## Estructura
 | Carpeta | Qué hay |
 |---|---|
-| `web/` | Escena R3F (`escena/`) + HUD (`hud/`) |
+| `web/` | Escena R3F (`escena/`), HUD (`hud/`) y módulos del menú lateral (`modulos/`) |
 | `server/` | API Express y fuentes de datos (`fuentes/zoho.ts`, `fuentes/seed.ts`) |
 | `shared/` | Tipos y reglas de negocio (buffer, cola, semáforo) |
 | `data/layout/` | Layout real de la planta exportado del CAD |
