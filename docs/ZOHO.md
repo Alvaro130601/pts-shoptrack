@@ -35,7 +35,7 @@ Consecuencias para la lectura:
 | Nombre del campo "Equipo asignado" en la API: ¿Equipos de Zoho o campo personalizado? | `config/zoho-mapeo.json` |
 | Lista completa de equipos y qué máquinas pertenecen a cada uno | `config/maquinas.json` |
 | Orden de las tareas dentro de la lista (campo de secuencia) y si hay dependencias | `server/fuentes/zoho.ts` |
-| Formato de `owners_and_work.total_work` con **varios propietarios**: ¿total de la tarea o suma que repite horas? | `server/fuentes/zoho.ts` |
+| Formato de `owners_and_work.total_work` con **varios propietarios**. Alvaro: las horas estimadas son el total de la tarea; verificar que `total_work` no las repita por persona | `server/fuentes/zoho.ts` |
 | Horas registradas por tarea (Registros de tiempo) para calcular horas pendientes | `server/fuentes/zoho.ts` |
 | Nombres exactos de los estados (hoy y después de simplificarlos) | `zoho-mapeo.json → estado_tarea` |
 | ¿La fase del SO es el estado del proyecto? ¿Dónde está el cliente? | `zoho-mapeo.json → fase / cliente` |

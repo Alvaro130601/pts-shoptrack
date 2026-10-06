@@ -29,6 +29,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - El proceso está en **Equipo asignado** (Fresado, Fresado CNC, Torno CNC, Erosionado, No Requiere = externo).
   **La máquina no está en Zoho**: ShopTrack debe sugerir el reparto entre las máquinas de cada proceso.
 - `H. Programación` es tiempo del programador (no de máquina); `H. Set Up` + el mecanizado siguiente van a la misma máquina.
+- Decidido con Alvaro (6-oct): tareas con 3 estados (Pendiente, En proceso, Cerrada); una tarea **Material** al
+  inicio de cada ítem; programación = cola de programadores aparte; ShopTrack **sugiere** máquina por carga y el
+  supervisor decide (no escribe en Zoho); horas estimadas = total de la tarea.
 - El modelo actual de la app (operación suelta por máquina, fase por SO) no lo respeta todavía.
 
 ## Reglas de negocio de PTS (no cambiar sin pedirlo)

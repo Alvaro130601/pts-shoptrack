@@ -1,7 +1,19 @@
 # Proceso de una orden en PTS
 
-> **Borrador para validar con Alvaro.** Actualizado el 6-oct-2026 con una captura real de **SO-10664-MCV-1**.
-> ✅ = visto en Zoho · ❓ = por confirmar · 💡 = propuesta. Detalle de campos en `docs/ZOHO.md`.
+> **Borrador para validar con Alvaro.** Actualizado el 6-oct-2026 con una captura real de **SO-10664-MCV-1**
+> y las decisiones de Alvaro. ✅ = visto en Zoho o decidido · ❓ = por confirmar · 💡 = propuesta.
+> Detalle de campos en `docs/ZOHO.md`.
+
+## Decisiones tomadas ✅ (6-oct-2026)
+
+| Tema | Decisión |
+|---|---|
+| Estados de las tareas | Solo **Pendiente, En proceso y Cerrada**. El estado del ítem y la fase del SO los calcula ShopTrack. |
+| Material | Una tarea **Material** al inicio de cada ítem; se cierra cuando llega. Mientras esté abierta, el ítem está bloqueado. |
+| Programación | La hace un **programador aparte**, en oficina: es una cola de personas, no ocupa máquina. |
+| Máquina | ShopTrack **sugiere** la máquina según la carga; **el supervisor decide**. No se escribe nada en Zoho. |
+| Horas estimadas | Son el **total de la tarea**, aunque tenga varios propietarios. |
+| Orden de la ruta | El de la lista de tareas; a veces se altera por prioridades. |
 
 ## 1. Estructura de una orden ✅
 
@@ -51,11 +63,14 @@ de la lista; a veces se altera por prioridades.
 | Hoy | Propuesta |
 |---|---|
 | Estados que mezclan avance y bloqueo (`Material Pendiente`, `Pendiente Op…`) | Tres estados por tarea: **Pendiente, En proceso, Cerrada** |
-| `Material Pendiente` repetido en cada tarea | Una tarea **Material** al inicio de cada ítem (sin `H.`), que se cierra cuando llega el material ❓ |
+| `Material Pendiente` repetido en cada tarea | Una tarea **Material** al inicio de cada ítem (sin `H.`), que se cierra cuando llega el material ✅ |
 | Planos ❓ | Igual: tarea **Planos** al inicio del ítem o del SO |
 | Calidad, ensamble y envío en el estado del proyecto | Lista final **Cierre** en cada SO: Ensamble (si aplica), Calidad, Envío ❓ |
 | Equipo "No Requiere" para servicios externos | Equipo **Servicio externo**, con el proveedor en el nombre de la tarea |
-| Máquina sin registrar | La sugiere ShopTrack; si se quiere dejar constancia, un campo **Máquina** en la tarea ❓ |
+| Máquina sin registrar | La sugiere ShopTrack y el supervisor decide; no se escribe en Zoho ✅ |
+
+Mientras se hace el cambio en Zoho, ShopTrack puede leer los dos esquemas: `Material Pendiente` cuenta como
+ítem bloqueado por material y los demás estados se traducen a Pendiente, En proceso o Cerrada.
 
 Con eso no hay que mantener estados a mano en otros niveles; ShopTrack los calcula:
 - **Ítem**: Pendiente (nada empezado), En proceso, Cerrado (todas sus tareas cerradas).
@@ -72,7 +87,7 @@ Con eso no hay que mantener estados a mano en otros niveles; ShopTrack los calcu
 | Torno CNC | Torno Hyundai, Torno Hanwa |
 | Torno | Torno #1 y #2 |
 | Erosionado | EDM hilo, CUT E350, E350 |
-| Programación | Programadores (personas, no máquinas) |
+| Programación | Programadores: cola de personas, no ocupa máquina ✅ |
 | Servicio externo / No Requiere | Proveedores, fuera de planta |
 
 Cada **operación** tiene un estado calculado con su ítem:
@@ -110,12 +125,10 @@ Y con eso:
 
 ## 6. Preguntas abiertas
 
-1. Material: ¿se controla por ítem o por SO?
-2. Programación: ¿la hace un programador aparte o se programa en la máquina?
-3. Con varios propietarios (Maykel +5), ¿las horas estimadas son del total de la tarea o se repiten por persona?
-4. Lista completa de equipos y qué máquinas pertenecen a cada uno.
-5. ¿Qué significa `Pendiente Op…`?
-6. Planos: ¿diseño interno o planos del cliente? ¿Por ítem o por SO?
-7. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?
-8. Calidad: ¿solo inspección final o también dentro de la ruta?
-9. ¿Qué máquinas son SYL, E350 y H32Z?
+1. Lista completa de equipos y qué máquinas pertenecen a cada uno (la tabla de la sección 4 es una propuesta).
+2. Calidad, ensamble y envío: ¿lista final **Cierre** en cada SO, o siguen en el estado del proyecto?
+3. Planos: ¿diseño interno o planos del cliente? ¿Una tarea **Planos** por ítem, como Material?
+4. ¿Un SO con ensamble y sin servicio externo lleva buffer de 2 o de 3 días?
+5. Calidad: ¿solo inspección final o también dentro de la ruta?
+6. ¿Qué máquinas son SYL, E350 y H32Z?
+7. ¿Qué significa `Pendiente Op…`? (Solo importa mientras se usen los estados actuales.)
