@@ -8,7 +8,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 
 ## Stack
 - `web/` React 19 + Vite + **React Three Fiber** + drei (escena 3D isométrica con cámara ortográfica) + CSS propio.
-  `escena/` (planta, cámara, `modelos.tsx` = formas por familia), `hud/` (barra, filtros, menú lateral, panel, controles;
+  `escena/` (planta, cámara, `modelos.tsx` = formas por familia y color por grupo de proceso, `Taller.tsx` = piso y
+  paredes con el color de cada taller), `hud/` (barra, filtros, menú lateral, panel, controles;
   la lógica de los filtros de la planta está en `filtros.ts`: semáforo, estado de máquina, proceso),
   `modulos/` (cajones del menú: carga por proceso, alertas, ¿dónde está mi SO?, material, sin centro, leyenda).
 - `server/` Node + Express (`tsx`). Expone `/api/estado`, `/api/layout`, `/api/salud`, `/api/ajustes` y
@@ -37,7 +38,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   Rectificadoras #1 y #2 al fondo del Taller #1 (no están en el CAD; posición aproximada).
 - `config/maquinas.json` — máquinas: proceso, `familia` (forma 3D), `capacidad_horas_dia`, activa.
 - `config/centros.json` — procesos (Equipo asociado en Zoho, o `tareas_zoho` = patrones del nombre de la tarea si no
-  trae equipo) → máquinas que los hacen; puestos manuales (grabado, limpieza); programadores; proveedores.
+  trae equipo) → máquinas que los hacen y su `grupo` (color en la planta; `convencional` = tono suave); puestos manuales
+  (grabado, limpieza); programadores; proveedores.
   **Propuesta por confirmar con Alvaro.** Confirmado: solo 2 erosionadoras (EDM hilo, CUT E350; la E350 no lo es);
   todo el Torno CNC va al Hyundai y el Hanwa solo hace sus tareas específicas (torno suizo).
 - `config/zoho-mapeo.json` — portal, la vista "Carga de trabajo" (grupos, estados de proyecto con su id, tareas "H."

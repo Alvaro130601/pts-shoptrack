@@ -58,6 +58,7 @@ export function armarEstado(datos: DatosPlanta): EstadoPlanta {
   // ---- por máquina ----
   const centroDe = new Map<string, string>();
   for (const c of d.centros) for (const m of c.maquinas ?? []) if (!centroDe.has(m)) centroDe.set(m, c.id);
+  const centroCfg = new Map(d.centros.map(c => [c.id, c]));
   const porRecurso = agrupar(ops.filter(o => o.maquina_id), o => o.maquina_id!);
   const maquinas: EstadoMaquina[] = d.maquinas.filter(m => m.activa).map(m => {
     const suyas = [...(porRecurso.get(m.id) ?? [])].sort((a, b) => (a.posicion ?? 0) - (b.posicion ?? 0));
@@ -67,6 +68,8 @@ export function armarEstado(datos: DatosPlanta): EstadoPlanta {
     const horas = [...en_proceso, ...cola].reduce((s, o) => s + o.horas_pendientes, 0);
     return {
       ...m, centro_id: centroDe.get(m.id) ?? null, en_proceso, cola, proximas,
+      grupo: centroCfg.get(centroDe.get(m.id) ?? '')?.grupo ?? null,
+      ...(centroCfg.get(centroDe.get(m.id) ?? '')?.convencional && { convencional: true }),
       horas_cola: round1(horas), dias_carga: round1(horas / Math.max(m.capacidad_horas_dia, 0.1)),
       semaforo: peor([...en_proceso, ...cola]),
     };

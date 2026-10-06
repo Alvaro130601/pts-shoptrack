@@ -54,7 +54,7 @@ export function Planta({ layout, maquinas, seleccion, resaltadas, onSeleccionar,
       {/* terreno */}
       <mesh rotation-x={-Math.PI / 2} position={[centro[0], -0.06, centro[1]]} receiveShadow>
         <planeGeometry args={[140, 90]} />
-        <meshStandardMaterial color="#e7ebf4" />
+        <meshStandardMaterial color="#dfe3e8" />
       </mesh>
 
       {layout.talleres.map(t => <Taller key={t.id} t={t} />)}

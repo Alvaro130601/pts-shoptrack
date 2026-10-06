@@ -1,13 +1,21 @@
 import { C } from '../colores';
-import { colorFamilia } from '../escena/modelos';
-import { NOMBRE_FAMILIA } from '../familias';
-import type { EstadoCentro, EstadoMaquina, FamiliaMaquina } from '../../../shared/tipos';
+import { GRUPOS, colorGrupo } from '../escena/modelos';
+import type { EstadoCentro, EstadoMaquina } from '../../../shared/tipos';
 import { Cajon } from './Cajon';
 
 export function Leyenda({ maquinas, centros, onCerrar }: { maquinas: EstadoMaquina[]; centros: EstadoCentro[]; onCerrar: () => void }) {
-  const cuenta = new Map<FamiliaMaquina, number>();
-  for (const m of maquinas) cuenta.set(m.familia ?? 'generica', (cuenta.get(m.familia ?? 'generica') ?? 0) + 1);
   const nombres = new Map(maquinas.map(m => [m.id, m.nombre]));
+  // Grupos de color presentes: cuántas máquinas y si hay convencionales (tono suave). '' = sin proceso asignado.
+  const grupos = new Map<string, { n: number; convencional: boolean; sinProceso: string[] }>();
+  for (const m of maquinas) {
+    const g = m.grupo ?? '';
+    const x = grupos.get(g) ?? { n: 0, convencional: false, sinProceso: [] };
+    x.n++;
+    x.convencional ||= !!m.convencional;
+    if (!g) x.sinProceso.push(m.nombre);
+    grupos.set(g, x);
+  }
+  const orden = [...Object.keys(GRUPOS), ''];
   return (
     <Cajon titulo="Leyenda" sub="Cómo leer la planta" onCerrar={onCerrar}>
       <section className="leyenda-sec">
@@ -75,14 +83,19 @@ export function Leyenda({ maquinas, centros, onCerrar }: { maquinas: EstadoMaqui
         <p className="nota">Se configuran en config/centros.json según el Equipo asignado de cada tarea en Zoho.</p>
       </section>
       <section className="leyenda-sec">
-        <h4>Tipos de máquina</h4>
+        <h4>Color de las máquinas</h4>
         <ul className="familias">
-          {[...cuenta].sort((a, b) => b[1] - a[1]).map(([f, n]) => (
-            <li key={f}><i className="muestra" style={{ background: colorFamilia(f) }} />{NOMBRE_FAMILIA[f]} <small>{n}</small></li>
+          {orden.filter(g => grupos.has(g)).map(g => (
+            <li key={g || 'sin'} title={g ? undefined : grupos.get(g)!.sinProceso.join(', ')}>
+              <i className="muestra" style={{ background: colorGrupo(g) }} />
+              {grupos.get(g)!.convencional && <i className="muestra" style={{ background: colorGrupo(g, true) }} />}
+              {g ? GRUPOS[g].nombre : 'Sin proceso asignado'} <small>{grupos.get(g)!.n}</small>
+            </li>
           ))}
         </ul>
-        <p className="nota">Formas aproximadas a escala del CAD; el color suave es el tipo de máquina (los colores fuertes son
-          de estado). Se configuran en config/maquinas.json → familia.</p>
+        <p className="nota">Cada máquina lleva el color de su grupo de proceso (el tono más suave es la versión convencional).
+          Los colores fuertes son de estado. La forma es aproximada, a escala del CAD. Se configuran en config/centros.json →
+          grupo y config/maquinas.json → familia.</p>
       </section>
       <section className="leyenda-sec">
         <h4>Controles</h4>

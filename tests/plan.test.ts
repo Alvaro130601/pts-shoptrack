@@ -146,4 +146,17 @@ describe('estado de la planta', () => {
     const proximas = e.maquinas.flatMap(m => m.proximas);
     expect(proximas.map(o => o.estado)).toEqual(['bloqueada']);
   });
+
+  it('cada máquina toma el grupo de color de su proceso', () => {
+    const centros: CentroConfig[] = CENTROS.map(c =>
+      c.id === 'cnc' ? { ...c, grupo: 'fresado' } : c.id === 'torno' ? { ...c, grupo: 'torno', convencional: true } : c);
+    const e = armarEstado({ proyectos: [], maquinas: [...MAQUINAS, maquina('x1')], centros, reglas, fuente: 'seed', hoy: HOY,
+      feriados: SIN_FERIADOS });
+    const de = (id: string) => e.maquinas.find(m => m.id === id)!;
+    expect(de('m2')).toMatchObject({ grupo: 'fresado' });
+    expect(de('m2').convencional).toBeUndefined();
+    expect(de('t1')).toMatchObject({ grupo: 'torno', convencional: true });
+    expect(de('e1').grupo).toBeNull();   // proceso sin grupo
+    expect(de('x1').grupo).toBeNull();   // máquina sin proceso
+  });
 });

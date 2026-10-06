@@ -68,6 +68,8 @@ export interface CentroConfig {
   personas?: number;          // tipo programacion o puesto: cuántas personas o puestos
   horas_dia?: number;         // tipo programacion o puesto: horas por persona y día hábil
   dias?: number;              // tipo externo: días hábiles por servicio
+  grupo?: string;             // tipo maquina: color de sus máquinas en la planta (fresado, torno, erosionado…)
+  convencional?: boolean;     // el tono suave del grupo (fresado y torno convencionales)
 }
 
 /** Cómo interpretar nombres y estados de Zoho (config/zoho-mapeo.json). Se compara sin tildes ni mayúsculas. */
@@ -190,6 +192,8 @@ export interface EstadoCentro {
 
 export interface EstadoMaquina extends MaquinaConfig {
   centro_id: string | null;
+  grupo?: string | null;      // del proceso (config/centros.json → grupo): color de la máquina en la planta
+  convencional?: boolean;
   en_proceso: Operacion[];
   cola: Operacion[];          // listas para empezar, en el orden sugerido
   proximas: Operacion[];      // en camino o bloqueadas, ya repartidas a esta máquina

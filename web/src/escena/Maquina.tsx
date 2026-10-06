@@ -60,7 +60,7 @@ export function Maquina({ e, estado, seleccionada, atenuada, detalle, onClick }:
         <Huella w={e.w} d={e.d} color={fuera ? C.fuera : colorSemaforo(sem)} op={op} libre={sem === 'libre' && !fuera} />
         <ModeloCtx.Provider value={{ op, realce }}>
           <group position-y={0.022}>
-            <ModeloMaquina familia={estado?.familia} w={e.w} d={e.d} h={h} />
+            <ModeloMaquina familia={estado?.familia} grupo={estado?.grupo} convencional={estado?.convencional} w={e.w} d={e.d} h={h} />
           </group>
         </ModeloCtx.Provider>
         <Andon x={e.w / 2 - 0.1} z={-e.d / 2 + 0.1} alto={h + 0.15} sem={sem} trabajando={trabajando} op={op} />

@@ -5,32 +5,39 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { FamiliaMaquina } from '../../../shared/tipos';
 import { C } from '../colores';
 
-// Paleta suave a propósito: el color fuerte queda reservado para el estado (semáforo, azul = en proceso).
+// La forma sale de la familia de la máquina; el color, de su grupo de proceso. Los colores fuertes quedan para el
+// estado (semáforo, azul = en proceso): el cuerpo de las máquinas va en tonos claros.
 type Tono = 'cuerpo' | 'techo' | 'oscuro' | 'metal' | 'vidrio' | 'panel' | 'pintura';
+type Paleta = Partial<Record<Tono, string>>;
 const TONOS: Record<Tono, string> = {
   cuerpo: '#eceff6', techo: '#d6dce8', oscuro: '#7f89a2', metal: '#b7bfcd', vidrio: '#a9cdf2', panel: '#2b3550', pintura: '#a2adbf',
 };
 
-/** Pintura de cada tipo de máquina: tonos apagados que distinguen la familia sin competir con los colores de estado. */
-const PALETAS: Partial<Record<FamiliaMaquina, Partial<Record<Tono, string>>>> = {
-  fresadora_cnc: { pintura: '#8aa1d1', cuerpo: '#e3eafa', techo: '#b7c6e9' },  // azul acero
-  fresadora_convencional: { pintura: '#7fb2a2', cuerpo: '#edf5f2' },  // verde máquina
-  torno_cnc: { pintura: '#72a8c1', cuerpo: '#e1eff5', techo: '#accfdd' },      // azul petróleo
-  torno_suizo: { pintura: '#6eb0b2', cuerpo: '#e2f2f2', techo: '#a9d3d3' },    // turquesa
-  torno_convencional: { pintura: '#93b487', cuerpo: '#f0f5ed' },      // verde salvia
-  edm_hilo: { pintura: '#a598d4', cuerpo: '#f2f0fa', oscuro: '#8a82ad' }, // lavanda
-  rectificadora: { pintura: '#c8aa83', cuerpo: '#f8f3ec' },           // arena
-  horno: { pintura: '#cf9a84', oscuro: '#ad8a80' },                    // terracota
-  laser: { pintura: '#d0a978', cuerpo: '#faf5ee' },                    // ocre
-  dobladora: { pintura: '#86a5c8' }, guillotina: { pintura: '#9fae8b' }, soldadora: { pintura: '#c79b87' },
+/** Color de cada grupo de proceso (config/centros.json → grupo). Tonos OKLCH elegidos con el validador de color para
+ *  que los grupos que quedan juntos en la planta se distingan, también con daltonismo rojo-verde, y lejos de los
+ *  colores del semáforo. `convencional`: el tono suave del grupo (fresado y torno convencionales). `oscuro` va en los
+ *  grupos cuyas máquinas son casi todo ese tono (la columna de la EDM, el cuerpo del horno). */
+export const GRUPOS: Record<string, { nombre: string; paleta: Paleta; convencional?: Paleta }> = {
+  fresado: { nombre: 'Fresado', paleta: { pintura: '#4371b7', cuerpo: '#d6e6fe', techo: '#a7c6f5' },        // azul
+    convencional: { pintura: '#6d91c6', cuerpo: '#e5effe', techo: '#bfd6f8' } },
+  torno: { nombre: 'Torno', paleta: { pintura: '#54b9a5', cuerpo: '#ceece4', techo: '#99d2c4' },             // turquesa
+    convencional: { pintura: '#8ed5c4', cuerpo: '#def4ee', techo: '#b6ded4' } },
+  erosionado: { nombre: 'Erosionado', paleta: { pintura: '#c88ec3', cuerpo: '#f2ddf0', techo: '#dcb6d7', oscuro: '#926b8e' } }, // orquídea
+  rectificado: { nombre: 'Rectificado', paleta: { pintura: '#6f7c32', cuerpo: '#e2e8cf', techo: '#c0ca9d' } }, // oliva
+  tratamiento: { nombre: 'Tratamiento térmico', paleta: { pintura: '#dc855d', cuerpo: '#fdddcf', techo: '#eeb69d', oscuro: '#b37458' } }, // terracota
+  lamina: { nombre: 'Lámina (doblado y soldadura)', paleta: { pintura: '#944561', cuerpo: '#fbdbe3', techo: '#eab2c2' } }, // frambuesa
 };
+const SIN_GRUPO: Paleta = {};
 
-/** Color de pintura de una familia (para la leyenda). */
-export const colorFamilia = (f: FamiliaMaquina) => PALETAS[f]?.pintura ?? TONOS.pintura;
+/** Color de pintura de un grupo (leyenda). Sin grupo (máquina sin proceso asignado), gris. */
+export const colorGrupo = (g?: string | null, convencional = false) => {
+  const x = g ? GRUPOS[g] : undefined;
+  return ((convencional && x?.convencional) || x?.paleta)?.pintura ?? TONOS.pintura;
+};
 
 interface Ctx { op: number; realce: boolean }
 export const ModeloCtx = createContext<Ctx>({ op: 1, realce: false });
-const PaletaCtx = createContext<Partial<Record<Tono, string>>>({});
+const PaletaCtx = createContext<Paleta>({});
 
 function Mat({ t }: { t: Tono }) {
   const { op, realce } = useContext(ModeloCtx);
@@ -300,8 +307,9 @@ const MODELOS: Record<FamiliaMaquina, (d: Dim) => ReactNode> = {
   soldadora: Soldadora, generica: Generica,
 };
 
-export function ModeloMaquina({ familia, ...dim }: Dim & { familia?: FamiliaMaquina }) {
-  const f = familia ?? 'generica';
-  const M = MODELOS[f] ?? Generica;
-  return <PaletaCtx.Provider value={PALETAS[f] ?? {}}><M {...dim} /></PaletaCtx.Provider>;
+export function ModeloMaquina({ familia, grupo, convencional, ...dim }:
+  Dim & { familia?: FamiliaMaquina; grupo?: string | null; convencional?: boolean }) {
+  const M = MODELOS[familia ?? 'generica'] ?? Generica;
+  const g = grupo ? GRUPOS[grupo] : undefined;
+  return <PaletaCtx.Provider value={(convencional && g?.convencional) || g?.paleta || SIN_GRUPO}><M {...dim} /></PaletaCtx.Provider>;
 }

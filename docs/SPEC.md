@@ -45,7 +45,10 @@ Pantalla limpia: la planta 3D ocupa todo el fondo; todo lo demás se abre bajo d
   4. **Material**: ítems esperando material, ordenados por la fecha en que hace falta.
   5. **Sin centro**: operaciones con un equipo que no está en `config/centros.json` (solo aparece si hay).
   6. **Leyenda**: cómo se arma el plan, estados, semáforo, máquina, procesos y controles.
-- **Planta 3D**: máquinas con **forma aproximada por familia** (`config/maquinas.json → familia`) a escala del CAD,
+- **Planta 3D**: cada taller con su color (piso, franja pintada junto a las paredes, paredes y etiqueta), elegido para
+  que contraste con sus máquinas. Máquinas con **forma aproximada por familia** (`config/maquinas.json → familia`) a
+  escala del CAD y **color de su grupo de proceso** (`config/centros.json → grupo`: fresado, torno, erosionado,
+  rectificado, tratamiento térmico, lámina; el tono suave es la versión convencional; gris = sin proceso),
   torre de luces andon (azul = mecanizando; rojo/amarillo/verde = peor semáforo), huella en el piso con el color
   del semáforo, pila de cajas del plan sugerido (azul = en proceso, color = semáforo, translúcido = próxima). Las etiquetas
   se reducen a un número al alejar la cámara. Controles: General / T1–T4 / acercar / alejar.
