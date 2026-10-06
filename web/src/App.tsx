@@ -17,6 +17,7 @@ import { DondeSO } from './modulos/DondeSO';
 import { Leyenda } from './modulos/Leyenda';
 import { Material } from './modulos/Material';
 import { SinCentro } from './modulos/SinCentro';
+import { Resguardo } from './Resguardo';
 
 const CLAVE_PISTA = 'shoptrack.pista-vista';
 const leerPista = () => { try { return localStorage.getItem(CLAVE_PISTA) !== '1'; } catch { return true; } };
@@ -125,8 +126,12 @@ export default function App() {
   return (
     <div className={`app ${modulo ? 'con-cajon' : ''} ${sel ? 'con-panel' : ''}`}>
       <div className="lienzo">
-        {layout && <Planta layout={layout} maquinas={mapa} seleccion={seleccion?.id ?? null} resaltadas={resaltadas}
-          onSeleccionar={id => seleccionar(id)} camara={camara} ocupado={ocupado} />}
+        {layout && (
+          <Resguardo nombre="la planta">
+            <Planta layout={layout} maquinas={mapa} seleccion={seleccion?.id ?? null} resaltadas={resaltadas}
+              onSeleccionar={id => seleccionar(id)} camara={camara} ocupado={ocupado} />
+          </Resguardo>
+        )}
       </div>
 
       <MenuLateral activo={modulo} onCambiar={m => abrir(m)} onInicio={() => { abrir(null); setSeleccion(null); vistaGeneral(); }}
@@ -135,19 +140,22 @@ export default function App() {
 
       <BarraSuperior estado={estado} error={error} busqueda={busqueda} onBusqueda={setBusqueda}
         coincidencias={resaltadas && modulo !== 'so' ? resaltadas.size : null}
-        procesos={procesos} proceso={proceso} onProceso={setProceso} onAbrir={abrir} refBusqueda={refBusqueda} />
+        procesos={procesos} proceso={proceso} onProceso={setProceso} onAbrir={abrir} refBusqueda={refBusqueda}
+        onAccionFuente={BACKEND.accion} />
 
-      {estado && modulo === 'cola' && <CargaProcesos centros={centros} maquinas={mapa} filtro={resaltadas} seleccion={seleccion?.id ?? null}
-        onMaquina={id => irA(id)} onOp={irAPaso} onCerrar={cerrar} />}
-      {estado && modulo === 'alertas' && <Alertas sos={estado.sos} pestana={pestana} onPestana={setPestana} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
-      {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar} />}
-      {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
-      {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
-      {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} centros={centros} onCerrar={cerrar} />}
-      {estado && modulo === 'asistente' && <Asistente chat={chat} estado={estado} backend={BACKEND} onCambio={recargar} onCerrar={cerrar} />}
+      <Resguardo nombre="el panel">
+        {estado && modulo === 'cola' && <CargaProcesos centros={centros} maquinas={mapa} filtro={resaltadas} seleccion={seleccion?.id ?? null}
+          onMaquina={id => irA(id)} onOp={irAPaso} onCerrar={cerrar} />}
+        {estado && modulo === 'alertas' && <Alertas sos={estado.sos} pestana={pestana} onPestana={setPestana} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+        {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+        {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+        {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
+        {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} centros={centros} onCerrar={cerrar} />}
+        {estado && modulo === 'asistente' && <Asistente chat={chat} estado={estado} backend={BACKEND} onCambio={recargar} onCerrar={cerrar} />}
 
-      {sel && <PanelMaquina key={sel.id} m={sel} centro={nombreCentro.get(sel.centro_id ?? '')} items={items}
-        opInicial={seleccion?.op} onPaso={irAPaso} onCerrar={() => setSeleccion(null)} />}
+        {sel && <PanelMaquina key={sel.id} m={sel} centro={nombreCentro.get(sel.centro_id ?? '')} items={items}
+          opInicial={seleccion?.op} onPaso={irAPaso} onCerrar={() => setSeleccion(null)} />}
+      </Resguardo>
 
       {layout && (
         <div className="pie">

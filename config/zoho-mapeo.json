@@ -3,7 +3,7 @@
   "portal": { "nombre": "ptsportal388", "id": "714664835" },
   "proyectos": { "prefijo": "SO-", "excluir_estados": ["Completado", "Cancelado"] },
   "vista": {
-    "_nota": "Lo mismo que la vista 'Carga de trabajo' de Tareas en Zoho (filtros que mostró Alvaro el 6-oct-2026). La API filtra los proyectos por id de estado; los grupos y los estados de tarea se comparan por nombre. Las tareas abiertas en otros estados (Servicio Externo, Calidad, Pausado) no entran, igual que en la vista.",
+    "_nota": "Lo mismo que la vista 'Carga de trabajo' de Tareas en Zoho (filtros que mostró Alvaro el 6-oct-2026), más las tareas en Servicio Externo: Alvaro (6-oct) dice que el servicio externo cuenta como una pausa de la ruta. La API filtra los proyectos por id de estado; los grupos y los estados de tarea se comparan por nombre. Las tareas en Calidad o Pausado no entran, igual que en la vista.",
     "grupos": ["Producción", "Automatizacion"],
     "estados_proyecto": {
       "En Producción": "1613834000000020095",
@@ -13,7 +13,7 @@
       "Pendiente de Compra": "1613834000020249080"
     },
     "tarea_contiene": "H.",
-    "estados_tarea": ["En Producción", "En Curso", "Material Pendiente", "Pendiente de Operación", "Pendiente Operación"]
+    "estados_tarea": ["En Producción", "En Curso", "Material Pendiente", "Pendiente de Operación", "Pendiente Operación", "Servicio Externo"]
   },
   "cliente": { "_nota": "Zoho no tiene un campo de cliente: es el código del nombre del proyecto (SO-11338-SMT-1 → SMT)." },
   "equipo": { "_nota": "'Equipo asociado' son los equipos de Zoho de la tarea (teams). Puede haber varios: se toma el que coincide con el nombre de la tarea; si el equipo no es de ningún centro (p. ej. 'Equipo de Diseño' en H. Grabado), manda el nombre." },
@@ -31,9 +31,9 @@
       "envio": "^(envio|despacho)"
     },
     "estados": {
-      "_nota": "Se comparan por inicio del texto ('Pendiente' cubre 'Pendiente Operación' y 'Pendiente de Operación'). 'material_pendiente': el ítem espera material.",
+      "_nota": "Se comparan por inicio del texto ('Pendiente' cubre 'Pendiente Operación' y 'Pendiente de Operación'). 'material_pendiente': el ítem espera material. 'Servicio Externo' está en proceso: la pieza está con el proveedor y el resto de la ruta espera (una pausa).",
       "pendiente": ["Pendiente", "Abierta", "Abierto", "Open", "No iniciada"],
-      "en_proceso": ["En proceso", "En progreso", "En Producción", "En Curso", "In Progress"],
+      "en_proceso": ["En proceso", "En progreso", "En Producción", "En Curso", "In Progress", "Servicio Externo"],
       "cerrada": ["Cerrada", "Cerrado", "Closed", "Completada", "Completado", "Terminada"],
       "material_pendiente": ["Material Pendiente"]
     }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import type { EstadoPlanta } from '../../../shared/tipos';
+import type { AccionFuente, EstadoPlanta } from '../../../shared/tipos';
 import { IcoCampana, IcoCerrar, IcoLupa } from '../iconos';
 import type { Modulo } from './MenuLateral';
 
@@ -14,11 +14,13 @@ interface Props {
   onProceso: (p: string) => void;
   onAbrir: (m: Modulo, pestana?: 'rojo' | 'amarillo') => void;
   refBusqueda: RefObject<HTMLInputElement | null>;
+  /** Página publicada: leer Zoho (pide permiso) o abrir los permisos de la página. */
+  onAccionFuente?: (a: AccionFuente) => void;
 }
 
 const SIN_FECHAS = 'Los SO no traen fecha de entrega: no hay semáforo';
 
-export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidencias, procesos, proceso, onProceso, onAbrir, refBusqueda }: Props) {
+export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidencias, procesos, proceso, onProceso, onAbrir, refBusqueda, onAccionFuente }: Props) {
   const k = estado?.kpis;
   const sinFechas = !!k && k.items_abiertos > 0 && k.items_con_fecha === 0;
   const avisos = estado?.avisos ?? [];
@@ -92,7 +94,7 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
             </div>
           )}
         </div>
-        <Fuente estado={estado} />
+        <Fuente estado={estado} onAccion={onAccionFuente} />
       </div>
     </header>
   );
@@ -101,9 +103,20 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
 
 /** De dónde vienen los datos: Zoho en vivo, una exportación a Excel (con su fecha) o datos simulados. */
-function Fuente({ estado }: { estado: EstadoPlanta | null }) {
+function Fuente({ estado, onAccion }: { estado: EstadoPlanta | null; onAccion?: (a: AccionFuente) => void }) {
   if (!estado) return <div className="fuente"><span className="punto-vivo" />Cargando…</div>;
   const de = estado.datos_de ?? estado.actualizado;
+  // Zoho pide permiso la primera vez: se lee al tocar el botón, no al abrir (el diálogo no tapa la planta de sorpresa).
+  const accion = estado.accion_fuente;
+  if (accion && onAccion) {
+    return (
+      <button type="button" className="fuente accion" onClick={() => onAccion(accion)}
+        title={accion === 'conectar_zoho' ? 'Leer Zoho en vivo con tu conector Zoho Projects (la primera vez claude.ai pide permiso)' : 'Zoho está bloqueado para esta página: ábrelo en Permisos'}>
+        <span className="punto-vivo" />Exportación {new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })}
+        <span className="nota">· {accion === 'conectar_zoho' ? 'Leer Zoho en vivo' : 'Permitir Zoho'}</span>
+      </button>
+    );
+  }
   // En la página publicada: "leyendo Zoho…" mientras llega, o "sin Zoho" (el motivo está en los avisos).
   const nota = estado.nota_fuente && <span className="nota">· {estado.nota_fuente}</span>;
   if (estado.fuente === 'excel') {

@@ -1,7 +1,7 @@
 // De dónde saca la app sus datos y a quién le habla el asistente: el servidor de ShopTrack (uso normal en planta)
 // o la página publicada en claude.ai, que arma el plan en el navegador (backend-pagina.ts).
 import type { EventoAsistente } from '../../shared/asistente';
-import type { EstadoPlanta } from '../../shared/tipos';
+import type { AccionFuente, EstadoPlanta } from '../../shared/tipos';
 import type { Layout } from './tipos-layout';
 
 export interface Turno { rol: 'usuario' | 'asistente'; texto: string }
@@ -25,6 +25,8 @@ export interface Backend {
   alCambiar(fn: () => void): () => void;
   /** Cada cuánto releer el estado (los datos de Zoho cambian solos). 0 = no hace falta. */
   refrescoMs: number;
+  /** Página publicada: lo que pide `estado.accion_fuente` (leer Zoho, abrir los permisos). */
+  accion?: (a: AccionFuente) => void;
 }
 
 async function json<T>(r: Response): Promise<T> {

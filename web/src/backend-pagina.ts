@@ -4,7 +4,7 @@
 // quien la abre (capacidad `mcp`); mientras tanto, o si no se puede, muestra los datos publicados con la página.
 import { ErrorHerramienta, HERRAMIENTAS, INSTRUCCIONES, contextoPlanta, ejecutarHerramienta, type Contexto } from '../../shared/asistente';
 import { armarEstado, type DatosPlanta } from '../../shared/plan';
-import type { Ajuste, EstadoPlanta } from '../../shared/tipos';
+import type { AccionFuente, Ajuste, EstadoPlanta } from '../../shared/tipos';
 import { leerZohoCon, type LecturaZoho, type LlamarZoho, type MapeoZoho } from '../../shared/zoho';
 import type { Backend } from './backend';
 import type { Layout } from './tipos-layout';
@@ -31,11 +31,13 @@ interface ErrorMcp { code?: string; message?: string; retryable?: boolean; retry
 interface Mcp {
   callTool(server: string, tool: string, input?: unknown, opciones?: { cache?: { staleTime?: number } }): Promise<{ payload?: unknown }>;
 }
+interface Permisos { state(nombre: string): Promise<string>; manage(): Promise<void> }
 const usar = <T>(nombre: string): Promise<T | null> =>
   (window as unknown as { claude?: { use(n: string): Promise<T | null> } }).claude?.use(nombre).catch(() => null) ?? Promise.resolve(null);
 
 /** Nombre del conector en claude.ai: el mismo que declara el manifiesto de la página (capacidad mcp). */
 const CONECTOR_ZOHO = 'Zoho Projects';
+const PERMISO_ZOHO = `mcp:${CONECTOR_ZOHO}`;
 /** Cada cuánto se vuelve a leer Zoho (la página relee el plan cada 5 min). */
 const VIGENCIA_ZOHO = 4 * 60_000;
 
@@ -99,6 +101,7 @@ async function leerZohoPagina(m: MapeoZoho): Promise<LecturaZoho> {
 }
 
 const fechaCorta = (iso: string) => new Date(iso).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+const textoError = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
 
 export function backendPagina(cfg: ConfigPagina): Backend {
@@ -114,26 +117,72 @@ export function backendPagina(cfg: ConfigPagina): Backend {
   // Base compartida: los ajustes de todos los que abren la página, en vivo. Sin ella, quedan en este navegador.
   const db = usar<Db>('db').then(d => {
     if (!d) return null;
-    d.collection('ajustes').onSnapshot(s => {
-      ajustes = ordenar(s.docs.map(x => x.data() as unknown as Ajuste).filter(a => a?.id));
-      avisar();
-    }, () => { /* sin base: siguen los ajustes de este navegador */ });
+    try {
+      d.collection('ajustes').onSnapshot(s => {
+        ajustes = ordenar(s.docs.map(x => x.data() as unknown as Ajuste).filter(a => a?.id));
+        avisar();
+      }, () => { /* sin base: siguen los ajustes de este navegador */ });
+    } catch { /* idem */ }
     return d;
-  });
+  }).catch(() => null);
 
-  // Zoho en vivo: se lee en segundo plano y, al terminar, la app vuelve a pedir el estado (avisar).
-  const zoho = { lectura: null as (LecturaZoho & { leido: string }) | null, error: null as string | null, leyendo: false, t: 0 };
-  function refrescarZoho(m: MapeoZoho) {
-    if (zoho.leyendo || (zoho.t && Date.now() - zoho.t < VIGENCIA_ZOHO)) return;
+  /** Diagnóstico en la base de la página (colección `diagnostico`): el último resultado de leer Zoho y el último
+   *  error del navegador, para revisar a distancia qué pasó. Si no se puede guardar, no pasa nada. */
+  const diagnostico = (clave: string, datos: Record<string, unknown>) => {
+    db.then(base => base?.collection('diagnostico').doc(clave)
+      .set({ ...datos, cuando: new Date().toISOString(), navegador: navigator.userAgent.slice(0, 160) }))
+      .catch(() => { /* sin base o sin permiso */ });
+  };
+  window.addEventListener('error', e => diagnostico('error', { mensaje: textoError(e.error ?? e.message), donde: `${String(e.filename ?? '').split('/').pop()}:${e.lineno}` }));
+  window.addEventListener('unhandledrejection', e => diagnostico('error', { mensaje: textoError(e.reason), donde: 'promesa' }));
+  window.addEventListener('shoptrack-error', e => diagnostico('error', { mensaje: textoError((e as CustomEvent).detail), donde: 'dibujo' }));
+
+  // Zoho en vivo: se lee en segundo plano y, al terminar, la app vuelve a pedir el estado (avisar). La primera vez
+  // claude.ai pide permiso para usar el conector: si todavía no lo hay, no se lee al abrir (el diálogo taparía la
+  // planta de sorpresa) sino cuando el supervisor toca "Leer Zoho en vivo" en la barra.
+  const zoho = {
+    lectura: null as (LecturaZoho & { leido: string }) | null,
+    error: null as string | null, codigo: null as string | null,
+    espera: null as AccionFuente | null,
+    leyendo: false, t: 0,
+  };
+  function refrescarZoho(m: MapeoZoho, aPedido = false) {
+    if (zoho.leyendo || (!aPedido && zoho.t && Date.now() - zoho.t < VIGENCIA_ZOHO)) return;
     zoho.leyendo = true;
-    leerZohoPagina(m)
-      .then(l => { zoho.lectura = { ...l, leido: new Date().toISOString() }; zoho.error = null; })
-      .catch(e => { zoho.error = mensajeZoho(e); })
+    const inicio = Date.now();
+    (async () => {
+      if (!aPedido) {
+        const permisos = await usar<Permisos>('permissions');
+        const p = permisos ? await permisos.state(PERMISO_ZOHO).catch(() => 'unavailable') : 'granted';
+        if (p === 'prompt' || p === 'denied') { zoho.espera = p === 'prompt' ? 'conectar_zoho' : 'permisos_zoho'; return; }
+      }
+      zoho.espera = null;
+      const l = await leerZohoPagina(m);
+      zoho.lectura = { ...l, leido: new Date().toISOString() };
+      zoho.error = zoho.codigo = null;
+      const tareas = l.proyectos.reduce((s, p) => s + p.listas.reduce((k, x) => k + x.tareas.length, 0), 0);
+      diagnostico('zoho', { ok: true, proyectos: l.proyectos.length, tareas, ms: Date.now() - inicio });
+    })()
+      .catch(e => {
+        zoho.error = mensajeZoho(e);
+        zoho.codigo = (e as ErrorMcp)?.code ?? null;
+        diagnostico('zoho', { ok: false, codigo: zoho.codigo, mensaje: zoho.error, detalle: textoError(e), ms: Date.now() - inicio });
+      })
       .finally(() => { zoho.t = Date.now(); zoho.leyendo = false; avisar(); });
   }
 
+  /** Botón de la barra: leer Zoho ahora (la primera vez claude.ai pide permiso) o abrir los permisos de la página. */
+  async function accion(a: AccionFuente) {
+    const d = await datos;
+    if (!d.zoho) return;
+    if (a === 'permisos_zoho') await (await usar<Permisos>('permissions'))?.manage().catch(() => { /* sin panel */ });
+    zoho.espera = null;
+    refrescarZoho(d.zoho, true);
+    avisar();   // la barra pasa a "leyendo Zoho…"
+  }
+
   /** Los datos con que se arma el plan ahora: los de Zoho si ya llegaron, si no los publicados con la página. */
-  function actuales(d: DatosPublicados): DatosPublicados & { nota_fuente?: string } {
+  function actuales(d: DatosPublicados): DatosPublicados & Pick<DatosPlanta, 'nota_fuente' | 'accion_fuente'> {
     if (!d.zoho) return d;
     refrescarZoho(d.zoho);
     const l = zoho.lectura;
@@ -143,15 +192,35 @@ export function backendPagina(cfg: ConfigPagina): Backend {
         ...(fallo ? { nota_fuente: 'sin conexión' } : {}) };
     }
     const respaldo = d.datos_de ? `la exportación del ${fechaCorta(d.datos_de)}` : 'los datos publicados con la página';
-    return zoho.error
-      ? { ...d, avisos: [`No se pudo leer Zoho en vivo: ${zoho.error}. Se muestra ${respaldo}.`, ...(d.avisos ?? [])], nota_fuente: 'sin Zoho' }
-      : { ...d, nota_fuente: 'leyendo Zoho…' };
+    const avisos = (a: string) => [a, ...(d.avisos ?? [])];
+    if (zoho.espera === 'conectar_zoho') {
+      return { ...d, accion_fuente: 'conectar_zoho',
+        avisos: avisos(`Se muestra ${respaldo}. Para ver Zoho en vivo toca "Leer Zoho en vivo" arriba a la derecha: la primera vez claude.ai te pide permiso para usar tu conector.`) };
+    }
+    if (zoho.espera === 'permisos_zoho') {
+      return { ...d, accion_fuente: 'permisos_zoho',
+        avisos: avisos(`Zoho está bloqueado para esta página: se muestra ${respaldo}. Toca "Permitir Zoho" arriba a la derecha o actívalo en Permisos de la página.`) };
+    }
+    if (zoho.error) {
+      return { ...d, nota_fuente: 'sin Zoho', avisos: avisos(`No se pudo leer Zoho en vivo: ${zoho.error}${zoho.codigo ? ` [${zoho.codigo}]` : ''}. Se muestra ${respaldo}.`) };
+    }
+    return { ...d, nota_fuente: 'leyendo Zoho…' };
   }
 
   // El plan arranca hoy (hora de Costa Rica), aunque los datos se hayan publicado otro día.
   const hoy = () => new Date(Date.now() - 6 * 3600_000).toISOString().slice(0, 10);
   const armar = (d: DatosPublicados, con: Ajuste[]): EstadoPlanta =>
     armarEstado({ ...d, hoy: hoy(), feriados: new Set(d.feriados), ajustes: con });
+  /** El plan con los datos actuales. Si con los de Zoho algo falla, se arma con los publicados y se avisa. */
+  function plan(d: DatosPublicados, con: Ajuste[]): EstadoPlanta {
+    const a = actuales(d);
+    try { return armar(a, con); } catch (e) {
+      if (a === d) throw e;
+      diagnostico('error', { mensaje: textoError(e), donde: 'plan con los datos de Zoho' });
+      return armar({ ...d, nota_fuente: 'sin Zoho',
+        avisos: [`No se pudo armar el plan con los datos de Zoho (${textoError(e)}): se muestran los datos publicados.`, ...(d.avisos ?? [])] }, con);
+    }
+  }
 
   async function guardar(nuevos: Ajuste[]) {
     const antes = ajustes;
@@ -175,7 +244,8 @@ export function backendPagina(cfg: ConfigPagina): Backend {
   return {
     refrescoMs: cfg.zoho ? 5 * 60_000 : 0,
     layout: () => fetch(cfg.layout).then(r => r.json() as Promise<Layout>),
-    estado: async () => armar(actuales(await datos), ajustes),
+    estado: async () => plan(await datos, ajustes),
+    accion: a => { void accion(a); },
     quitarAjuste: async id => guardar(ajustes.filter(a => a.id !== id)),
     async asistente() {
       const sample = await usar<Sample>('sample');
@@ -186,8 +256,8 @@ export function backendPagina(cfg: ConfigPagina): Backend {
     async preguntar(p) {
       const sample = await usar<Sample>('sample');
       if (!sample) throw new Error('El asistente no está disponible en esta vista.');
-      const d = actuales(await datos);   // los mismos datos que se ven en la planta
-      const contexto = (): Contexto => ({ estado: armar(d, ajustes), ajustes, replanificar: con => armar(d, con) });
+      const d = await datos;   // los mismos datos que se ven en la planta
+      const contexto = (): Contexto => ({ estado: plan(d, ajustes), ajustes, replanificar: con => plan(d, con) });
       const max = (await sample.limits().catch(() => null))?.tools?.maxCount ?? HERRAMIENTAS.length;
       const tools: HerramientaPagina[] = HERRAMIENTAS.slice(0, max).map(h => ({
         name: h.name, description: h.description, inputSchema: h.input_schema,

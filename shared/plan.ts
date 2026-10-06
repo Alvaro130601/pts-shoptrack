@@ -40,6 +40,7 @@ export interface DatosPlanta {
   fuente: EstadoPlanta['fuente'];
   datos_de?: string;          // fecha del archivo exportado (excel) o de la lectura de Zoho
   nota_fuente?: string;
+  accion_fuente?: EstadoPlanta['accion_fuente'];
   hoy: string;
   feriados: Set<string>;
   avisos?: string[];
@@ -120,7 +121,7 @@ export function armarEstado(datos: DatosPlanta): EstadoPlanta {
 
   return {
     actualizado: new Date().toISOString(), fuente: d.fuente, datos_de: d.datos_de, hoy: d.hoy,
-    ...(d.nota_fuente && { nota_fuente: d.nota_fuente }),
+    ...(d.nota_fuente && { nota_fuente: d.nota_fuente }), ...(d.accion_fuente && { accion_fuente: d.accion_fuente }),
     centros, maquinas, sos, sin_centro,
     kpis: {
       so_abiertos: sos.filter(s => s.etapa !== 'Terminado').length,

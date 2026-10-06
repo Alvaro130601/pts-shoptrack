@@ -75,6 +75,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .fuente.zoho { background: #e4f6ee; color: #12734f; } .fuente.seed { background: #fff3e0; color: #8a5300; }
 .fuente.excel { background: #e8eefc; color: #2c46c9; } .fuente.excel .punto-vivo { animation: none; }
 .fuente .nota { font-weight: 500; opacity: .75; }
+.fuente.accion { border: 1px solid #b9c6f5; background: #e8eefc; color: #2c46c9; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; }
+.fuente.accion .nota { opacity: 1; text-decoration: underline; }
+.fuente.accion:hover { background: #dbe4fb; }
 .punto-vivo { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: latido 1.6s infinite; }
 .hora { font-family: var(--mono); font-weight: 500; opacity: .75; }
 @keyframes latido { 50% { opacity: .25; } }
@@ -276,7 +279,8 @@ kbd { font-family: var(--mono); font-size: 10.5px; background: #fff; border: 1px
 .pista { position: absolute; top: calc(var(--m) * 2 + var(--barra)); left: 50%; transform: translateX(-50%); z-index: 22;
   font-size: 12px; color: var(--suave); padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .con-cajon .pista, .con-panel .pista { display: none; }
-.cargando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--suave); font-size: 14px; z-index: 1; }
+/* Encima de la planta pero sin tapar el mouse: la cámara se puede mover aunque haya un error. */
+.cargando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--suave); font-size: 14px; z-index: 1; pointer-events: none; }
 .cargando.err { color: #9b1c1c; }
 
 /* ---------- etiquetas 3D ---------- */
@@ -347,3 +351,9 @@ kbd { font-family: var(--mono); font-size: 10.5px; background: #fff; border: 1px
 .estado-maq.fuera .punto { background: #5d6680; }
 .chip-maquina.fuera { background: #e9ebf2; color: #3d4560; }
 .chip-maquina.fuera .punto { background: #5d6680; }
+
+/* Resguardo: una parte que falló al dibujarse */
+.resguardo { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 6px;
+  max-width: 460px; padding: 12px 14px; font-size: 13px; color: #9b1c1c; background: #fff; }
+.resguardo span { color: var(--suave); font-size: 12px; word-break: break-word; }
+.resguardo .boton { justify-self: start; }

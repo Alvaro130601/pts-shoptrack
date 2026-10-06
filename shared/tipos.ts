@@ -198,11 +198,15 @@ export interface EstadoMaquina extends MaquinaConfig {
   semaforo: Semaforo | 'libre';
 }
 
+/** Lo que el supervisor puede hacer con la fuente desde la barra: leer Zoho (pide permiso) o abrir los permisos. */
+export type AccionFuente = 'conectar_zoho' | 'permisos_zoho';
+
 export interface EstadoPlanta {
   actualizado: string;        // ISO datetime
   fuente: 'seed' | 'zoho' | 'excel';
   datos_de?: string;          // ISO: fecha del archivo exportado (excel) o de la lectura de Zoho en la página
   nota_fuente?: string;       // página publicada: "leyendo Zoho…" o por qué no se pudo leer
+  accion_fuente?: AccionFuente; // página publicada: falta que el supervisor conecte Zoho o lo desbloquee
   hoy: string;                // fecha usada para los cálculos
   centros: EstadoCentro[];
   maquinas: EstadoMaquina[];
