@@ -93,7 +93,7 @@ del Equipo asignado; si la tarea no lo trae (exportación a Excel), de su nombre
 | Erosionado | EDM hilo y CUT E350 ✅ (solo 2 erosionadoras) |
 | Rectificado | Rectificadora #1 y #2, al fondo del Taller #1 ✅ (posición aproximada) |
 | Tratamiento térmico y revenido | Horno |
-| Doblado · Soldadura · Corte láser | Dobladora · Soldadora · Cortadora láser |
+| Doblado · Soldadura | Dobladora · Soldadora (la cortadora láser se quitó del plano, 6-oct ✅) |
 | Grabado · Limpieza y rebabeo | Puestos manuales fuera del plano: 1 persona, 8 h/día cada uno ❓ |
 | Programación | Programadores: cola de personas, no ocupa máquina ✅ (1 programador, 8 h/día ❓) |
 | Servicio externo / No Requiere | Proveedores (Flash Chrome, anodizado, electroless, black oxide…): 3 días hábiles |

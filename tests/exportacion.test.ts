@@ -131,7 +131,7 @@ describe('procesos por el nombre de la tarea (sin equipo asignado)', () => {
     const nombres = [
       'H. Fresado CNC (Dowels)', 'H. Fresado', 'H. Torno CNC', 'H. Torno', 'H. Torno Suizo', 'H. Erosionado (#2)',
       'H. Retrabajo Erosionado', 'H. Rectificado (Balony)', 'H. Rectificadora (Centerless)', 'H. Tratamiento térmico',
-      'H. Revenido', 'H. Doblado', 'H. Soldadura', 'H. Corte y soldadura', 'H. Corte láser', 'H. Grabado',
+      'H. Revenido', 'H. Doblado', 'H. Soldadura', 'H. Corte y soldadura', 'H. Grabado',
       'H. Limpieza y medición', 'H. Rebabeo', 'H. Flash Chrome', 'H. Anodizado', 'H. Electroless nykel', 'H. Black Oxide',
     ];
     // Cada tarea en su propio SO para que el orden no mezcle ítems.
@@ -140,7 +140,7 @@ describe('procesos por el nombre de la tarea (sin equipo asignado)', () => {
     expect(sos.map(s => s.items[0].ruta[0].centro_id)).toEqual([
       'fresado-cnc', 'fresado', 'torno-cnc', 'torno', 'torno-suizo', 'erosionado',
       'erosionado', 'rectificado', 'rectificado', 'tratamiento',
-      'tratamiento', 'doblado', 'soldadura', 'soldadura', 'corte-laser', 'grabado',
+      'tratamiento', 'doblado', 'soldadura', 'soldadura', 'grabado',
       'limpieza', 'limpieza', 'externo', 'externo', 'externo', 'externo',
     ]);
   });

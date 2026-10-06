@@ -24,7 +24,7 @@ export function cajaDe(pts: [number, number][], margen = 1): Caja2D {
   return { x0: Math.min(...xs) - margen, x1: Math.max(...xs) + margen, z0: Math.min(...zs) - margen, z1: Math.max(...zs) + margen };
 }
 
-/** Toda la planta: talleres + elementos que quedan fuera de ellos (p. ej. la cortadora láser). */
+/** Toda la planta: talleres + elementos, también los que quedan fuera de un taller. */
 export const cajaPlanta = (layout: Layout) =>
   cajaDe([...layout.talleres.flatMap(t => t.footprint), ...layout.elementos.flatMap(e => e.footprint)]);
 

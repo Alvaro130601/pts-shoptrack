@@ -5,7 +5,7 @@
  "advertencias": [
   "En el CAD, Talleres #2-#4 están inclinados 2.41° respecto a Taller #1; aquí se proyectó todo a planta y se ignoró la inclinación.",
   "Taller #4 no trae contorno: es aproximado.",
-  "Cortadora láser no tiene relaciones de posición en el CAD; su posición puede no ser la real.",
+  "Cortadora láser quitada del layout a pedido de Alvaro (6-oct-2026); en el CAD no tenía relaciones de posición.",
   "proceso_sugerido es una suposición por nombre: confirmar contra Zoho.",
   "RACK MORADO-1 de primer nivel choca con SVM 4100-3 en el CAD; se excluyó del layout.",
   "Rectificadoras #1 y #2 no están en el CAD: agregadas a mano al fondo de Taller #1 (posición aproximada, 6-oct-2026)."
@@ -952,39 +952,6 @@
    "proceso_sugerido": "Erosionado",
    "id": "cut-e350",
    "taller": "taller-4"
-  },
-  {
-   "px": 3.5,
-   "py": 7.953,
-   "w": 7.0,
-   "d": 13.5,
-   "h": 3.0,
-   "yaw": -3.1416,
-   "footprint": [
-    [
-     7.0,
-     14.703
-    ],
-    [
-     0.0,
-     14.703
-    ],
-    [
-     0.0,
-     1.203
-    ],
-    [
-     7.0,
-     1.203
-    ]
-   ],
-   "cad": "Cortadora laser-1",
-   "cad_path": "Cortadora laser-1",
-   "kind": "maquina",
-   "nombre": "Cortadora láser",
-   "proceso_sugerido": "Corte láser",
-   "id": "cortadora-laser",
-   "taller": null
   },
   {
    "px": 26.659,

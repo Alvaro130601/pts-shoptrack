@@ -27,7 +27,6 @@ const RUTAS: { peso: number; pasos: Paso[] }[] = [
   { peso: 8, pasos: [['H. Torno', 'Torno', [1, 5], true]] },
   { peso: 10, pasos: [PROG('Torno CNC'), SETUP('Torno CNC'), ['H. Torno CNC', 'Torno CNC', [1.5, 8], true]] },
   { peso: 6, pasos: [PROG('Fresado CNC'), SETUP('Fresado CNC'), ['H. Fresado CNC', 'Fresado CNC', [2, 8], true], ANODIZADO] },
-  { peso: 4, pasos: [PROG('Corte láser'), ['H. Corte láser', 'Corte láser', [0.5, 3], true]] },
   { peso: 5, pasos: [['H. Fresado', 'Fresado', [1, 3], true], PROG('Fresado CNC'), SETUP('Fresado CNC'), ['H. Fresado CNC', 'Fresado CNC', [2, 7], true]] },
   { peso: 4, pasos: [PROG('Erosionado'), ['H. Erosionado', 'Erosionado', [3, 10], true]] },
   { peso: 6, pasos: [['H. Fresado', 'Fresado', [1.5, 4], true], ['H. Tratamiento térmico', 'Tratamiento térmico', [5, 5], false],
@@ -37,7 +36,7 @@ const PESO_TOTAL = RUTAS.reduce((s, r) => s + r.peso, 0);
 /** Cuántas tareas pueden estar "En proceso" a la vez por equipo (≈ máquinas o programadores disponibles). */
 const CUPOS: Record<string, number> = {
   'Fresado CNC': 5, Fresado: 4, 'Torno CNC': 1, Torno: 2, Erosionado: 2, Rectificado: 2, 'Tratamiento térmico': 1,
-  'Corte láser': 1, Programación: 1, 'No Requiere': 3,
+  Programación: 1, 'No Requiere': 3,
 };
 
 export function generarSeed(hoy: string, feriados: Set<string>): ProyectoCrudo[] {

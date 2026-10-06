@@ -252,16 +252,6 @@
    "activa": true
   },
   {
-   "id": "cortadora-laser",
-   "nombre": "Cortadora láser",
-   "taller": null,
-   "proceso": "Corte láser",
-   "familia": "laser",
-   "capacidad_horas_dia": 8,
-   "es_centro_mecanizado": true,
-   "activa": true
-  },
-  {
    "id": "rectificadora-1",
    "nombre": "Rectificadora #1",
    "taller": "taller-1",

@@ -61,7 +61,9 @@ Fuente: `Ensamble final de taller.SLDASM` (guardado 2026-07-22). Notas de la rev
 - Talleres #2, #3 y #4 están inclinados 2.41° respecto a Taller #1 en el CAD (14 relaciones en error). El JSON
   ignora la inclinación.
 - Taller #4 no trae contorno: rectángulo aproximado.
-- Cortadora láser sin relaciones en el CAD: posición dudosa.
+- **Cortadora láser** (6-oct-2026): quitada del layout, de las máquinas y de los procesos a pedido de Alvaro ("borra
+  la láser grande"). En el CAD no tenía relaciones de posición. Si vuelve a aparecer una tarea "Corte láser", queda
+  en *Sin centro*.
 - RACK MORADO-1 de primer nivel choca con SVM 4100 #2: excluido.
 - `proceso_sugerido` sale del nombre del componente; confirmar (Fresadoras/Tornos del Taller #2 ¿convencionales?,
   SYL, E350, H32Z sin identificar). Alvaro (6-oct): solo hay 2 erosionadoras (EDM hilo y CUT E350), así que **E350** queda

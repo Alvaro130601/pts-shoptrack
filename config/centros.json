@@ -21,8 +21,6 @@
       "maquinas": ["dobladora"] },
     { "id": "soldadura", "nombre": "Soldadura", "tipo": "maquina", "equipos_zoho": ["Soldadura"], "tareas_zoho": ["^soldadura", "^corte y soldadura"],
       "maquinas": ["soldadora"] },
-    { "id": "corte-laser", "nombre": "Corte láser", "tipo": "maquina", "equipos_zoho": ["Corte láser", "Láser"], "tareas_zoho": ["^corte laser"],
-      "maquinas": ["cortadora-laser"] },
     { "id": "grabado", "nombre": "Grabado", "tipo": "puesto", "equipos_zoho": ["Grabado"], "tareas_zoho": ["^grabado", "^marcado"],
       "personas": 1, "horas_dia": 8 },
     { "id": "limpieza", "nombre": "Limpieza y rebabeo", "tipo": "puesto", "equipos_zoho": ["Limpieza", "Rebabeo"], "tareas_zoho": ["^limpieza", "^rebabeo", "^pulido"],
