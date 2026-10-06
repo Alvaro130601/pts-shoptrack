@@ -1,4 +1,3 @@
-import { AdaptiveDpr } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type Ref } from 'react';
 import type { EstadoMaquina } from '../../../shared/tipos';
@@ -41,7 +40,6 @@ export function Planta({ layout, maquinas, seleccion, resaltadas, onSeleccionar,
       shadows="percentage"
       orthographic
       dpr={[1, 2]}
-      performance={{ min: 0.5 }}
       camera={{ position: [centro[0] - 34, 40, centro[1] + 34], zoom: 20, near: -200, far: 500 }}
       onPointerMissed={() => onSeleccionar(null)}
       style={{ background: `linear-gradient(180deg, #f5f7fc 0%, ${C.fondo} 100%)` }}
@@ -72,7 +70,6 @@ export function Planta({ layout, maquinas, seleccion, resaltadas, onSeleccionar,
       )}
 
       <Camara api={camara} inicial={inicial} ocupado={ocupado} onDetalle={setDetalle} />
-      <AdaptiveDpr pixelated />
       <Medidor datos={maquinas} />
     </Canvas>
   );

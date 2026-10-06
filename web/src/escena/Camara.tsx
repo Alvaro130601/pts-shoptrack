@@ -1,6 +1,6 @@
 import { MapControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useRef, type Ref } from 'react';
 import * as THREE from 'three';
 
 /** Rectángulo en planta (metros): x = px, z = py. */
@@ -26,10 +26,9 @@ interface Props {
 
 const UMBRAL_DETALLE = 30;
 export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
-  const { camera, size } = useThree();
-  // Mientras la cámara se mueve, la planta se dibuja a menos resolución (AdaptiveDpr): en equipos con gráficos
-  // modestos el movimiento sigue fluido y al soltar vuelve la nitidez.
-  const regress = useThree(s => s.performance.regress);
+  // Solo lo que se usa: con useThree() entero, cualquier cambio del estado de la escena redibujaba la cámara.
+  const camera = useThree(s => s.camera);
+  const size = useThree(s => s.size);
   const hud = useRef(ocupado);
   hud.current = ocupado;
   const controles = useRef<any>(null);
@@ -68,6 +67,10 @@ export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
     destino.current = { target, zoom };
   };
 
+  // Funciones estables para MapControls: si cambian, drei desconecta y reconecta los controles y corta el arrastre
+  // en curso (la cámara se "pegaba" cada vez que la página se redibujaba, p. ej. al llegar los datos de Zoho).
+  const alEmpezar = useCallback(() => { destino.current = null; }, []);
+
   useImperativeHandle(api, () => ({
     encuadrar: (c, zoomMax) => encuadrar(c, true, zoomMax),
     zoom: f => {
@@ -79,6 +82,12 @@ export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
       };
     },
   }));
+
+  // Pruebas (Playwright): con window.__depurarCamara la página deja leer dónde mira la cámara.
+  useEffect(() => {
+    const w = window as unknown as { __depurarCamara?: boolean; __camara?: unknown };
+    if (w.__depurarCamara) w.__camara = { objetivo: () => controles.current?.target.toArray(), zoom: () => (camera as THREE.OrthographicCamera).zoom };
+  }, [camera]);
 
   // Encuadre inicial sin animación, una vez que existen los controles.
   useEffect(() => { encuadrar(inicial, false); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,6 +113,6 @@ export function Camara({ api, inicial, ocupado, onDetalle }: Props) {
   return (
     <MapControls ref={controles} makeDefault enableRotate enableDamping dampingFactor={0.12}
       maxPolarAngle={Math.PI / 2.4} minZoom={8} maxZoom={90} screenSpacePanning
-      onStart={() => { destino.current = null; }} onChange={() => regress()} />
+      onStart={alEmpezar} />
   );
 }
