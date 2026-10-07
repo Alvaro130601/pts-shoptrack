@@ -57,7 +57,7 @@ export function BarraSuperior({ estado, error, busqueda, onBusqueda, coincidenci
           <button className="kpi sec" onClick={() => onAbrir('so')} title={`${k.items_abiertos} ítems abiertos`}>
             <b>{k.so_abiertos}</b><span>SO abiertos</span>
           </button>
-          <button className="kpi" onClick={() => onAbrir('cola')} title="Operaciones en proceso: máquinas, programación y proveedores">
+          <button className="kpi" onClick={() => onAbrir('cola')} title={`Operaciones en proceso en la planta: máquinas y programación${k.en_proveedor ? `. Aparte, ${k.en_proveedor} en servicio externo (no suman carga)` : ''}`}>
             <b className="azul">{k.en_proceso}</b><span>en proceso</span>
           </button>
           <button className="kpi" onClick={() => onAbrir('cola')} title="Operaciones de máquina listas para empezar">

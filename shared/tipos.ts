@@ -219,7 +219,8 @@ export interface EstadoPlanta {
   kpis: {
     so_abiertos: number;
     items_abiertos: number;
-    en_proceso: number;       // operaciones en proceso
+    en_proceso: number;       // operaciones en proceso dentro de la planta (máquina y programación)
+    en_proveedor: number;     // operaciones de servicio externo en el proveedor (no cargan la planta)
     en_cola: number;          // operaciones de máquina listas para empezar
     esperando_material: number; // ítems
     atrasados: number;        // ítems en rojo

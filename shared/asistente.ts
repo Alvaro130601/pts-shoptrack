@@ -32,7 +32,7 @@ export function contextoPlanta(e: EstadoPlanta): string {
   const dia = DIAS[new Date(e.hoy + 'T12:00:00').getDay()];
   const fuente = e.fuente === 'zoho' ? 'Zoho en vivo' : e.fuente === 'excel' ? `exportación de Zoho del ${(e.datos_de ?? '').slice(0, 10)}` : 'datos simulados';
   const lineas = [
-    `Hoy: ${e.hoy} (${dia}). Datos: ${fuente}. ${k.so_abiertos} SO y ${k.items_abiertos} ítems abiertos; ${k.en_proceso} operaciones en proceso, ${k.en_cola} en cola, ${k.esperando_material} ítems esperando material.`,
+    `Hoy: ${e.hoy} (${dia}). Datos: ${fuente}. ${k.so_abiertos} SO y ${k.items_abiertos} ítems abiertos; ${k.en_proceso} operaciones en proceso en la planta (más ${k.en_proveedor} en servicio externo, que no cargan la planta), ${k.en_cola} en cola, ${k.esperando_material} ítems esperando material.`,
     k.items_con_fecha ? `Semáforo: ${k.atrasados} ítems atrasados, ${k.en_riesgo} en riesgo.` : 'Ningún ítem tiene fecha de entrega: no hay semáforo.',
     'Carga por proceso (horas listas para empezar · horas en total · días de carga · recursos):',
     ...[...e.centros].filter(c => c.ops.length || c.tipo === 'maquina').sort((a, b) => b.dias_carga - a.dias_carga).map(c =>

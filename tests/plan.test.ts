@@ -147,6 +147,14 @@ describe('estado de la planta', () => {
     expect(proximas.map(o => o.estado)).toEqual(['bloqueada']);
   });
 
+  it('el servicio externo en el proveedor no cuenta como trabajo en proceso de la planta ni carga máquinas', () => {
+    const e = plan(so('SO-10', '2026-10-30', item(MATERIAL_OK(), t('H. Fresado CNC', 'Fresado CNC', 'Cerrada'),
+      t('H. Anodizado', 'No Requiere', 'Servicio Externo', 0.5), t('H. Torno CNC', 'Torno CNC'))));
+    expect(e.kpis).toMatchObject({ en_proceso: 0, en_proveedor: 1, en_cola: 0, horas_cola: 0 });
+    expect(e.centros.find(c => c.id === 'ext')).toMatchObject({ en_proceso: 1 });
+    expect(e.maquinas.find(m => m.id === 't1')).toMatchObject({ horas_cola: 0, proximas: [expect.objectContaining({ estado: 'en_camino' })] });
+  });
+
   it('cada máquina toma el grupo de color de su proceso', () => {
     const centros: CentroConfig[] = CENTROS.map(c =>
       c.id === 'cnc' ? { ...c, grupo: 'fresado' } : c.id === 'torno' ? { ...c, grupo: 'torno', convencional: true } : c);

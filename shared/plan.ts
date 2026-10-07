@@ -129,7 +129,9 @@ export function armarEstado(datos: DatosPlanta): EstadoPlanta {
     kpis: {
       so_abiertos: sos.filter(s => s.etapa !== 'Terminado').length,
       items_abiertos: items.length,
-      en_proceso: ops.filter(o => o.estado === 'en_proceso' && (o.tipo === 'maquina' || o.tipo === 'programacion' || o.tipo === 'externo')).length,
+      // Solo trabajo interno: el servicio externo está con el proveedor y no carga la planta.
+      en_proceso: ops.filter(o => o.estado === 'en_proceso' && (o.tipo === 'maquina' || o.tipo === 'programacion')).length,
+      en_proveedor: ops.filter(o => o.estado === 'en_proceso' && o.tipo === 'externo').length,
       en_cola: ops.filter(o => o.estado === 'en_cola' && o.tipo === 'maquina').length,
       esperando_material: items.filter(i => i.ruta.some(o => o.tipo === 'material' && o.estado !== 'hecha')).length,
       atrasados: items.filter(i => i.semaforo === 'rojo').length,

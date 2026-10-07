@@ -100,7 +100,8 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
   cuando hay datos y la sombra es de 1024. La página mide los cuadros (en la PC de Alvaro, Intel UHD 620: ~27 ms).
 - La exportación a Excel no trae lista de tareas, equipo ni fecha de entrega: los ítems se deducen del orden
   ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Con Zoho en vivo sí. Ver `docs/ZOHO.md`.
-- Zoho en vivo lee las tareas abiertas de la vista más las de Servicio Externo (cuenta como una pausa de la ruta);
+- Zoho en vivo lee las tareas abiertas de la vista más las de Servicio Externo (cuenta como una pausa de la ruta; no
+  suma carga a la planta ni al KPI "en proceso": va aparte como `en_proveedor`, Alvaro 7-oct);
   Calidad y Pausado no entran. La entrega es siempre la fecha final; las etiquetas de Zoho no se usan (Alvaro, 6-oct).
 - Página con Zoho: sin permiso del conector no lo pide al abrir (botón "Leer Zoho en vivo"); guarda en su base
   (`diagnostico`) el último resultado de Zoho y el último error del navegador para revisarlo con `ArtifactData`.

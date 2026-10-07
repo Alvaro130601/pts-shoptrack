@@ -19,10 +19,11 @@ export function CargaProcesos({ centros, maquinas, filtro, seleccion, onMaquina,
   onCerrar: () => void;
 }) {
   const [orden, setOrden] = useState<Orden>('carga');
-  const filas = [...centros].sort((a, b) =>
+  // El servicio externo va al final: es del proveedor y no suma carga a la planta.
+  const filas = [...centros].sort((a, b) => Number(a.tipo === 'externo') - Number(b.tipo === 'externo') || (
     orden === 'carga' ? b.dias_carga - a.dias_carga || b.horas_total - a.horas_total
       : orden === 'semaforo' ? RANGO[a.semaforo] - RANGO[b.semaforo] || b.dias_carga - a.dias_carga
-        : a.nombre.localeCompare(b.nombre, 'es'));
+        : a.nombre.localeCompare(b.nombre, 'es')));
   const [abierto, setAbierto] = useState<string | null>(() => filas[0]?.id ?? null);
   const maxCarga = Math.max(3, ...filas.map(c => c.dias_carga));
 
@@ -77,7 +78,7 @@ export function CargaProcesos({ centros, maquinas, filtro, seleccion, onMaquina,
 }
 
 function resumen(c: EstadoCentro) {
-  if (c.tipo === 'externo') return `${c.en_proceso} en el proveedor · ${c.en_cola} listos para enviar · ${c.en_camino} por llegar`;
+  if (c.tipo === 'externo') return `${c.en_proceso} en el proveedor · ${c.en_cola} listos para enviar · ${c.en_camino} por llegar. No suma carga a la planta: la ruta del ítem espera a que vuelva.`;
   const n = c.recursos.length;
   const quien = c.tipo === 'programacion' ? `${n} programador${n === 1 ? '' : 'es'}`
     : c.tipo === 'puesto' ? `${n} puesto${n === 1 ? '' : 's'}` : `${n} máquina${n === 1 ? '' : 's'}`;
