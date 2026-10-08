@@ -112,7 +112,7 @@ function Fuente({ estado, onAccion }: { estado: EstadoPlanta | null; onAccion?: 
     return (
       <button type="button" className="fuente accion" onClick={() => onAccion(accion)}
         title={accion === 'conectar_zoho' ? 'Leer Zoho en vivo con tu conector Zoho Projects (la primera vez claude.ai pide permiso)' : 'Zoho está bloqueado para esta página: ábrelo en Permisos'}>
-        <span className="punto-vivo" />Exportación {new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })}
+        <span className="punto-vivo" />{estado.fuente === 'zoho' ? 'Copia de Zoho' : 'Exportación'} {new Date(de).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })}
         <span className="nota">· {accion === 'conectar_zoho' ? 'Leer Zoho en vivo' : 'Permitir Zoho'}</span>
       </button>
     );

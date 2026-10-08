@@ -18,6 +18,16 @@ Además, solo proyectos `SO-` y nunca Completado ni Cancelado. ShopTrack agrega 
 (3 días hábiles) y lo que sigue en la ruta lo espera. Las tareas en **Calidad** o **Pausado** no entran, igual que en
 la vista; el aviso de la campana dice cuántas son.
 
+**Estado del proyecto vs. estado de la tarea** (Alvaro, 8-oct): un *proyecto* en estado **Servicio Externo** ya pasó por
+todo el mecanizado y no entra (no está en los estados de la vista). Una *tarea* en estado Servicio Externo está con el
+proveedor: si es de una máquina (p. ej. `H. Fresado CNC` hecho afuera) cuenta como servicio externo y no carga ninguna
+máquina, y lo que va antes en la ruta del ítem se da por hecho aunque no se haya cerrado en Zoho.
+
+**Respaldo de la página:** mientras llega Zoho en vivo, o si quien la abre no tiene el conector, la página muestra los
+datos con que se publicó. Con `DATA_SOURCE=zoho-copia` son una copia de la API (`data/zoho-copia/proyectos.json` y
+`tareas.json`, no se suben) con los mismos filtros; la exportación a Excel no trae el estado del proyecto y mostraría
+proyectos que ya están en servicio externo.
+
 Son unas 5 llamadas por lectura (`shared/zoho.ts`): los proyectos en esos estados (~110-150, una página de 200) y las
 tareas abiertas con "H." de todo el portal (~600-800, 3-4 páginas). Las tareas se agrupan por proyecto y por lista.
 

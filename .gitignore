@@ -9,6 +9,8 @@ data/exportaciones/*
 # Ajustes del supervisor (nombran SO reales)
 data/ajustes.json
 data/ajustes.json.tmp
+# Copia de la API de Zoho para el respaldo de la página (datos reales)
+data/zoho-copia
 # Página estática con datos (npm run pagina)
 dist-pagina
 *.tsbuildinfo

@@ -31,11 +31,12 @@
       "envio": "^(envio|despacho)"
     },
     "estados": {
-      "_nota": "Se comparan por inicio del texto ('Pendiente' cubre 'Pendiente Operación' y 'Pendiente de Operación'). 'material_pendiente': el ítem espera material. 'Servicio Externo' está en proceso: la pieza está con el proveedor y el resto de la ruta espera (una pausa).",
+      "_nota": "Se comparan por inicio del texto ('Pendiente' cubre 'Pendiente Operación' y 'Pendiente de Operación'). 'material_pendiente': el ítem espera material. 'proveedor' (Servicio Externo): la pieza está con un proveedor y el resto de la ruta espera (una pausa); si la tarea es de una máquina (mecanizado hecho afuera) cuenta como servicio externo, no carga la planta, y lo anterior de la ruta se da por hecho.",
       "pendiente": ["Pendiente", "Abierta", "Abierto", "Open", "No iniciada"],
       "en_proceso": ["En proceso", "En progreso", "En Producción", "En Curso", "In Progress", "Servicio Externo"],
       "cerrada": ["Cerrada", "Cerrado", "Closed", "Completada", "Completado", "Terminada"],
-      "material_pendiente": ["Material Pendiente"]
+      "material_pendiente": ["Material Pendiente"],
+      "proveedor": ["Servicio Externo"]
     }
   }
 }

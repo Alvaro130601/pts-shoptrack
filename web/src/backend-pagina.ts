@@ -192,7 +192,8 @@ export function backendPagina(cfg: ConfigPagina): Backend {
       return { ...d, proyectos: l.proyectos, fuente: 'zoho', datos_de: l.leido, avisos: [...(fallo ? [fallo] : []), ...l.avisos],
         ...(fallo ? { nota_fuente: 'sin conexión' } : {}) };
     }
-    const respaldo = d.datos_de ? `la exportación del ${fechaCorta(d.datos_de)}` : 'los datos publicados con la página';
+    const respaldo = !d.datos_de ? 'los datos publicados con la página'
+      : d.fuente === 'zoho' ? `la copia de Zoho del ${fechaCorta(d.datos_de)}` : `la exportación del ${fechaCorta(d.datos_de)}`;
     const avisos = (a: string) => [a, ...(d.avisos ?? [])];
     if (zoho.espera === 'conectar_zoho') {
       return { ...d, accion_fuente: 'conectar_zoho',

@@ -155,6 +155,27 @@ describe('estado de la planta', () => {
     expect(e.maquinas.find(m => m.id === 't1')).toMatchObject({ horas_cola: 0, proximas: [expect.objectContaining({ estado: 'en_camino' })] });
   });
 
+  it('un mecanizado en estado Servicio Externo se hizo afuera: no va a ninguna máquina', () => {
+    const e = plan(so('SO-11', '2026-10-30', item(MATERIAL_OK(), t('H. Fresado CNC', 'Fresado CNC', 'Servicio Externo'),
+      t('H. Flash Chrome', 'No Requiere'))));
+    const [fresado, flash] = ops(e, 'SO-11');
+    expect(fresado).toMatchObject({ tipo: 'externo', centro_id: 'ext', estado: 'en_proceso' });
+    expect(fresado.maquina_id).toBeFalsy();
+    expect(flash.estado).toBe('en_camino');
+    expect(e.kpis).toMatchObject({ en_proceso: 0, en_proveedor: 1, en_cola: 0 });
+    expect(e.maquinas.flatMap(m => [...m.en_proceso, ...m.cola])).toEqual([]);
+  });
+
+  it('si la pieza ya está en el proveedor, lo anterior de la ruta sin cerrar se da por hecho', () => {
+    const e = plan(so('SO-12', '2026-10-30', item(MATERIAL_OK(), t('H. Torno CNC', 'Torno CNC'),
+      t('H. Anodizado', 'No Requiere', 'Servicio Externo'), t('H. Fresado CNC', 'Fresado CNC'))));
+    const [torno, anodizado, fresado] = ops(e, 'SO-12');
+    expect(torno.estado).toBe('hecha');
+    expect(anodizado.estado).toBe('en_proceso');
+    expect(fresado.estado).toBe('en_camino');
+    expect(e.maquinas.find(m => m.id === 't1')).toMatchObject({ cola: [], en_proceso: [], horas_cola: 0 });
+  });
+
   it('cada máquina toma el grupo de color de su proceso', () => {
     const centros: CentroConfig[] = CENTROS.map(c =>
       c.id === 'cnc' ? { ...c, grupo: 'fresado' } : c.id === 'torno' ? { ...c, grupo: 'torno', convencional: true } : c);

@@ -65,10 +65,12 @@ function expresiones(reglas: ReglasLectura) {
 /** Estado de Zoho → pendiente / en proceso / cerrada. Los estados viejos tipo "Material Pendiente" marcan que al
  *  ítem le falta material. Se compara por prefijo ("Pendiente Op…" entra en "Pendiente"). `conocido` = false si
  *  no está en ninguna lista (se trata como pendiente). */
-export function leerEstado(crudo: string, estados: ReglasLectura['estados']): { estado: EstadoTarea; falta_material: boolean; conocido: boolean } {
+export function leerEstado(crudo: string, estados: ReglasLectura['estados']): { estado: EstadoTarea; falta_material: boolean; conocido: boolean; con_proveedor?: boolean } {
   const n = norm(crudo);
   const en = (lista: string[]) => lista.some(x => norm(x) && n.startsWith(norm(x)));
   if (en(estados.cerrada)) return { estado: 'cerrada', falta_material: false, conocido: true };
+  // "Servicio Externo": la pieza está en un proveedor, aunque la tarea sea de un proceso nuestro (mecanizado afuera).
+  if (en(estados.proveedor ?? [])) return { estado: 'en_proceso', falta_material: false, conocido: true, con_proveedor: true };
   if (en(estados.en_proceso)) return { estado: 'en_proceso', falta_material: false, conocido: true };
   if (en(estados.material_pendiente)) return { estado: 'pendiente', falta_material: true, conocido: true };
   return { estado: 'pendiente', falta_material: false, conocido: en(estados.pendiente) || !crudo.trim() };
@@ -97,6 +99,7 @@ export function crearClasificador(reglas: ReglasLectura, centros: CentroConfig[]
 
 function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
   const R = expresiones(reglas);
+  const externo = centros.find(c => c.tipo === 'externo') ?? null;
   const clasificar = crearClasificador(reglas, centros);
   const desconocidos = new Set<string>();
   const estadoTarea = (crudo: string) => {
@@ -151,6 +154,8 @@ function crearLector(reglas: ReglasLectura, centros: CentroConfig[]) {
       const e = estadoTarea(t.estado);
       faltaMaterial ||= e.falta_material;
       const c = clasificar(t, enCierre);
+      // Con el proveedor: no es trabajo de la planta aunque el equipo sea una máquina (p. ej. Fresado CNC hecho afuera).
+      if (e.con_proveedor && (c.tipo === 'maquina' || c.tipo === 'programacion')) return { t, estado: e.estado, tipo: 'externo' as const, centro: externo };
       return { t, estado: e.estado, tipo: c.tipo, centro: c.centro };
     });
     const ops: Operacion[] = [];
@@ -229,9 +234,13 @@ function unir(setUp: Operacion, mec: Operacion): Operacion {
 
 /** Estado de cada paso según la ruta. `antes` son pasos que van antes de toda la ruta (para el cierre: los ítems). */
 export function estadosRuta(ruta: Operacion[], antes: Operacion[]): void {
+  // Si la pieza ya está en un proveedor, lo anterior de su ruta ya se hizo aunque no se haya cerrado en Zoho.
+  let enProveedor = -1;
+  ruta.forEach((o, i) => { if (o.tipo === 'externo' && o.estado_tarea === 'en_proceso') enProveedor = i; });
   ruta.forEach((op, i) => {
     op.espera = undefined;
     if (op.estado_tarea === 'cerrada') { op.estado = 'hecha'; return; }
+    if (i < enProveedor && op.tipo !== 'cierre') { op.estado = 'hecha'; op.espera = 'Sin cerrar en Zoho: la pieza ya está en el proveedor'; return; }
     if (esCondicion(op.tipo)) {
       op.estado = 'pendiente';
       op.espera = op.tipo === 'material' ? 'Llegada del material' : 'Planos';

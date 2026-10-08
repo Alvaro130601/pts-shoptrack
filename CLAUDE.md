@@ -26,7 +26,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - `scripts/pagina.ts` (`npm run pagina`): la app como página estática para claude.ai (plan en el navegador, ajustes
   en la base compartida `db`, asistente con la capacidad `sample`); sale en `dist-pagina/` (no se sube). Con
   `PAGINA_ZOHO=1` lee **Zoho en vivo** con el conector Zoho Projects de quien la abre (capacidad `mcp`, solo
-  `get_projects_list` y `get_tasks_by_portal`) y los datos de `DATA_SOURCE` quedan de respaldo.
+  `get_projects_list` y `get_tasks_by_portal`) y los datos de `DATA_SOURCE` quedan de respaldo. Respaldo recomendado:
+  `DATA_SOURCE=zoho-copia` (copia de la API en `data/zoho-copia/`, no se sube), que respeta el estado del proyecto; la
+  exportación a Excel no lo trae y muestra proyectos que ya están en servicio externo.
 - `npm run dev` levanta API (8787) + web (5173, con proxy a /api). `DATA_SOURCE=seed` usa datos simulados,
   `zoho` lee la API y `excel` lee la exportación de tareas más reciente de `data/exportaciones/` (`server/fuentes/exportacion.ts`).
 - `npm test` corre los tests (vitest, en `tests/`). `npm run build` = typecheck + tests + build.
@@ -101,7 +103,9 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - La exportación a Excel no trae lista de tareas, equipo ni fecha de entrega: los ítems se deducen del orden
   ("Grupo 1, 2…"), el proceso del nombre y no hay semáforo (plan por número de SO). Con Zoho en vivo sí. Ver `docs/ZOHO.md`.
 - Zoho en vivo lee las tareas abiertas de la vista más las de Servicio Externo (cuenta como una pausa de la ruta; no
-  suma carga a la planta ni al KPI "en proceso": va aparte como `en_proveedor`, Alvaro 7-oct);
+  suma carga a la planta ni al KPI "en proceso": va aparte como `en_proveedor`, Alvaro 7-oct). Una tarea de máquina en
+  estado Servicio Externo se hizo afuera (cuenta como servicio externo) y lo anterior de su ruta se da por hecho. Los
+  proyectos en estado Servicio Externo ya terminaron el mecanizado y no entran (Alvaro, 8-oct);
   Calidad y Pausado no entran. La entrega es siempre la fecha final; las etiquetas de Zoho no se usan (Alvaro, 6-oct).
 - Página con Zoho: sin permiso del conector no lo pide al abrir (botón "Leer Zoho en vivo"); guarda en su base
   (`diagnostico`) el último resultado de Zoho y el último error del navegador para revisarlo con `ArtifactData`.

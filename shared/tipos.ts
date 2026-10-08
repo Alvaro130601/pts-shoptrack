@@ -80,7 +80,7 @@ export interface ReglasLectura {
     programacion: string; set_up: string; material: string; planos: string;
     ensamble: string; calidad: string; envio: string;
   };
-  estados: { pendiente: string[]; en_proceso: string[]; cerrada: string[]; material_pendiente: string[] };
+  estados: { pendiente: string[]; en_proceso: string[]; cerrada: string[]; material_pendiente: string[]; proveedor?: string[] };
 }
 
 // ---------- Modelo normalizado ----------

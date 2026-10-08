@@ -3,22 +3,34 @@
 // asistente usa la cuenta de Claude de quien la abre. Uso: npm run build && DATA_SOURCE=excel npm run pagina
 // Con PAGINA_ZOHO=1 la página lee Zoho en vivo con el conector Zoho Projects de quien la abre (capacidad mcp) y los
 // datos de DATA_SOURCE quedan de respaldo mientras llega o si no se puede leer.
-// Sale en dist-pagina/ (no se sube: con DATA_SOURCE=excel o zoho lleva datos reales).
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+// DATA_SOURCE=zoho-copia: el respaldo sale de una copia de la API de Zoho guardada en data/zoho-copia/ (proyectos.json y
+// tareas.json, tal como los devuelve la API), con los mismos filtros de la vista que la lectura en vivo.
+// Sale en dist-pagina/ (no se sube: con DATA_SOURCE=excel, zoho o zoho-copia lleva datos reales).
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cargarCentros, cargarFeriados, cargarMapeoZoho, cargarMaquinas, cargarReglasLectura, hoyCR, rutaRaiz } from '../server/config.ts';
 import { leerExportacion } from '../server/fuentes/exportacion.ts';
 import { generarSeed } from '../server/fuentes/seed.ts';
 import { leerZoho } from '../server/fuentes/zoho.ts';
+import { proyectosDeZoho } from '../shared/zoho.ts';
 import type { ProyectoCrudo } from '../shared/tipos.ts';
 
-const fuente = (process.env.DATA_SOURCE ?? 'seed') as 'seed' | 'zoho' | 'excel';
+const pedida = process.env.DATA_SOURCE ?? 'seed';
+const fuente = (pedida === 'zoho-copia' ? 'zoho' : pedida) as 'seed' | 'zoho' | 'excel';
 const zohoEnVivo = !!process.env.PAGINA_ZOHO;
 const dist = join(rutaRaiz, 'dist'), salida = join(rutaRaiz, 'dist-pagina');
 if (!existsSync(join(dist, 'index.html'))) throw new Error('Falta dist/: corre primero npm run build');
 
 const feriados = cargarFeriados(), hoy = hoyCR(), reglas = cargarReglasLectura(), centros = cargarCentros();
-const leido: { proyectos: ProyectoCrudo[]; avisos: string[]; datos_de?: string } = fuente === 'zoho' ? await leerZoho()
+/** Copia guardada de la API de Zoho → mismos proyectos que la lectura en vivo (respeta el estado del proyecto). */
+function leerCopiaZoho(dir: string) {
+  const archivo = (n: string) => JSON.parse(readFileSync(join(dir, n), 'utf8'));
+  const l = proyectosDeZoho(archivo('proyectos.json'), archivo('tareas.json'), cargarMapeoZoho());
+  return { proyectos: l.proyectos, avisos: l.avisos.map(x => x.replace(/^Zoho en vivo:/, 'Copia de Zoho:')),
+    datos_de: process.env.ZOHO_COPIA_FECHA ?? statSync(join(dir, 'tareas.json')).mtime.toISOString() };
+}
+const leido: { proyectos: ProyectoCrudo[]; avisos: string[]; datos_de?: string } = pedida === 'zoho-copia' ? leerCopiaZoho(process.env.ZOHO_COPIA ?? join(rutaRaiz, 'data/zoho-copia'))
+  : fuente === 'zoho' ? await leerZoho()
   : fuente === 'excel' ? await leerExportacion(process.env.EXPORT_PATH ?? join(rutaRaiz, 'data/exportaciones'), reglas, centros)
     : { proyectos: generarSeed(hoy, feriados), avisos: ['Demo con datos simulados (clientes y SO ficticios)'] };
 
