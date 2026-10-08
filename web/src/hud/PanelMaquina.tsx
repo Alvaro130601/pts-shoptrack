@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { EstadoMaquina, Item, Operacion } from '../../../shared/tipos';
 import { colorSemaforo } from '../colores';
 import { NOMBRE_FAMILIA } from '../familias';
-import { CopiarSO } from './CopiarSO';
 import { estadoLargo, etiquetaPaso, fecha, itemCorto, legible, tallerNombre } from '../formato';
 import { IcoCerrar } from '../iconos';
 import { RutaItem } from '../modulos/RutaItem';
@@ -12,12 +11,13 @@ const ESTADO_MAQ = { rojo: 'Atrasada', amarillo: 'En riesgo', verde: 'A tiempo',
 const estadoMaq = (m: EstadoMaquina) =>
   m.semaforo === 'libre' && (m.en_proceso.length || m.cola.length) ? 'Con trabajo, sin fecha de entrega' : ESTADO_MAQ[m.semaforo];
 
-export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: {
+export function PanelMaquina({ m, centro, items, opInicial, onPaso, onComentar, onCerrar }: {
   m: EstadoMaquina;
   centro?: string;                       // nombre del proceso al que pertenece
   items: Map<string, Item>;              // para mostrar la ruta del ítem de cada operación
   opInicial?: string;
   onPaso: (o: Operacion) => void;
+  onComentar: (proyectoId: string) => void;   // abre el SO con su comentario listo para escribir
   onCerrar: () => void;
 }) {
   const [abierta, setAbierta] = useState<string | null>(opInicial ?? m.en_proceso[0]?.id ?? m.cola[0]?.id ?? null);
@@ -86,7 +86,7 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
                         <dt>Entrega SO</dt><dd>{fecha(o.fecha_entrega)}</dd>
                       </dl>
                       <div className="so-acciones">
-                        <CopiarSO so={o.proyecto} />
+                        <button type="button" className="boton chico primario" onClick={() => onComentar(o.proyecto_id)}>Comentar</button>
                         {o.url_zoho && <a className="boton chico" href={o.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
                       </div>
                     </div>

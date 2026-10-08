@@ -22,9 +22,10 @@ Dueño del producto: Alvaro (supervisor/coordinador de producción). Idioma de U
 - **Asistente** (`docs/ASISTENTE.md`): chat con Claude (`@anthropic-ai/sdk`, `claude-opus-5-5`, `server/asistente.ts`)
   que consulta el plan y crea **ajustes del supervisor** (estado, material, prioridad, entrega, máquina, fuera de
   servicio). Los ajustes viven en ShopTrack (`data/ajustes.json`, no se sube), **no se escriben en Zoho** y se quitan
-  desde la pestaña Cambios. Necesita `ANTHROPIC_API_KEY` en `.env`. En ¿Dónde está mi SO? cada SO tiene "Copiar SO",
-  "Abrir en Zoho" (`config/zoho-mapeo.json → portal.url_proyecto`, por confirmar que abre bien) y una instrucción en
-  palabras que manda al asistente ("cerrar el fresado del ítem 2", "prioridad 1") y lista los cambios de ese SO.
+  desde la pestaña Cambios. Necesita `ANTHROPIC_API_KEY` en `.env`. Cada SO tiene **Comentar** (en ¿Dónde está mi SO?
+  y en cada operación del panel de máquina): un comentario en palabras que lee el asistente y aplica ("cerrar el
+  fresado del ítem 2", "prioridad 1"), con los cambios de ese SO debajo; y "Abrir en Zoho"
+  (`config/zoho-mapeo.json → portal.url_proyecto`, falta confirmar el enlace a la pestaña de detalles).
 - `scripts/pagina.ts` (`npm run pagina`): la app como página estática para claude.ai (plan en el navegador, ajustes
   en la base compartida `db`, asistente con la capacidad `sample`); sale en `dist-pagina/` (no se sube). Con
   `PAGINA_ZOHO=1` lee **Zoho en vivo** con el conector Zoho Projects de quien la abre (capacidad `mcp`, solo

@@ -68,11 +68,12 @@ navegador. Al publicarla con las capacidades `sample`, `db` y `user`:
 - ShopTrack no tiene usuarios todavía: en la red interna, cualquiera que lo abra puede usar el asistente y quitar
   cambios. Cada pedido gasta uso de la clave de Claude configurada.
 
-## Instrucción desde un SO
+## Comentario desde un SO
 
-En **¿Dónde está mi SO?**, cada SO tiene un cuadro "Instrucción para este SO". Lo que se escribe ahí ("cerrar el
-fresado del ítem 2", "ponerlo de prioridad 1", "llegó el material") va al asistente como *"Sobre el SO-…: …"* y se
-aplica igual que en el chat: como cambio del supervisor en ShopTrack, **no en Zoho**. La respuesta aparece debajo del
-cuadro y los cambios de ese SO se listan ahí mismo, cada uno con **Quitar**. Al lado están **Copiar SO** (para buscarlo
-en Zoho) y **Abrir en Zoho**, que arma el enlace con `config/zoho-mapeo.json → portal.url_proyecto` y el id del
-proyecto (solo con Zoho en vivo o la copia de Zoho; la exportación a Excel no trae el id).
+Cada SO tiene un botón **Comentar**: arriba en **¿Dónde está mi SO?** y en cada operación del panel de una máquina
+(abre el SO con el cuadro listo para escribir). Lo que se escribe ("cerrar el fresado del ítem 2", "ponerlo de
+prioridad 1", "llegó el material") va al asistente como *"Sobre el SO-…: …"* y se aplica igual que en el chat: como
+cambio del supervisor en ShopTrack, **no en Zoho**. La respuesta aparece debajo del cuadro y los cambios de ese SO se
+listan ahí mismo, cada uno con **Quitar**. Al lado está **Abrir en Zoho**, que arma el enlace con
+`config/zoho-mapeo.json → portal.url_proyecto` y el id del proyecto (solo con Zoho en vivo o la copia de Zoho; la
+exportación a Excel no trae el id).

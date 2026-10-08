@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { AjusteEstado, Operacion, SO } from '../../../shared/tipos';
 import type { Backend } from '../backend';
 import { colorSemaforo } from '../colores';
 import { fecha, legible } from '../formato';
-import { CopiarSO } from '../hud/CopiarSO';
 import type { Chat } from './Asistente';
 import { Cajon } from './Cajon';
 import { RutaItem } from './RutaItem';
 
 /** Buscar un SO y ver cada ítem como su ruta de pasos: dónde está la pieza, qué falta y cuándo termina. */
-export function DondeSO({ sos, so, onSO, onPaso, onCerrar, chat, backend, ajustes, onQuitarAjuste, onVerAsistente }: {
+export function DondeSO({ sos, so, onSO, onPaso, onCerrar, chat, backend, ajustes, onQuitarAjuste, onVerAsistente, enfocar }: {
   sos: SO[]; so: string | null; onSO: (id: string | null) => void;
   onPaso: (o: Operacion) => void; onCerrar: () => void;
   chat: Chat; backend: Backend; ajustes: AjusteEstado[]; onQuitarAjuste: (id: string) => Promise<void>; onVerAsistente: () => void;
+  enfocar?: number;   // cambia cuando se pide comentar este SO desde otro panel
 }) {
+  const refComentario = useRef<HTMLTextAreaElement>(null);
+  const comentar = () => { refComentario.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); refComentario.current?.focus(); };
+  useEffect(() => { if (enfocar) setTimeout(comentar, 50); }, [enfocar, so]);
   const [q, setQ] = useState('');
   const candidatos = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -43,9 +46,11 @@ export function DondeSO({ sos, so, onSO, onPaso, onCerrar, chat, backend, ajuste
             <button className="enlace" onClick={() => onSO(null)}>Cambiar</button>
           </div>
           <div className="so-acciones">
-            <CopiarSO so={actual.nombre} />
+            <button type="button" className="boton chico primario" onClick={comentar}>Comentar</button>
             {actual.url_zoho && <a className="boton chico" href={actual.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
           </div>
+          <ComentarioSO so={actual} chat={chat} backend={backend} onVerAsistente={onVerAsistente} refTexto={refComentario} />
+          <CambiosSO so={actual} ajustes={ajustes} onQuitar={onQuitarAjuste} />
           <div className="so-estado">
             <span className={`estado-maq ${actual.semaforo ?? ''}`}><span className="punto" style={{ background: colorSemaforo(actual.semaforo) }} />{actual.etapa}</span>
             {actual.motivo && actual.semaforo !== 'verde' && <span className="motivo">{legible(actual.motivo)}</span>}
@@ -71,8 +76,6 @@ export function DondeSO({ sos, so, onSO, onPaso, onCerrar, chat, backend, ajuste
             </div>
           )}
           <p className="nota">Clic en un paso de máquina para verlo en la planta. Las máquinas del SO quedan resaltadas.</p>
-          <InstruccionSO so={actual} chat={chat} backend={backend} onVerAsistente={onVerAsistente} />
-          <CambiosSO so={actual} ajustes={ajustes} onQuitar={onQuitarAjuste} />
         </div>
       ) : (
         <div className="so-lista">
@@ -91,9 +94,11 @@ export function DondeSO({ sos, so, onSO, onPaso, onCerrar, chat, backend, ajuste
   );
 }
 
-/** Instrucción en palabras para este SO ("cerrar el fresado del ítem 2", "prioridad 1", "llegó el material"). La
- *  interpreta el asistente y la aplica como cambio del supervisor: queda en ShopTrack, no en Zoho, y se puede quitar. */
-function InstruccionSO({ so, chat, backend, onVerAsistente }: { so: SO; chat: Chat; backend: Backend; onVerAsistente: () => void }) {
+/** Comentario en palabras para este SO ("cerrar el fresado del ítem 2", "prioridad 1", "llegó el material"). Lo
+ *  interpreta el asistente y lo aplica como cambio del supervisor: queda en ShopTrack, no en Zoho, y se puede quitar. */
+function ComentarioSO({ so, chat, backend, onVerAsistente, refTexto }: {
+  so: SO; chat: Chat; backend: Backend; onVerAsistente: () => void; refTexto: RefObject<HTMLTextAreaElement | null>;
+}) {
   const [texto, setTexto] = useState('');
   const [enviado, setEnviado] = useState<string | null>(null);
   const [disponible, setDisponible] = useState<true | string | null>(null);
@@ -117,15 +122,15 @@ function InstruccionSO({ so, chat, backend, onVerAsistente }: { so: SO; chat: Ch
   };
   return (
     <section className="so-instruccion">
-      <h4>Instrucción para este SO</h4>
+      <h4>Comentario para este SO</h4>
       <form onSubmit={e => { e.preventDefault(); enviar(); }} className="chat-entrada">
-        <textarea id="so-instruccion" rows={2} value={texto} disabled={!listo} aria-label={`Instrucción para ${so.nombre}`}
+        <textarea id="so-comentario" ref={refTexto} rows={2} value={texto} disabled={!listo} aria-label={`Comentario para ${so.nombre}`}
           placeholder="Ej.: cerrar el fresado del ítem 2 · ponerlo de prioridad 1 · llegó el material"
           onChange={e => setTexto(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }} />
         {chat.ocupado
           ? <button type="button" className="boton" onClick={chat.detener}>Detener</button>
-          : <button type="submit" className="boton primario" disabled={!listo || !texto.trim()}>Aplicar</button>}
+          : <button type="submit" className="boton primario" disabled={!listo || !texto.trim()}>Comentar</button>}
       </form>
       {disponible !== true && <p className="chat-aviso">{disponible ?? 'Conectando con Claude…'}</p>}
       {respuesta && (
@@ -137,7 +142,7 @@ function InstruccionSO({ so, chat, backend, onVerAsistente }: { so: SO; chat: Ch
           {respuesta.error && <p className="chat-error">{respuesta.error}</p>}
         </div>
       )}
-      <p className="nota">El cambio queda en ShopTrack para todos (no se escribe en Zoho) y se puede quitar abajo.
+      <p className="nota">El asistente lee el comentario y aplica el cambio en ShopTrack para todos (no se escribe en Zoho); se puede quitar abajo.
         {respuesta && <> <button type="button" className="enlace" onClick={onVerAsistente}>Ver la conversación</button></>}</p>
     </section>
   );

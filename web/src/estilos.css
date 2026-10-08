@@ -358,6 +358,7 @@ kbd { font-family: var(--mono); font-size: 10.5px; background: #fff; border: 1px
 .boton.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
 .boton:disabled { opacity: .5; cursor: default; }
 .boton.chico { padding: 5px 10px; font-size: 12px; border-radius: 8px; color: var(--tinta); text-decoration: none; display: inline-flex; align-items: center; }
+.boton.chico.primario { color: #fff; }
 .so-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 4px 12px; }
 .op-detalle .so-acciones { margin: 8px 0 0; }
 .so-instruccion { display: flex; flex-direction: column; gap: 8px; margin: 8px 4px 4px; }

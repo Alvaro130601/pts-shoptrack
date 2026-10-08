@@ -98,6 +98,8 @@ export default function App() {
     encuadrarMaquinas(ids, 5);
   };
   const abrirSO = (id: string) => { setSeleccion(null); setModulo('so'); elegirSO(id); };
+  const [comentar, setComentar] = useState(0);
+  const comentarSO = (id: string) => { abrirSO(id); setComentar(c => c + 1); };
 
   /** Clic en un paso de una ruta: si va en una máquina, ir a ella; si no (programación, proveedor), mostrar el SO. */
   const irAPaso = (o: Operacion) => {
@@ -149,7 +151,7 @@ export default function App() {
           onMaquina={id => irA(id)} onOp={irAPaso} onCerrar={cerrar} />}
         {estado && modulo === 'alertas' && <Alertas sos={estado.sos} pestana={pestana} onPestana={setPestana} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
         {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar}
-          chat={chat} backend={BACKEND} ajustes={estado.ajustes} onVerAsistente={() => abrir('asistente')}
+          chat={chat} backend={BACKEND} ajustes={estado.ajustes} onVerAsistente={() => abrir('asistente')} enfocar={comentar}
           onQuitarAjuste={async id => { try { await BACKEND.quitarAjuste(id); } finally { recargar(); } }} />}
         {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
         {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
@@ -157,7 +159,7 @@ export default function App() {
         {estado && modulo === 'asistente' && <Asistente chat={chat} estado={estado} backend={BACKEND} onCambio={recargar} onCerrar={cerrar} />}
 
         {sel && <PanelMaquina key={sel.id} m={sel} centro={nombreCentro.get(sel.centro_id ?? '')} items={items}
-          opInicial={seleccion?.op} onPaso={irAPaso} onCerrar={() => setSeleccion(null)} />}
+          opInicial={seleccion?.op} onPaso={irAPaso} onComentar={comentarSO} onCerrar={() => setSeleccion(null)} />}
       </Resguardo>
 
       {layout && (
