@@ -357,6 +357,13 @@ kbd { font-family: var(--mono); font-size: 10.5px; background: #fff; border: 1px
 .boton { border: 1px solid var(--linea); background: #fff; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .boton.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
 .boton:disabled { opacity: .5; cursor: default; }
+.boton.chico { padding: 5px 10px; font-size: 12px; border-radius: 8px; color: var(--tinta); text-decoration: none; display: inline-flex; align-items: center; }
+.so-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 4px 12px; }
+.op-detalle .so-acciones { margin: 8px 0 0; }
+.so-instruccion { display: flex; flex-direction: column; gap: 8px; margin: 8px 4px 4px; }
+.so-instruccion h4 { margin: 6px 0 0; }
+.so-instruccion .burbuja { max-width: 100%; }
+.so-instruccion .nota { margin: 0; }
 .cambios { display: flex; flex-direction: column; gap: 6px; padding: 4px 4px 8px; }
 .cambio { border: 1px solid var(--linea); background: #fff; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
 .cambio.sin-aplicar { background: var(--campo); }

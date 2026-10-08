@@ -104,6 +104,10 @@ describe('proyectos y tareas de Zoho → SO', () => {
     expect(crudos[1]).toMatchObject({ estado: 'Pendiente de Planos', fecha_entrega: '' });
   });
 
+  it('arma el enlace web de cada proyecto con su id', () => {
+    expect(crudos[0].url).toBe('https://projects.zoho.com/portal/ptsportal388#project/1');
+  });
+
   it('agrupa por lista de tareas, ordena por secuencia y lee horas y equipo', () => {
     const so = crudos[0];
     expect(so.listas.map(l => l.nombre)).toEqual(['Ítem 1 (19 unidades)', 'Ítem 10 (1 und)']);

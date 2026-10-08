@@ -15,7 +15,7 @@ export interface VistaZoho {
 
 /** Lo que hace falta de config/zoho-mapeo.json para leer Zoho. */
 export interface MapeoZoho {
-  portal: { nombre: string; id: string };
+  portal: { nombre: string; id: string; url_proyecto?: string };   // url_proyecto: enlace web, con {id} del proyecto
   proyectos: { prefijo: string; excluir_estados: string[] };
   vista: VistaZoho;
 }
@@ -116,7 +116,7 @@ export function proyectosDeZoho(proyectos: any[], tareas: any[], mapeo: MapeoZoh
     porProyecto.set(pid, [...(porProyecto.get(pid) ?? []), t]);
   }
 
-  const crudos = [...elegidos.values()].filter(p => porProyecto.has(texto(p.id))).map(p => aProyecto(p, porProyecto.get(texto(p.id))!));
+  const crudos = [...elegidos.values()].filter(p => porProyecto.has(texto(p.id))).map(p => aProyecto(p, porProyecto.get(texto(p.id))!, mapeo.portal.url_proyecto));
   const n = crudos.reduce((s, p) => s + p.listas.reduce((k, l) => k + l.tareas.length, 0), 0);
   const avisos = [`Zoho en vivo: ${n} tareas de ${crudos.length} SO (vista "Carga de trabajo")`];
   if (fuera.size) {
@@ -128,7 +128,7 @@ export function proyectosDeZoho(proyectos: any[], tareas: any[], mapeo: MapeoZoh
 }
 
 /** Una lista de tareas = un ítem. Las listas van por nombre ("Ítem 2" antes que "Ítem 10"); las tareas, en su orden. */
-function aProyecto(p: any, tareas: any[]): ProyectoCrudo {
+function aProyecto(p: any, tareas: any[], urlProyecto?: string): ProyectoCrudo {
   const porLista = new Map<string, { nombre: string; tareas: any[] }>();
   for (const t of tareas) {
     const id = texto(t.tasklist?.id ?? t.tasklist_id) || 'sin-lista';
@@ -139,7 +139,8 @@ function aProyecto(p: any, tareas: any[]): ProyectoCrudo {
     .sort(([, a], [, b]) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true }))
     .map(([id, l]) => ({ id, nombre: l.nombre, tareas: l.tareas.sort((a, b) => orden(a) - orden(b) || orden2(a) - orden2(b)).map(aTarea) }));
   const nombre = texto(p.name);
-  return { id: texto(p.id), nombre, estado: estadoDe(p), cliente: clienteDe(nombre), fecha_entrega: fechaZoho(p) ?? '', listas };
+  return { id: texto(p.id), nombre, estado: estadoDe(p), cliente: clienteDe(nombre), fecha_entrega: fechaZoho(p) ?? '', listas,
+    ...(urlProyecto && texto(p.id) && { url: urlProyecto.replace('{id}', texto(p.id)) }) };
 }
 
 function aTarea(t: any): TareaCruda {

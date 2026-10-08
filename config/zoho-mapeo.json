@@ -1,6 +1,6 @@
 {
   "_estado": "Revisado con la API v3 de Zoho Projects (conector de claude.ai, 6-oct-2026). Detalle en docs/ZOHO.md.",
-  "portal": { "nombre": "ptsportal388", "id": "714664835" },
+  "portal": { "nombre": "ptsportal388", "id": "714664835", "url_proyecto": "https://projects.zoho.com/portal/ptsportal388#project/{id}" },
   "proyectos": { "prefijo": "SO-", "excluir_estados": ["Completado", "Cancelado"] },
   "vista": {
     "_nota": "Lo mismo que la vista 'Carga de trabajo' de Tareas en Zoho (filtros que mostró Alvaro el 6-oct-2026), más las tareas en Servicio Externo: Alvaro (6-oct) dice que el servicio externo cuenta como una pausa de la ruta. La API filtra los proyectos por id de estado; los grupos y los estados de tarea se comparan por nombre. Las tareas en Calidad o Pausado no entran, igual que en la vista.",

@@ -148,7 +148,9 @@ export default function App() {
         {estado && modulo === 'cola' && <CargaProcesos centros={centros} maquinas={mapa} filtro={resaltadas} seleccion={seleccion?.id ?? null}
           onMaquina={id => irA(id)} onOp={irAPaso} onCerrar={cerrar} />}
         {estado && modulo === 'alertas' && <Alertas sos={estado.sos} pestana={pestana} onPestana={setPestana} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
-        {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar} />}
+        {estado && modulo === 'so' && <DondeSO sos={estado.sos} so={soActivo} onSO={elegirSO} onPaso={irAPaso} onCerrar={cerrar}
+          chat={chat} backend={BACKEND} ajustes={estado.ajustes} onVerAsistente={() => abrir('asistente')}
+          onQuitarAjuste={async id => { try { await BACKEND.quitarAjuste(id); } finally { recargar(); } }} />}
         {estado && modulo === 'material' && <Material sos={estado.sos} onSO={abrirSO} onPaso={irAPaso} onCerrar={cerrar} />}
         {estado && modulo === 'sin_centro' && <SinCentro ops={estado.sin_centro} onCerrar={cerrar} />}
         {estado && modulo === 'leyenda' && <Leyenda maquinas={maquinas} centros={centros} onCerrar={cerrar} />}

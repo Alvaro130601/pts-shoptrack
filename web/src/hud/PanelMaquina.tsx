@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { EstadoMaquina, Item, Operacion } from '../../../shared/tipos';
 import { colorSemaforo } from '../colores';
 import { NOMBRE_FAMILIA } from '../familias';
+import { CopiarSO } from './CopiarSO';
 import { estadoLargo, etiquetaPaso, fecha, itemCorto, legible, tallerNombre } from '../formato';
 import { IcoCerrar } from '../iconos';
 import { RutaItem } from '../modulos/RutaItem';
@@ -84,7 +85,10 @@ export function PanelMaquina({ m, centro, items, opInicial, onPaso, onCerrar }: 
                         <dt>Semáforo</dt><dd>{legible(o.motivo)}</dd>
                         <dt>Entrega SO</dt><dd>{fecha(o.fecha_entrega)}</dd>
                       </dl>
-                      {o.url_zoho && <a href={o.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
+                      <div className="so-acciones">
+                        <CopiarSO so={o.proyecto} />
+                        {o.url_zoho && <a className="boton chico" href={o.url_zoho} target="_blank" rel="noreferrer">Abrir en Zoho ↗</a>}
+                      </div>
                     </div>
                   )}
                 </div>
