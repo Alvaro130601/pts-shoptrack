@@ -1,0 +1,1791 @@
+{
+ "fuente": "Ensamble final de taller.SLDASM (último guardado 2026-07-22), árbol de componentes visibles",
+ "unidades": "metros",
+ "ejes": "px = eje Z del ensamble, py = −(eje X del ensamble) (rotación de 90°, conserva la orientación real, sin espejo); yaw en radianes alrededor del eje vertical (convención three.js, escena x=px, z=py)",
+ "advertencias": [
+  "En el CAD, Talleres #2-#4 están inclinados 2.41° respecto a Taller #1; aquí se proyectó todo a planta y se ignoró la inclinación.",
+  "Taller #4 no trae contorno: es aproximado.",
+  "Cortadora láser quitada del layout a pedido de Alvaro (6-oct-2026); en el CAD no tenía relaciones de posición.",
+  "proceso_sugerido es una suposición por nombre: confirmar contra Zoho.",
+  "RACK MORADO-1 de primer nivel choca con SVM 4100-3 en el CAD; se excluyó del layout.",
+  "Rectificadoras #1 y #2 no están en el CAD: agregadas a mano al fondo de Taller #1 (posición aproximada, 6-oct-2026)."
+ ],
+ "talleres": [
+  {
+   "px": 21.845,
+   "py": 10.992,
+   "w": 21.67,
+   "d": 9.162,
+   "h": 5.41,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     17.379,
+     21.742
+    ],
+    [
+     17.26,
+     0.087
+    ],
+    [
+     26.42,
+     0.043
+    ],
+    [
+     26.539,
+     21.698
+    ]
+   ],
+   "cad": "Taller #3-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Taller #3-1",
+   "id": "taller-3",
+   "nombre": "Taller #3"
+  },
+  {
+   "px": 30.971,
+   "py": 10.949,
+   "w": 21.67,
+   "d": 9.094,
+   "h": 5.41,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     26.539,
+     21.698
+    ],
+    [
+     26.42,
+     0.043
+    ],
+    [
+     35.512,
+     0.0
+    ],
+    [
+     35.631,
+     21.655
+    ]
+   ],
+   "cad": "Taller #2-1",
+   "cad_path": "Ensamble de taller #2-1/Taller #2-1",
+   "id": "taller-2",
+   "nombre": "Taller #2"
+  },
+  {
+   "px": 39.855,
+   "py": 10.819,
+   "w": 21.41,
+   "d": 8.675,
+   "h": 2.75,
+   "yaw": 1.5708,
+   "footprint": [
+    [
+     35.518,
+     21.524
+    ],
+    [
+     35.518,
+     0.114
+    ],
+    [
+     44.193,
+     0.114
+    ],
+    [
+     44.193,
+     21.524
+    ]
+   ],
+   "cad": "Taller #1-1",
+   "cad_path": "Ensamble de taller #1-1/Taller #1-1",
+   "id": "taller-1",
+   "nombre": "Taller #1"
+  },
+  {
+   "id": "taller-4",
+   "nombre": "Taller #4",
+   "aproximado": true,
+   "footprint": [
+    [
+     7.84,
+     0.04
+    ],
+    [
+     17.26,
+     0.04
+    ],
+    [
+     17.26,
+     21.74
+    ],
+    [
+     7.84,
+     21.74
+    ]
+   ],
+   "h": 5.4,
+   "nota": "Contorno no incluido en el ensamble; rectángulo aproximado a partir de las máquinas relacionadas con Taller #4."
+  }
+ ],
+ "elementos": [
+  {
+   "px": 35.943,
+   "py": 4.707,
+   "w": 0.5,
+   "d": 0.6,
+   "h": 1.5,
+   "yaw": 1.5708,
+   "footprint": [
+    [
+     35.643,
+     4.957
+    ],
+    [
+     35.643,
+     4.457
+    ],
+    [
+     36.243,
+     4.457
+    ],
+    [
+     36.243,
+     4.957
+    ]
+   ],
+   "cad": "HORNO-1",
+   "cad_path": "Ensamble de taller #1-1/HORNO-1",
+   "kind": "maquina",
+   "nombre": "Horno",
+   "proceso_sugerido": "Tratamiento térmico?",
+   "id": "horno",
+   "taller": "taller-1"
+  },
+  {
+   "px": 41.289,
+   "py": 10.229,
+   "w": 2.75,
+   "d": 0.75,
+   "h": 1.15,
+   "yaw": 1.3634,
+   "footprint": [
+    [
+     40.639,
+     11.497
+    ],
+    [
+     41.205,
+     8.806
+    ],
+    [
+     41.939,
+     8.96
+    ],
+    [
+     41.373,
+     11.651
+    ]
+   ],
+   "cad": "Dobladora-1",
+   "cad_path": "Ensamble de taller #1-1/Dobladora-1",
+   "kind": "maquina",
+   "nombre": "Dobladora",
+   "proceso_sugerido": "Fabricación",
+   "id": "dobladora",
+   "taller": "taller-1"
+  },
+  {
+   "px": 41.999,
+   "py": 6.944,
+   "w": 2.79,
+   "d": 1.22,
+   "h": 1.0,
+   "yaw": -1.7782,
+   "footprint": [
+    [
+     42.884,
+     5.705
+    ],
+    [
+     42.309,
+     8.435
+    ],
+    [
+     41.115,
+     8.184
+    ],
+    [
+     41.69,
+     5.453
+    ]
+   ],
+   "cad": "MESA CON SOLDADORA-1",
+   "cad_path": "Ensamble de taller #1-1/MESA CON SOLDADORA-1",
+   "kind": "maquina",
+   "nombre": "Soldadora",
+   "proceso_sugerido": "Fabricación",
+   "id": "soldadora",
+   "taller": "taller-1"
+  },
+  {
+   "px": 42.597,
+   "py": 3.179,
+   "w": 3.1,
+   "d": 1.6,
+   "h": 1.8,
+   "yaw": 1.3634,
+   "footprint": [
+    [
+     41.495,
+     4.531
+    ],
+    [
+     42.134,
+     1.497
+    ],
+    [
+     43.699,
+     1.827
+    ],
+    [
+     43.061,
+     4.86
+    ]
+   ],
+   "cad": "Gillotina-1",
+   "cad_path": "Ensamble de taller #1-1/Gillotina-1",
+   "kind": "maquina",
+   "nombre": "Guillotina",
+   "proceso_sugerido": "Fabricación",
+   "id": "guillotina",
+   "taller": "taller-1"
+  },
+  {
+   "px": 27.541,
+   "py": 13.867,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": 2.8013,
+   "footprint": [
+    [
+     28.033,
+     14.934
+    ],
+    [
+     26.501,
+     14.392
+    ],
+    [
+     27.093,
+     12.718
+    ],
+    [
+     28.625,
+     13.261
+    ]
+   ],
+   "cad": "Fresadora-18",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-18",
+   "kind": "maquina",
+   "nombre": "Fresadora #1",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-1",
+   "taller": "taller-2"
+  },
+  {
+   "px": 27.552,
+   "py": 16.293,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": 0.35,
+   "footprint": [
+    [
+     26.507,
+     15.696
+    ],
+    [
+     28.032,
+     15.14
+    ],
+    [
+     28.643,
+     16.807
+    ],
+    [
+     27.117,
+     17.364
+    ]
+   ],
+   "cad": "Fresadora-17",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-17",
+   "kind": "maquina",
+   "nombre": "Fresadora #2",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-2",
+   "taller": "taller-2"
+  },
+  {
+   "px": 27.799,
+   "py": 20.222,
+   "w": 2.283,
+   "d": 0.942,
+   "h": 1.317,
+   "yaw": 2.8509,
+   "footprint": [
+    [
+     28.771,
+     20.975
+    ],
+    [
+     26.584,
+     20.321
+    ],
+    [
+     26.854,
+     19.419
+    ],
+    [
+     29.041,
+     20.073
+    ]
+   ],
+   "cad": "Torno-1",
+   "cad_path": "Ensamble de taller #2-1/Torno-1",
+   "kind": "maquina",
+   "nombre": "Torno #1",
+   "proceso_sugerido": "Torno (convencional?)",
+   "id": "torno-1",
+   "taller": "taller-2"
+  },
+  {
+   "px": 28.131,
+   "py": 18.506,
+   "w": 2.283,
+   "d": 0.942,
+   "h": 1.317,
+   "yaw": 2.8509,
+   "footprint": [
+    [
+     29.103,
+     19.26
+    ],
+    [
+     26.916,
+     18.606
+    ],
+    [
+     27.186,
+     17.704
+    ],
+    [
+     29.373,
+     18.358
+    ]
+   ],
+   "cad": "Torno-2",
+   "cad_path": "Ensamble de taller #2-1/Torno-2",
+   "kind": "maquina",
+   "nombre": "Torno #2",
+   "proceso_sugerido": "Torno (convencional?)",
+   "id": "torno-2",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.437,
+   "py": 6.955,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": -0.344,
+   "footprint": [
+    [
+     33.993,
+     5.805
+    ],
+    [
+     35.523,
+     6.353
+    ],
+    [
+     34.925,
+     8.024
+    ],
+    [
+     33.395,
+     7.476
+    ]
+   ],
+   "cad": "Fresadora-2",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-2",
+   "kind": "maquina",
+   "nombre": "Fresadora #3",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-3",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.448,
+   "py": 8.969,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": -0.344,
+   "footprint": [
+    [
+     34.004,
+     7.819
+    ],
+    [
+     35.534,
+     8.366
+    ],
+    [
+     34.936,
+     10.038
+    ],
+    [
+     33.406,
+     9.49
+    ]
+   ],
+   "cad": "Fresadora-16",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-16",
+   "kind": "maquina",
+   "nombre": "Fresadora #4",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-4",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.46,
+   "py": 11.2,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": -0.344,
+   "footprint": [
+    [
+     34.017,
+     10.049
+    ],
+    [
+     35.546,
+     10.597
+    ],
+    [
+     34.948,
+     12.268
+    ],
+    [
+     33.419,
+     11.72
+    ]
+   ],
+   "cad": "Fresadora-25",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-25",
+   "kind": "maquina",
+   "nombre": "Fresadora #5",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-5",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.48,
+   "py": 14.274,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": -2.7916,
+   "footprint": [
+    [
+     35.571,
+     14.788
+    ],
+    [
+     34.045,
+     15.345
+    ],
+    [
+     33.435,
+     13.677
+    ],
+    [
+     34.961,
+     13.12
+    ]
+   ],
+   "cad": "Fresadora-30",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-30",
+   "kind": "maquina",
+   "nombre": "Fresadora #6",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-6",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.489,
+   "py": 16.203,
+   "w": 1.625,
+   "d": 1.777,
+   "h": 2.223,
+   "yaw": -0.3403,
+   "footprint": [
+    [
+     34.042,
+     15.054
+    ],
+    [
+     35.573,
+     15.597
+    ],
+    [
+     34.981,
+     17.27
+    ],
+    [
+     33.45,
+     16.728
+    ]
+   ],
+   "cad": "Fresadora-29",
+   "cad_path": "Ensamble de taller #2-1/Fresadora-29",
+   "kind": "maquina",
+   "nombre": "Fresadora #7",
+   "proceso_sugerido": "Fresado (convencional?)",
+   "id": "fresadora-7",
+   "taller": "taller-2"
+  },
+  {
+   "px": 19.942,
+   "py": 9.038,
+   "w": 2.826,
+   "d": 2.29,
+   "h": 2.1,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     21.023,
+     10.403
+    ],
+    [
+     21.007,
+     7.579
+    ],
+    [
+     20.961,
+     7.663
+    ],
+    [
+     20.976,
+     10.488
+    ]
+   ],
+   "cad": "VF-2_S_XT_2013-01-2",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/VF-2_S_XT_2013-01-2",
+   "kind": "maquina",
+   "nombre": "Haas VF-2",
+   "proceso_sugerido": "Fresado CNC",
+   "id": "haas-vf-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 20.298,
+   "py": 14.508,
+   "w": 3.494,
+   "d": 2.704,
+   "h": 2.666,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     18.983,
+     16.211
+    ],
+    [
+     18.964,
+     12.719
+    ],
+    [
+     21.667,
+     12.706
+    ],
+    [
+     21.686,
+     16.198
+    ]
+   ],
+   "cad": "SVM 4100-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/SVM 4100-1",
+   "kind": "maquina",
+   "nombre": "SVM 4100 #1",
+   "proceso_sugerido": "Fresado CNC",
+   "id": "svm-4100-1",
+   "taller": "taller-3"
+  },
+  {
+   "px": 24.555,
+   "py": 14.488,
+   "w": 3.494,
+   "d": 2.704,
+   "h": 2.666,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     23.24,
+     16.191
+    ],
+    [
+     23.221,
+     12.699
+    ],
+    [
+     25.924,
+     12.686
+    ],
+    [
+     25.943,
+     16.178
+    ]
+   ],
+   "cad": "SVM 4100-3",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/SVM 4100-3",
+   "kind": "maquina",
+   "nombre": "SVM 4100 #2",
+   "proceso_sugerido": "Fresado CNC",
+   "id": "svm-4100-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 24.558,
+   "py": 9.323,
+   "w": 1.2,
+   "d": 1.5,
+   "h": 1.93,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     23.831,
+     9.89
+    ],
+    [
+     23.825,
+     8.691
+    ],
+    [
+     25.324,
+     8.684
+    ],
+    [
+     25.331,
+     9.883
+    ]
+   ],
+   "cad": "SYL-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/SYL-1",
+   "kind": "maquina",
+   "nombre": "SYL",
+   "proceso_sugerido": "Por confirmar",
+   "id": "syl",
+   "taller": "taller-3"
+  },
+  {
+   "px": 24.846,
+   "py": 5.142,
+   "w": 1.69,
+   "d": 1.833,
+   "h": 2.235,
+   "yaw": -1.5653,
+   "footprint": [
+    [
+     25.781,
+     4.252
+    ],
+    [
+     25.79,
+     5.941
+    ],
+    [
+     23.957,
+     5.949
+    ],
+    [
+     23.948,
+     4.26
+    ]
+   ],
+   "cad": "Mini-Mill-Haas-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Mini-Mill-Haas-1",
+   "kind": "maquina",
+   "nombre": "Haas Mini Mill #1",
+   "proceso_sugerido": "Fresado CNC",
+   "id": "haas-mini-mill-1",
+   "taller": "taller-3"
+  },
+  {
+   "px": 24.859,
+   "py": 7.354,
+   "w": 1.69,
+   "d": 1.833,
+   "h": 2.235,
+   "yaw": -1.5653,
+   "footprint": [
+    [
+     25.793,
+     6.464
+    ],
+    [
+     25.802,
+     8.153
+    ],
+    [
+     23.97,
+     8.162
+    ],
+    [
+     23.96,
+     6.473
+    ]
+   ],
+   "cad": "Mini-Mill-Haas-2",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Mini-Mill-Haas-2",
+   "kind": "maquina",
+   "nombre": "Haas Mini Mill #2",
+   "proceso_sugerido": "Fresado CNC",
+   "id": "haas-mini-mill-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 9.792,
+   "py": 15.502,
+   "w": 1.183,
+   "d": 1.523,
+   "h": 2.158,
+   "yaw": 1.5712,
+   "footprint": [
+    [
+     9.052,
+     16.053
+    ],
+    [
+     9.052,
+     14.871
+    ],
+    [
+     10.574,
+     14.872
+    ],
+    [
+     10.575,
+     16.054
+    ]
+   ],
+   "cad": "H32Z-1",
+   "cad_path": "H32Z-1",
+   "kind": "maquina",
+   "nombre": "H32Z",
+   "proceso_sugerido": "Por confirmar",
+   "id": "h32z",
+   "taller": "taller-4"
+  },
+  {
+   "px": 10.095,
+   "py": 3.383,
+   "w": 3.97,
+   "d": 2.54,
+   "h": 1.7,
+   "yaw": 1.5712,
+   "footprint": [
+    [
+     8.843,
+     5.335
+    ],
+    [
+     8.842,
+     1.368
+    ],
+    [
+     11.381,
+     1.369
+    ],
+    [
+     11.383,
+     5.336
+    ]
+   ],
+   "cad": "Torno Hyundai-1",
+   "cad_path": "Torno Hyundai-1",
+   "kind": "maquina",
+   "nombre": "Torno Hyundai",
+   "proceso_sugerido": "Torno CNC",
+   "id": "torno-hyundai",
+   "taller": "taller-4"
+  },
+  {
+   "px": 15.184,
+   "py": 19.168,
+   "w": 1.8,
+   "d": 1.0,
+   "h": 2.4,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     16.111,
+     19.62
+    ],
+    [
+     14.311,
+     19.628
+    ],
+    [
+     14.306,
+     18.629
+    ],
+    [
+     16.106,
+     18.62
+    ]
+   ],
+   "cad": "E350-1",
+   "cad_path": "E350-1",
+   "kind": "maquina",
+   "nombre": "E350",
+   "proceso_sugerido": "Por confirmar",
+   "id": "e350",
+   "taller": "taller-4"
+  },
+  {
+   "px": 15.338,
+   "py": 4.924,
+   "w": 7.68,
+   "d": 1.42,
+   "h": 1.73,
+   "yaw": 1.5712,
+   "footprint": [
+    [
+     14.647,
+     8.729
+    ],
+    [
+     14.644,
+     1.054
+    ],
+    [
+     16.063,
+     1.055
+    ],
+    [
+     16.066,
+     8.73
+    ]
+   ],
+   "cad": "Torno Hanwa-1",
+   "cad_path": "Torno Hanwa-1",
+   "kind": "maquina",
+   "nombre": "Torno Hanwa",
+   "proceso_sugerido": "Torno Suizo?",
+   "id": "torno-hanwa",
+   "taller": "taller-4"
+  },
+  {
+   "px": 15.386,
+   "py": 13.368,
+   "w": 1.705,
+   "d": 3.189,
+   "h": 2.503,
+   "yaw": 1.5712,
+   "footprint": [
+    [
+     13.817,
+     14.173
+    ],
+    [
+     13.817,
+     12.47
+    ],
+    [
+     17.005,
+     12.471
+    ],
+    [
+     17.006,
+     14.175
+    ]
+   ],
+   "cad": "Erosionadora de hilo-1",
+   "cad_path": "Erosionadora de hilo-1",
+   "kind": "maquina",
+   "nombre": "EDM hilo",
+   "proceso_sugerido": "Erosionado",
+   "id": "edm-hilo",
+   "taller": "taller-4"
+  },
+  {
+   "px": 15.449,
+   "py": 16.422,
+   "w": 1.85,
+   "d": 2.47,
+   "h": 2.2,
+   "yaw": 1.5712,
+   "footprint": [
+    [
+     14.237,
+     17.305
+    ],
+    [
+     14.236,
+     15.457
+    ],
+    [
+     16.705,
+     15.458
+    ],
+    [
+     16.706,
+     17.306
+    ]
+   ],
+   "cad": "CUT E350-1",
+   "cad_path": "CUT E350-1",
+   "kind": "maquina",
+   "nombre": "CUT E350",
+   "proceso_sugerido": "Erosionado",
+   "id": "cut-e350",
+   "taller": "taller-4"
+  },
+  {
+   "px": 26.659,
+   "py": 0.592,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     26.445,
+     0.944
+    ],
+    [
+     26.441,
+     0.174
+    ],
+    [
+     26.911,
+     0.172
+    ],
+    [
+     26.915,
+     0.941
+    ]
+   ],
+   "cad": "Armario para  inventario 1-1",
+   "cad_path": "Ensamble de taller #2-1/Armario para  inventario 1-1",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-5",
+   "taller": "taller-2"
+  },
+  {
+   "px": 26.664,
+   "py": 1.461,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     26.45,
+     1.813
+    ],
+    [
+     26.445,
+     1.044
+    ],
+    [
+     26.915,
+     1.041
+    ],
+    [
+     26.92,
+     1.811
+    ]
+   ],
+   "cad": "Armario para  inventario 1-4",
+   "cad_path": "Ensamble de taller #2-1/Armario para  inventario 1-4",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-6",
+   "taller": "taller-2"
+  },
+  {
+   "px": 28.593,
+   "py": 4.18,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     28.997,
+     4.379
+    ],
+    [
+     28.227,
+     4.383
+    ],
+    [
+     28.225,
+     3.913
+    ],
+    [
+     28.995,
+     3.91
+    ]
+   ],
+   "cad": "Armario para  inventario 1-6",
+   "cad_path": "Ensamble de taller #2-1/Armario para  inventario 1-6",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-7",
+   "taller": "taller-2"
+  },
+  {
+   "px": 33.404,
+   "py": 3.142,
+   "w": 2.5,
+   "d": 0.71,
+   "h": 1.8,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     33.074,
+     4.36
+    ],
+    [
+     33.061,
+     1.862
+    ],
+    [
+     33.771,
+     1.858
+    ],
+    [
+     33.784,
+     4.356
+    ]
+   ],
+   "cad": "RACK MORADO-2",
+   "cad_path": "Ensamble de taller #2-1/RACK MORADO-2",
+   "kind": "almacen",
+   "nombre": "Rack morado",
+   "id": "rack-morado-2",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.742,
+   "py": 2.877,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     35.45,
+     3.365
+    ],
+    [
+     34.078,
+     3.372
+    ],
+    [
+     34.073,
+     2.318
+    ],
+    [
+     35.444,
+     2.312
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-8",
+   "cad_path": "Ensamble de taller #2-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-8",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-10",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.748,
+   "py": 3.93,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     35.456,
+     4.418
+    ],
+    [
+     34.084,
+     4.425
+    ],
+    [
+     34.078,
+     3.372
+    ],
+    [
+     35.45,
+     3.365
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-9",
+   "cad_path": "Ensamble de taller #2-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-9",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-11",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.78,
+   "py": 2.807,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     35.488,
+     3.295
+    ],
+    [
+     34.117,
+     3.302
+    ],
+    [
+     34.111,
+     2.248
+    ],
+    [
+     35.482,
+     2.242
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-1",
+   "cad_path": "Ensamble de taller #2-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-1",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-8",
+   "taller": "taller-2"
+  },
+  {
+   "px": 34.786,
+   "py": 3.86,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     35.494,
+     4.348
+    ],
+    [
+     34.123,
+     4.355
+    ],
+    [
+     34.117,
+     3.302
+    ],
+    [
+     35.488,
+     3.295
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-2",
+   "cad_path": "Ensamble de taller #2-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-2",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-9",
+   "taller": "taller-2"
+  },
+  {
+   "px": 35.114,
+   "py": 3.134,
+   "w": 2.5,
+   "d": 0.71,
+   "h": 1.8,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     34.784,
+     4.352
+    ],
+    [
+     34.77,
+     1.853
+    ],
+    [
+     35.48,
+     1.85
+    ],
+    [
+     35.494,
+     4.348
+    ]
+   ],
+   "cad": "RACK MORADO-1",
+   "cad_path": "Ensamble de taller #2-1/RACK MORADO-1",
+   "kind": "almacen",
+   "nombre": "Rack morado",
+   "id": "rack-morado-1",
+   "taller": "taller-2"
+  },
+  {
+   "px": 17.544,
+   "py": 0.635,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     17.329,
+     0.987
+    ],
+    [
+     17.325,
+     0.218
+    ],
+    [
+     17.795,
+     0.215
+    ],
+    [
+     17.799,
+     0.985
+    ]
+   ],
+   "cad": "Armario para  inventario 1-4",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Armario para  inventario 1-4",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-3",
+   "taller": "taller-3"
+  },
+  {
+   "px": 17.548,
+   "py": 1.454,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     17.334,
+     1.806
+    ],
+    [
+     17.33,
+     1.037
+    ],
+    [
+     17.8,
+     1.035
+    ],
+    [
+     17.804,
+     1.804
+    ]
+   ],
+   "cad": "Armario para  inventario 1-2",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Armario para  inventario 1-2",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 17.553,
+   "py": 2.274,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     17.338,
+     2.626
+    ],
+    [
+     17.334,
+     1.856
+    ],
+    [
+     17.804,
+     1.854
+    ],
+    [
+     17.808,
+     2.624
+    ]
+   ],
+   "cad": "Armario para  inventario 1-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Armario para  inventario 1-1",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-1",
+   "taller": "taller-3"
+  },
+  {
+   "px": 17.557,
+   "py": 3.093,
+   "w": 0.77,
+   "d": 0.47,
+   "h": 1.83,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     17.343,
+     3.445
+    ],
+    [
+     17.339,
+     2.676
+    ],
+    [
+     17.809,
+     2.674
+    ],
+    [
+     17.813,
+     3.443
+    ]
+   ],
+   "cad": "Armario para  inventario 1-6",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Armario para  inventario 1-6",
+   "kind": "almacen",
+   "nombre": "Armario",
+   "id": "armario-4",
+   "taller": "taller-3"
+  },
+  {
+   "px": 18.095,
+   "py": 19.011,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     18.803,
+     19.499
+    ],
+    [
+     17.431,
+     19.506
+    ],
+    [
+     17.426,
+     18.453
+    ],
+    [
+     18.797,
+     18.446
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-4",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-4",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-3",
+   "taller": "taller-3"
+  },
+  {
+   "px": 18.101,
+   "py": 20.064,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     18.808,
+     20.553
+    ],
+    [
+     17.437,
+     20.559
+    ],
+    [
+     17.431,
+     19.506
+    ],
+    [
+     18.803,
+     19.499
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-2",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-2",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 18.106,
+   "py": 21.118,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     18.814,
+     21.606
+    ],
+    [
+     17.443,
+     21.613
+    ],
+    [
+     17.437,
+     20.559
+    ],
+    [
+     18.808,
+     20.553
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-1",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-1",
+   "taller": "taller-3"
+  },
+  {
+   "px": 20.671,
+   "py": 20.219,
+   "w": 0.988,
+   "d": 0.584,
+   "h": 1.457,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     20.397,
+     20.687
+    ],
+    [
+     20.391,
+     19.7
+    ],
+    [
+     20.975,
+     19.697
+    ],
+    [
+     20.98,
+     20.685
+    ]
+   ],
+   "cad": "Binstand-2",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Binstand-2",
+   "kind": "almacen",
+   "nombre": "Rack de bines",
+   "id": "rack-de-bines-2",
+   "taller": "taller-3"
+  },
+  {
+   "px": 20.676,
+   "py": 21.169,
+   "w": 0.988,
+   "d": 0.584,
+   "h": 1.457,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     20.402,
+     21.637
+    ],
+    [
+     20.396,
+     20.649
+    ],
+    [
+     20.98,
+     20.647
+    ],
+    [
+     20.986,
+     21.634
+    ]
+   ],
+   "cad": "Binstand-1",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Binstand-1",
+   "kind": "almacen",
+   "nombre": "Rack de bines",
+   "id": "rack-de-bines-1",
+   "taller": "taller-3"
+  },
+  {
+   "px": 23.149,
+   "py": 2.329,
+   "w": 0.988,
+   "d": 0.584,
+   "h": 1.457,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     22.875,
+     2.798
+    ],
+    [
+     22.869,
+     1.81
+    ],
+    [
+     23.453,
+     1.807
+    ],
+    [
+     23.459,
+     2.795
+    ]
+   ],
+   "cad": "Binstand-5",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Binstand-5",
+   "kind": "almacen",
+   "nombre": "Rack de bines",
+   "id": "rack-de-bines-4",
+   "taller": "taller-3"
+  },
+  {
+   "px": 23.154,
+   "py": 3.279,
+   "w": 0.988,
+   "d": 0.584,
+   "h": 1.457,
+   "yaw": 1.5763,
+   "footprint": [
+    [
+     22.88,
+     3.747
+    ],
+    [
+     22.875,
+     2.759
+    ],
+    [
+     23.458,
+     2.757
+    ],
+    [
+     23.464,
+     3.744
+    ]
+   ],
+   "cad": "Binstand-3",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Binstand-3",
+   "kind": "almacen",
+   "nombre": "Rack de bines",
+   "id": "rack-de-bines-3",
+   "taller": "taller-3"
+  },
+  {
+   "px": 25.623,
+   "py": 2.221,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     26.33,
+     2.709
+    ],
+    [
+     24.959,
+     2.715
+    ],
+    [
+     24.953,
+     1.662
+    ],
+    [
+     26.325,
+     1.656
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-13",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-13",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-7",
+   "taller": "taller-3"
+  },
+  {
+   "px": 25.628,
+   "py": 3.274,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     26.336,
+     3.762
+    ],
+    [
+     24.965,
+     3.769
+    ],
+    [
+     24.959,
+     2.715
+    ],
+    [
+     26.33,
+     2.709
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-11",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-11",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-6",
+   "taller": "taller-3"
+  },
+  {
+   "px": 25.661,
+   "py": 2.15,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     26.369,
+     2.639
+    ],
+    [
+     24.997,
+     2.645
+    ],
+    [
+     24.992,
+     1.592
+    ],
+    [
+     26.363,
+     1.585
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-6",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-6",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-5",
+   "taller": "taller-3"
+  },
+  {
+   "px": 25.667,
+   "py": 3.204,
+   "w": 1.372,
+   "d": 1.054,
+   "h": 1.899,
+   "yaw": -3.1368,
+   "footprint": [
+    [
+     26.375,
+     3.692
+    ],
+    [
+     25.003,
+     3.699
+    ],
+    [
+     24.997,
+     2.645
+    ],
+    [
+     26.369,
+     2.639
+    ]
+   ],
+   "cad": "Jarke SPG Bar Storage Rack BSRA with Add-on.stp-5",
+   "cad_path": "TALLER 3D^Ensamble final de taller-1/Jarke SPG Bar Storage Rack BSRA with Add-on.stp-5",
+   "kind": "almacen",
+   "nombre": "Rack de barras",
+   "id": "rack-de-barras-4",
+   "taller": "taller-3"
+  },
+  {
+   "px": 38.0,
+   "py": 20.2,
+   "w": 2.2,
+   "d": 1.6,
+   "h": 1.9,
+   "yaw": 3.1416,
+   "footprint": [
+    [
+     39.1,
+     21.0
+    ],
+    [
+     36.9,
+     21.0
+    ],
+    [
+     36.9,
+     19.4
+    ],
+    [
+     39.1,
+     19.4
+    ]
+   ],
+   "cad": "No está en el CAD: agregada a mano (posición aproximada)",
+   "cad_path": "",
+   "kind": "maquina",
+   "nombre": "Rectificadora #1",
+   "proceso_sugerido": "Rectificado",
+   "id": "rectificadora-1",
+   "taller": "taller-1"
+  },
+  {
+   "px": 41.6,
+   "py": 20.2,
+   "w": 2.2,
+   "d": 1.6,
+   "h": 1.9,
+   "yaw": 3.1416,
+   "footprint": [
+    [
+     42.7,
+     21.0
+    ],
+    [
+     40.5,
+     21.0
+    ],
+    [
+     40.5,
+     19.4
+    ],
+    [
+     42.7,
+     19.4
+    ]
+   ],
+   "cad": "No está en el CAD: agregada a mano (posición aproximada)",
+   "cad_path": "",
+   "kind": "maquina",
+   "nombre": "Rectificadora #2",
+   "proceso_sugerido": "Rectificado",
+   "id": "rectificadora-2",
+   "taller": "taller-1"
+  }
+ ]
+}

@@ -1,0 +1,275 @@
+{
+ "_instrucciones": "Máquinas de la planta (ids del layout). La máquina NO está en Zoho: el proceso viene del Equipo asignado y config/centros.json dice qué máquinas hacen cada proceso. proceso = descripción; familia = forma 3D aproximada: fresadora_cnc | fresadora_convencional | torno_cnc | torno_convencional | torno_suizo | edm_hilo | laser | horno | dobladora | guillotina | soldadora | generica (sin identificar). capacidad_horas_dia = horas productivas por día hábil sumando turnos (16 = 2 turnos, provisional). activa=false oculta la máquina.",
+ "maquinas": [
+  {
+   "id": "horno",
+   "nombre": "Horno",
+   "taller": "taller-1",
+   "proceso": "Tratamiento térmico y revenido",
+   "familia": "horno",
+   "capacidad_horas_dia": 24,
+   "es_centro_mecanizado": false,
+   "activa": true
+  },
+  {
+   "id": "dobladora",
+   "nombre": "Dobladora",
+   "taller": "taller-1",
+   "proceso": "Fabricación",
+   "familia": "dobladora",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": false,
+   "activa": true
+  },
+  {
+   "id": "soldadora",
+   "nombre": "Soldadora",
+   "taller": "taller-1",
+   "proceso": "Fabricación",
+   "familia": "soldadora",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": false,
+   "activa": true
+  },
+  {
+   "id": "guillotina",
+   "nombre": "Guillotina",
+   "taller": "taller-1",
+   "proceso": "Fabricación",
+   "familia": "guillotina",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": false,
+   "activa": true
+  },
+  {
+   "id": "fresadora-1",
+   "nombre": "Fresadora #1",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-2",
+   "nombre": "Fresadora #2",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "torno-1",
+   "nombre": "Torno #1",
+   "taller": "taller-2",
+   "proceso": "Torno (convencional?)",
+   "familia": "torno_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "torno-2",
+   "nombre": "Torno #2",
+   "taller": "taller-2",
+   "proceso": "Torno (convencional?)",
+   "familia": "torno_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-3",
+   "nombre": "Fresadora #3",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-4",
+   "nombre": "Fresadora #4",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-5",
+   "nombre": "Fresadora #5",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-6",
+   "nombre": "Fresadora #6",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "fresadora-7",
+   "nombre": "Fresadora #7",
+   "taller": "taller-2",
+   "proceso": "Fresado (convencional?)",
+   "familia": "fresadora_convencional",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "haas-vf-2",
+   "nombre": "Haas VF-2",
+   "taller": "taller-3",
+   "proceso": "Fresado CNC",
+   "familia": "fresadora_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "svm-4100-1",
+   "nombre": "SVM 4100 #1",
+   "taller": "taller-3",
+   "proceso": "Fresado CNC",
+   "familia": "fresadora_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "svm-4100-2",
+   "nombre": "SVM 4100 #2",
+   "taller": "taller-3",
+   "proceso": "Fresado CNC",
+   "familia": "fresadora_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "syl",
+   "nombre": "SYL",
+   "taller": "taller-3",
+   "proceso": "Por confirmar",
+   "familia": "generica",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "haas-mini-mill-1",
+   "nombre": "Haas Mini Mill #1",
+   "taller": "taller-3",
+   "proceso": "Fresado CNC",
+   "familia": "fresadora_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "haas-mini-mill-2",
+   "nombre": "Haas Mini Mill #2",
+   "taller": "taller-3",
+   "proceso": "Fresado CNC",
+   "familia": "fresadora_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "h32z",
+   "nombre": "H32Z",
+   "taller": "taller-4",
+   "proceso": "Por confirmar",
+   "familia": "generica",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "torno-hyundai",
+   "nombre": "Torno Hyundai",
+   "taller": "taller-4",
+   "proceso": "Torno CNC",
+   "familia": "torno_cnc",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "e350",
+   "nombre": "E350",
+   "taller": "taller-4",
+   "proceso": "Por confirmar (no es erosionadora)",
+   "familia": "generica",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": false,
+   "activa": true
+  },
+  {
+   "id": "torno-hanwa",
+   "nombre": "Torno Hanwa",
+   "taller": "taller-4",
+   "proceso": "Torno suizo",
+   "familia": "torno_suizo",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "edm-hilo",
+   "nombre": "EDM hilo",
+   "taller": "taller-4",
+   "proceso": "Erosionado",
+   "familia": "edm_hilo",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "cut-e350",
+   "nombre": "CUT E350",
+   "taller": "taller-4",
+   "proceso": "Erosionado",
+   "familia": "edm_hilo",
+   "capacidad_horas_dia": 16,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "rectificadora-1",
+   "nombre": "Rectificadora #1",
+   "taller": "taller-1",
+   "proceso": "Rectificado",
+   "familia": "rectificadora",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  },
+  {
+   "id": "rectificadora-2",
+   "nombre": "Rectificadora #2",
+   "taller": "taller-1",
+   "proceso": "Rectificado",
+   "familia": "rectificadora",
+   "capacidad_horas_dia": 8,
+   "es_centro_mecanizado": true,
+   "activa": true
+  }
+ ]
+}

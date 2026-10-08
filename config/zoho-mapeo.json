@@ -1,0 +1,42 @@
+{
+  "_estado": "Revisado con la API v3 de Zoho Projects (conector de claude.ai, 6-oct-2026). Detalle en docs/ZOHO.md.",
+  "portal": { "nombre": "ptsportal388", "id": "714664835", "url_proyecto": "https://projects.zoho.com/portal/ptsportal388#project/{id}" },
+  "proyectos": { "prefijo": "SO-", "excluir_estados": ["Completado", "Cancelado"] },
+  "vista": {
+    "_nota": "Lo mismo que la vista 'Carga de trabajo' de Tareas en Zoho (filtros que mostró Alvaro el 6-oct-2026), más las tareas en Servicio Externo: Alvaro (6-oct) dice que el servicio externo cuenta como una pausa de la ruta. La API filtra los proyectos por id de estado; los grupos y los estados de tarea se comparan por nombre. Las tareas en Calidad o Pausado no entran, igual que en la vista.",
+    "grupos": ["Producción", "Automatizacion"],
+    "estados_proyecto": {
+      "En Producción": "1613834000000020095",
+      "Pendiente de material": "1613834000008021837",
+      "En Calidad": "1613834000012109227",
+      "Pendiente de Planos": "1613834000012342925",
+      "Pendiente de Compra": "1613834000020249080"
+    },
+    "tarea_contiene": "H.",
+    "estados_tarea": ["En Producción", "En Curso", "Material Pendiente", "Pendiente de Operación", "Pendiente Operación", "Servicio Externo"]
+  },
+  "cliente": { "_nota": "Zoho no tiene un campo de cliente: es el código del nombre del proyecto (SO-11338-SMT-1 → SMT)." },
+  "equipo": { "_nota": "'Equipo asociado' son los equipos de Zoho de la tarea (teams). Puede haber varios: se toma el que coincide con el nombre de la tarea; si el equipo no es de ningún centro (p. ej. 'Equipo de Diseño' en H. Grabado), manda el nombre." },
+  "lectura": {
+    "_nota": "item_regex se aplica al nombre de la lista (grupo 1 = línea, grupo 2 = cantidad): 'Ítem 23 (3 unidades)', 'Ítem 1 (1 und)', 'PZA-0018-C (6 und)'. Lo demás se compara sin 'H.', sin tildes y en minúsculas.",
+    "item_regex": "^\\s*(?:[ÍIíi]tem\\s+)?(.+?)\\s*\\((\\d+)\\s*(?:unidad(?:es)?|unds?|uds?|u|pzas?|piezas?)\\.?\\s*\\)",
+    "cierre_regex": "^cierre\\b",
+    "tareas": {
+      "programacion": "^progr",
+      "set_up": "^set ?-?up",
+      "material": "^material",
+      "planos": "^planos?\\b",
+      "ensamble": "^ensambl",
+      "calidad": "^(calidad|inspeccion)",
+      "envio": "^(envio|despacho)"
+    },
+    "estados": {
+      "_nota": "Se comparan por inicio del texto ('Pendiente' cubre 'Pendiente Operación' y 'Pendiente de Operación'). 'material_pendiente': el ítem espera material. 'proveedor' (Servicio Externo): la pieza está con un proveedor y el resto de la ruta espera (una pausa); si la tarea es de una máquina (mecanizado hecho afuera) cuenta como servicio externo, no carga la planta, y lo anterior de la ruta se da por hecho.",
+      "pendiente": ["Pendiente", "Abierta", "Abierto", "Open", "No iniciada"],
+      "en_proceso": ["En proceso", "En progreso", "En Producción", "En Curso", "In Progress", "Servicio Externo"],
+      "cerrada": ["Cerrada", "Cerrado", "Closed", "Completada", "Completado", "Terminada"],
+      "material_pendiente": ["Material Pendiente"],
+      "proveedor": ["Servicio Externo"]
+    }
+  }
+}
